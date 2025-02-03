@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from enum import Enum,auto
 
 SIMULATE = False
+amountOfThreads = 8
 
 ##############
 # TODO: Add a brief description here of what we are doing
@@ -324,6 +325,11 @@ def PrintResult(result,firstColumnSize):
    ok = "OK"
    cached = "(cached)" if result.cached else ""
 
+   if(stage == Stage.PC_EMUL):
+      ok = "OK[1]"
+   if(stage == Stage.SIM_RUN):
+      ok = "OK[2]"
+
    testPassed = (result.error.error != ErrorType.TEST_FAILED)
    testRanEverything = (stage == finalStage)
 
@@ -451,7 +457,7 @@ def ThreadMain(workQueue,resultQueue,index):
          workQueue.task_done()
 
 def RunTests(testInfoJson):
-   amountOfThreads = 8
+   global amountOfThreads
    amountOfTests = len(testInfoJson['tests'])
 
    workQueue = queue.Queue()
