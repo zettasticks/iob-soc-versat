@@ -4,171 +4,186 @@
     {
       "name": "EXAMPLE_M_Stage",
       "finalStage": "SIM_RUN",
-      "tokens": 15682,
-      "hash": 15822402735130277572,
+      "tokens": 17204,
+      "hash": 8394595152314118396,
       "stage": "SIM_RUN"
     },
     {
       "name": "EXAMPLE_F_Stage",
       "finalStage": "SIM_RUN",
-      "tokens": 28462,
-      "hash": 16528035826499882382,
+      "tokens": 30046,
+      "hash": 16569975799784168552,
       "stage": "SIM_RUN"
     },
     {
       "name": "EXAMPLE_AddRoundKey",
       "finalStage": "SIM_RUN",
-      "tokens": 41929,
-      "hash": 8252021369899124576,
+      "tokens": 41833,
+      "hash": 10872264366656419328,
       "stage": "SIM_RUN"
     },
     {
       "name": "EXAMPLE_Simple",
       "finalStage": "SIM_RUN",
-      "tokens": 8851,
-      "hash": 8734620068355255766,
+      "tokens": 8845,
+      "hash": 16516256571275797856,
       "stage": "SIM_RUN"
     },
     {
       "name": "EXAMPLE_SHA",
       "finalStage": "SIM_RUN",
-      "tokens": 45331,
-      "hash": 3586604226399729557,
+      "comment" : "Need to reenable the versat specific units, although need to see if test becomes too slow",
+      "tokens": 47825,
+      "hash": 7301732201386536429,
       "stage": "SIM_RUN"
     },
     {
       "name": "EXAMPLE_Variety1",
       "finalStage": "SIM_RUN",
-      "tokens": 37562,
-      "hash": 10789094682961720857,
+      "tokens": 37462,
+      "hash": 13243794154365532885,
       "stage": "SIM_RUN"
     },
     {
       "name": "MEM_SimpleTransfer",
       "finalStage": "SIM_RUN",
-      "tokens": 32686,
-      "hash": 7672365745740971613,
+      "tokens": 32578,
+      "hash": 2657587923085702737,
       "stage": "SIM_RUN"
     },
     {
       "name": "DATABUS_SimpleTransfer",
       "finalStage": "SIM_RUN",
       "coment": "This test could do more, by testing for unaligned transfers as well. We also need to test different AXI widths",
-      "tokens": 27845,
-      "hash": 18244535404540896446,
+      "tokens": 27773,
+      "hash": 13201792896917194870,
       "stage": "SIM_RUN"
     },
     {
       "name": "DATABUS_MultipleTransfers",
       "finalStage": "SIM_RUN",
-      "tokens": 31362,
-      "hash": 7659979500544749872,
+      "tokens": 31278,
+      "hash": 12136341582967820540,
       "stage": "SIM_RUN"
     },
     {
       "name": "CONFIG_SimpleShare",
       "finalStage": "SIM_RUN",
-      "tokens": 12601,
-      "hash": 16612828324013170122,
+      "tokens": 12557,
+      "hash": 14712816694801138982,
       "stage": "SIM_RUN"
+    },
+    {
+      "name": "CONFIG_PartialShare",
+      "finalStage": "DISABLED"
     },
     {
       "name": "CONFIG_SimpleStatic",
       "finalStage": "SIM_RUN",
-      "tokens": 11460,
-      "hash": 6451260908764407555,
+      "tokens": 12298,
+      "hash": 4424374343277874011,
       "stage": "SIM_RUN"
     },
     {
       "name": "CONFIG_ShareStatic",
       "finalStage": "SIM_RUN",
-      "tokens": 19041,
-      "hash": 2411064795031399265,
+      "tokens": 19619,
+      "hash": 6440599910923771605,
       "stage": "SIM_RUN"
     },
     {
       "name": "DELAYS_AddedDelays",
       "finalStage": "SIM_RUN",
-      "tokens": 8753,
-      "hash": 8476351966289807377,
+      "tokens": 8749,
+      "hash": 17967367845291189485,
       "stage": "SIM_RUN"
     },
     {
       "name": "DELAYS_Variable",
       "finalStage": "SIM_RUN",
-      "tokens": 8737,
-      "hash": 4246502852648797178,
+      "tokens": 8731,
+      "hash": 6296380820998359428,
       "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_Simple",
       "finalStage": "SIM_RUN",
-      "tokens": 11064,
-      "hash": 10119468562954735542,
+      "tokens": 11056,
+      "hash": 2507504621666465646,
       "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_Inputs",
       "finalStage": "SIM_RUN",
-      "tokens": 10890,
-      "hash": 2951751928915609827,
+      "tokens": 10882,
+      "hash": 1743069713514218907,
       "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_SameTypeChildren",
       "finalStage": "SIM_RUN",
-      "comment": "Nothing tested in software. Mainly to see if Versat works and produces valid Verilog",
-      "tokens": 93635,
-      "hash": 17158601594678853746,
+      "comment": "Nothing in software. See if Versat produces valid Verilog. Eventually make proper test",
+      "tokens": 94895,
+      "hash": 382108265431972726,
       "stage": "SIM_RUN"
+    },
+    {
+      "name": "MERGE_ModuleWithMultipleMerged",
+      "finalStage": "DISABLED",
+      "comment": "Nothing in software. See if Versat produces valid Verilog. Eventually make proper test"
+    },
+    {
+      "name": "MERGE_MergeWithStructMerge",
+      "finalStage": "DISABLED",
+      "comment": "Nothing in software. See if Versat produces valid Verilog. Eventually make proper test"
     },
     {
       "name": "UNIT_LookupTable",
       "finalStage": "SIM_RUN",
-      "tokens": 13270,
-      "hash": 5785817913977711024,
+      "tokens": 13262,
+      "hash": 7982923337751525480,
       "stage": "SIM_RUN"
     },
     {
       "name": "ADDRESS_GEN_Simple",
       "finalStage": "SIM_RUN",
-      "tokens": 25573,
-      "hash": 2087713998589909359,
+      "tokens": 25491,
+      "hash": 14549195864120793357,
       "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_TwoLevels",
       "finalStage": "SIM_RUN",
-      "tokens": 55894,
-      "hash": 3976634297225691305,
+      "tokens": 56430,
+      "hash": 17025874307901314379,
       "stage": "SIM_RUN"
     },
     {
       "name": "UNIT_Generator",
       "finalStage": "SIM_RUN",
-      "tokens": 25542,
-      "hash": 16171362401078964436,
+      "tokens": 25460,
+      "hash": 15702302112276124850,
       "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_Delays",
       "finalStage": "SIM_RUN",
-      "tokens": 25683,
-      "hash": 6865364235021883133,
+      "tokens": 25625,
+      "hash": 14718218423080704307,
       "stage": "SIM_RUN"
     },
     {
       "name": "EXAMPLE_Variety2",
       "finalStage": "SIM_RUN",
-      "tokens": 48790,
-      "hash": 17175557739483312453,
+      "tokens": 48658,
+      "hash": 9211077845960803233,
       "stage": "SIM_RUN"
     },
     {
       "name": "GRAPH_SimpleLoop",
       "finalStage": "SIM_RUN",
-      "tokens": 10097,
-      "hash": 3995831886663284108,
+      "tokens": 10091,
+      "hash": 14502549395838369814,
       "stage": "SIM_RUN"
     },
     {

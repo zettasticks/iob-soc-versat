@@ -9,31 +9,6 @@ module EXAMPLE_Simple(){
   addition -> result;
 }
 
-module StaticExample(){
-    static Const constant;
-#
-    constant -> out:0;   
-}
-
-module ShareExample(){
-    share config Const {
-        unit[2];
-    }
-    StaticExample static[2];
-#
-    {unit[0..1],static[0..1]} -> out:0..3;
-}
-
-module TestStuff(){
-   Mem m0;
-   Const c;
-   Buffer b;
-#
-   m0 -> b;
-   a = c + b;
-   a -> out;
-}
-
 module TestStaticChild2(){ // Since TestStaticChild2 is only used as static in the following modules, it should have the same values
    Const inside0; 
    static Const inside1;
@@ -84,7 +59,7 @@ module CONFIG_SimpleShare(){
    childs[1]:0..1 -> outputs[2..3];
 }
 
-module TestPartialShare(){
+module CONFIG_PartialShare(){
    share config VRead(~ext_addr){
       units[2];
    }
@@ -151,15 +126,6 @@ merge MERGE_Simple = TestMergeChild1:w | TestMergeChild2:z{
    w.output - z.output;
 }
 
-module TestMergeWithBlankChild1(){
-   Mem mem;
-   Const x2;
-   Reg output2;
-#
-   a = x2 + mem;
-   a -> output2;
-}
-
 module TestMergeInputs1(x,y){
 #
    a = x + y;
@@ -179,7 +145,7 @@ module MERGE_SameTypeChildren(){
 #
 }
 
-module TestHasMultipleMerged(){
+module MERGE_ModuleWithMultipleMerged(){
    MERGE_Simple child0;
    MERGE_TwoLevels child1;
    MERGE_SameTypeChildren child2;
@@ -201,26 +167,6 @@ module TestMergeDelay2(){
 }
 
 merge MERGE_Delays = TestMergeDelay1 | TestMergeDelay2;
-
-module TestMergeLargeDelay1(){
-   Const x;
-   Reg output;
-#
-   x{10} -> output;
-}
-
-module TestMergeLargeDelay2(){
-   Const x;
-   PipelineRegister r[3];
-   Reg output;
-#
-   x -> r[0];
-   r[0] -> r[1];
-   r[1] -> r[2];
-   r[2] -> output;
-}
-
-merge TestMergeLargeDelay = TestMergeLargeDelay1 | TestMergeLargeDelay2;
 
 module TestDoubleMerge00(){
    Const x00;
@@ -267,14 +213,7 @@ module TestMergeStruct(){
    a -> out;
 }
 
-merge TestMergeAfterStruct = TestMergeStruct | TestDoubleMerge1;
-
-module TestMergeAfterStruct2(){
-   TestMergeAfterStruct t1;
-   TestMergeAfterStruct t2;
-#
-   
-}
+merge MERGE_MergeWithStructMerge = TestMergeStruct | TestDoubleMerge1;
 
 module DATABUS_SimpleTransfer(){
    VRead #(.AXI_ADDR_W(AXI_ADDR_W),.ADDR_W(20)) read;
@@ -297,59 +236,6 @@ module MEM_SimpleTransfer(){
    start -> end;
 }
 
-module TripleAdd(x,y,z){
-#
-   res = x + y + z;
-   res -> out;
-}
-
-module OnlyInputToOutput(x){
-#
-   x -> out:0;
-}
-
-module SimpleAdder(){
-   Const a1;
-   Const a2;
-   Reg res;
-#
-   a = a1 + a2;
-
-   a -> res;
-}
-
-module ComplexAdder(){
-   Mem b1;   
-   Mem b2;
-   Mem memOut1;
-#
-   b = b1 + b2;
-
-   b -> memOut1;
-}
-
-module ComplexMultiplier(){
-   Mem c1;
-   Mem c2;
-   Mem memOut2;
-   Mul mul;
-#
-   c1 -> mul:0;
-   c2 -> mul:1;
-
-   mul -> memOut2;
-}
-
-module SemiComplexAdder(){
-   Const d1;
-   Mem d2;
-   Mem memOut3;
-#
-   d = d1 + d2;
-
-   d -> memOut3;
-}
-
 module StaticMuladd(x,y){
    static Muladd mul;
 #
@@ -361,62 +247,7 @@ module StaticMuladd(x,y){
    mul -> out;
 }
 
-module StaticConst(){
-   static Const var;
-#
-   var -> out:0;
-}
-
-module SimpleStatic(){
-   StaticConst c0;
-   StaticConst c1;
-#
-   c1 -> out;
-}
-
-module ComplexStatic(){
-   SimpleStatic s0;
-   SimpleStatic s1;
-#
-   s1 -> out;
-}
-
-module SimpleShareConfig(){
-   share config Const {
-      a1;
-      a2;
-   }
-   share config Const{
-      b1;
-      b2;
-   }
-#
-   a = a1 + a2;
-   b = b1 + b2;
-   c = a1 + b1;
-   d = a2 + b2;
-
-   {a,b,c,d} -> out:0..3;
-}
-
-module ComplexShareConfig(){ // 6 config, 1 static - flatten should have 5 configs
-   share config SimpleShareConfig { // 3
-      a1;
-      a2;
-   }
-   StaticConst var1; // 1 static
-   StaticConst var2; // Same static
-   share config SimpleShareConfig { // 3
-      shared1;
-      shared2;
-   }
-   Reg out0;
-   Reg out1;
-#
-   var1 -> out0;
-   var2 -> out1;
-}
-
+// TODO: We might add this to the EXAMPLE tests
 module StringHasher(){
    Const weight1;
    Const weight2;
@@ -451,69 +282,6 @@ module StringHasher(){
    a4{1} -> bytesOut;
 }
 
-module MatrixMultiplication(){
-   Mem matA; // 0 1 2 0 1 2 0 1 2 3 4 5 3 4 5 3 4 5
-   Mem matB; // a d g b e h c f i a d 
-   Muladd ma;
-   Mem res;
-#
-   matA -> ma:0;
-   matB -> ma:1;
-
-   ma -> res;
-}
-
-module MatrixMultiplicationVread(){ 
-   VRead matA;
-   VRead matB;
-   Muladd ma;
-   VWrite res;
-#
-   matA -> ma:0;
-   matB -> ma:1;
-
-   ma -> res;
-}
-
-module ConvolutionStage(previous){
-   VRead pixels;
-   static Mem weights;
-   static Muladd muladd;
-#
-   pixels  -> muladd:0;
-   weights -> muladd:1;
-
-   res = muladd + previous;
-
-   res -> out;
-}
-
-module Convolution(){
-   ConvolutionStage stage0; // 0 <- 1
-   ConvolutionStage stage1; // 1 <- 2
-   ConvolutionStage stage2; // 2 <- 3
-   ConvolutionStage stage3; // 3 <- 4 
-   ConvolutionStage stage4; // 4 <- 5
-   Mem res; // 5 <- 6
-   Const bias; // 6 <- 0
-#
-   bias   -> stage0;
-   stage0 -> stage1;
-   stage1 -> stage2;
-   stage2 -> stage3;
-   stage3 -> stage4;
-   stage4{9} -> res;
-}
-
-module StaticMux(x,y){
-   Mux2 mux;
-#
-   x -> mux:0;
-   y -> mux:1;
-
-   mux -> out;
-}
-
 module sigma(x){
    Const const1;
    Const const2;
@@ -536,20 +304,6 @@ module CH(a,b,c){
 #
    res = (a & b) ^ (~a & c);
    res -> out;
-}
-
-module CHImpl(){
-   Const a;
-   Const b;
-   Const c;
-   CH ch;
-   Reg output;
-#
-   a -> ch:0;
-   b -> ch:1;
-   c -> ch:2;
-
-   ch -> output;
 }
 
 module Maj(x,y,z){
