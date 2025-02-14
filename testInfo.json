@@ -1,207 +1,202 @@
 {
-  "default_args": "-s -b32 -d -u /home/z/AA/Versat/iob-soc-versat/submodules/VERSAT/hardware/src/units -I /home/z/AA/Versat/iob-soc-versat/submodules/VERSAT/hardware/src -u /home/z/AA/Versat/iob-soc-versat/hardware/src/units -x64",
+  "defaultArgs": "-s -b32 -d -u /home/z/AA/Versat/iob-soc-versat/submodules/VERSAT/hardware/src/units -I /home/z/AA/Versat/iob-soc-versat/submodules/VERSAT/hardware/src -u /home/z/AA/Versat/iob-soc-versat/hardware/src/units -x64",
   "tests": [
     {
       "name": "EXAMPLE_M_Stage",
-      "finalStage": "SIM_RUN",
-      "tokens": 17204,
-      "hash": 8394595152314118396,
-      "stage": "SIM_RUN"
+      "finalStage": "TEMP_DISABLED",
+      "stage": "NOT_WORKING",
+      "tempDisabledStage": "SIM_RUN"
     },
     {
       "name": "EXAMPLE_F_Stage",
-      "finalStage": "SIM_RUN",
-      "tokens": 30046,
-      "hash": 16569975799784168552,
-      "stage": "SIM_RUN"
+      "finalStage": "TEMP_DISABLED",
+      "stage": "NOT_WORKING",
+      "tempDisabledStage": "SIM_RUN"
     },
     {
       "name": "EXAMPLE_AddRoundKey",
       "finalStage": "SIM_RUN",
-      "tokens": 41833,
-      "hash": 10872264366656419328,
+      "tokens": 41843,
+      "hashVal": 9473763225452443050,
       "stage": "SIM_RUN"
     },
     {
       "name": "EXAMPLE_Simple",
       "finalStage": "SIM_RUN",
-      "tokens": 8845,
-      "hash": 16516256571275797856,
+      "tokens": 8855,
+      "hashVal": 8341188680261553610,
       "stage": "SIM_RUN"
     },
     {
       "name": "EXAMPLE_SHA",
-      "finalStage": "SIM_RUN",
-      "comment" : "Need to reenable the versat specific units, although need to see if test becomes too slow",
-      "tokens": 47825,
-      "hash": 7301732201386536429,
-      "stage": "SIM_RUN"
+      "finalStage": "TEMP_DISABLED",
+      "stage": "NOT_WORKING",
+      "tempDisabledStage": "SIM_RUN"
     },
     {
       "name": "EXAMPLE_Variety1",
       "finalStage": "SIM_RUN",
-      "tokens": 37462,
-      "hash": 13243794154365532885,
+      "tokens": 37472,
+      "hashVal": 12509396785074497375,
       "stage": "SIM_RUN"
     },
     {
       "name": "MEM_SimpleTransfer",
       "finalStage": "SIM_RUN",
-      "tokens": 32578,
-      "hash": 2657587923085702737,
+      "tokens": 32588,
+      "hashVal": 11659598299103037691,
       "stage": "SIM_RUN"
     },
     {
       "name": "DATABUS_SimpleTransfer",
       "finalStage": "SIM_RUN",
-      "coment": "This test could do more, by testing for unaligned transfers as well. We also need to test different AXI widths",
-      "tokens": 27773,
-      "hash": 13201792896917194870,
+      "tokens": 27783,
+      "hashVal": 8447745705117985312,
       "stage": "SIM_RUN"
     },
     {
       "name": "DATABUS_MultipleTransfers",
       "finalStage": "SIM_RUN",
-      "tokens": 31278,
-      "hash": 12136341582967820540,
+      "tokens": 31288,
+      "hashVal": 8249853067143146662,
       "stage": "SIM_RUN"
     },
     {
       "name": "CONFIG_SimpleShare",
-      "finalStage": "SIM_RUN",
-      "tokens": 12557,
-      "hash": 14712816694801138982,
-      "stage": "SIM_RUN"
+      "finalStage": "TEMP_DISABLED",
+      "stage": "NOT_WORKING",
+      "tempDisabledStage": "SIM_RUN"
     },
     {
       "name": "CONFIG_PartialShare",
-      "finalStage": "DISABLED"
+      "finalStage": "TEMP_DISABLED",
+      "stage": "NOT_WORKING",
+      "tempDisabledStage": "PC_EMUL"
     },
     {
       "name": "CONFIG_SimpleStatic",
-      "finalStage": "SIM_RUN",
-      "tokens": 12298,
-      "hash": 4424374343277874011,
-      "stage": "SIM_RUN"
+      "finalStage": "TEMP_DISABLED",
+      "stage": "NOT_WORKING",
+      "tempDisabledStage": "SIM_RUN"
     },
     {
       "name": "CONFIG_ShareStatic",
-      "finalStage": "SIM_RUN",
-      "tokens": 19619,
-      "hash": 6440599910923771605,
-      "stage": "SIM_RUN"
+      "finalStage": "TEMP_DISABLED",
+      "stage": "NOT_WORKING",
+      "tempDisabledStage": "SIM_RUN"
     },
     {
       "name": "DELAYS_AddedDelays",
       "finalStage": "SIM_RUN",
-      "tokens": 8749,
-      "hash": 17967367845291189485,
+      "tokens": 8759,
+      "hashVal": 16257074154208201111,
       "stage": "SIM_RUN"
     },
     {
       "name": "DELAYS_Variable",
       "finalStage": "SIM_RUN",
-      "tokens": 8731,
-      "hash": 6296380820998359428,
+      "tokens": 8741,
+      "hashVal": 15375856682605693006,
       "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_Simple",
       "finalStage": "SIM_RUN",
-      "tokens": 11056,
-      "hash": 2507504621666465646,
+      "tokens": 11066,
+      "hashVal": 1325789956754150648,
       "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_Inputs",
       "finalStage": "SIM_RUN",
-      "tokens": 10882,
-      "hash": 1743069713514218907,
+      "tokens": 10892,
+      "hashVal": 1122849672286115141,
       "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_SameTypeChildren",
-      "finalStage": "SIM_RUN",
-      "comment": "Nothing in software. See if Versat produces valid Verilog. Eventually make proper test",
-      "tokens": 94895,
-      "hash": 382108265431972726,
-      "stage": "SIM_RUN"
+      "finalStage": "TEMP_DISABLED",
+      "stage": "NOT_WORKING",
+      "tempDisabledStage": "SIM_RUN"
     },
     {
       "name": "MERGE_ModuleWithMultipleMerged",
       "finalStage": "DISABLED",
-      "comment": "Nothing in software. See if Versat produces valid Verilog. Eventually make proper test"
+      "stage": "NOT_WORKING"
     },
     {
       "name": "MERGE_MergeWithStructMerge",
       "finalStage": "DISABLED",
-      "comment": "Nothing in software. See if Versat produces valid Verilog. Eventually make proper test"
+      "stage": "NOT_WORKING"
     },
     {
       "name": "UNIT_LookupTable",
       "finalStage": "SIM_RUN",
-      "tokens": 13262,
-      "hash": 7982923337751525480,
+      "tokens": 13272,
+      "hashVal": 12491532075146229970,
       "stage": "SIM_RUN"
     },
     {
       "name": "ADDRESS_GEN_Simple",
       "finalStage": "SIM_RUN",
-      "tokens": 25491,
-      "hash": 14549195864120793357,
+      "tokens": 25501,
+      "hashVal": 18068971329772840471,
       "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_TwoLevels",
       "finalStage": "SIM_RUN",
-      "tokens": 56430,
-      "hash": 17025874307901314379,
+      "tokens": 56320,
+      "hashVal": 11368366320157311657,
       "stage": "SIM_RUN"
     },
     {
       "name": "UNIT_Generator",
       "finalStage": "SIM_RUN",
-      "tokens": 25460,
-      "hash": 15702302112276124850,
+      "tokens": 25470,
+      "hashVal": 8869583341596290044,
       "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_Delays",
       "finalStage": "SIM_RUN",
-      "tokens": 25625,
-      "hash": 14718218423080704307,
+      "tokens": 25635,
+      "hashVal": 11014859952348278237,
       "stage": "SIM_RUN"
     },
     {
       "name": "EXAMPLE_Variety2",
       "finalStage": "SIM_RUN",
-      "tokens": 48658,
-      "hash": 9211077845960803233,
+      "tokens": 48668,
+      "hashVal": 5186251456697328651,
       "stage": "SIM_RUN"
     },
     {
       "name": "GRAPH_SimpleLoop",
       "finalStage": "SIM_RUN",
-      "tokens": 10091,
-      "hash": 14502549395838369814,
+      "tokens": 10101,
+      "hashVal": 17357221771541787520,
       "stage": "SIM_RUN"
     },
     {
       "name": "CryptoAlgos",
-      "finalStage": "DISABLED"
+      "finalStage": "DISABLED",
+      "stage": "NOT_WORKING"
     },
     {
       "name": "DMATest",
       "finalStage": "DISABLED",
-      "comment": "Current test should work in sim-run but will not work in pc-emul. Needs a proper look at"
+      "stage": "NOT_WORKING"
     },
     {
       "name": "FullAES",
-      "finalStage": "DISABLED"
+      "finalStage": "DISABLED",
+      "stage": "NOT_WORKING"
     },
     {
       "name": "GoodCryptoAlgos",
-      "finalStage": "DISABLED"
+      "finalStage": "DISABLED",
+      "stage": "NOT_WORKING"
     }
   ]
 }

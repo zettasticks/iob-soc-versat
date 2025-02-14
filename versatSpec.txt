@@ -60,12 +60,13 @@ module CONFIG_SimpleShare(){
 }
 
 module CONFIG_PartialShare(){
-   share config VRead(~ext_addr){
+   share config Const2(constant){
       units[2];
    }
-   Reg outputs[2];
+   Reg outputs[4];
 #
-   units[0..1] -> outputs[0..1];
+   units[0]:0..1 -> outputs[0..1];
+   units[1]:0..1 -> outputs[2..3];
 }
 
 module TestShareStaticChild() -> 2{

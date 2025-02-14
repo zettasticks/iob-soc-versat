@@ -1,18 +1,4 @@
-import subprocess as sp
-import threading
-import sys
-import json
-import codecs
-import queue
-import time
-import traceback
-import shutil
-import os
-from dataclasses import dataclass
-from enum import Enum,auto
-
-SIMULATE = False
-amountOfThreads = 8
+#!/usr/bin/python
 
 ##############
 # TODO: Add a brief description here of what we are doing
@@ -27,6 +13,7 @@ amountOfThreads = 8
 #   here is some mixup somewhere
 
 # TODO:
+# Add a update-if-better mode, where we only update values if the test gave the same or better result.
 # The code is a bit complex for no good reason. Maybe simplify a bit if have time. Seems to work fine though
 # Refactor commands if adding more commands. Maybe add argparse and work from there.
 # Save the text/output of the tests that fail. The stdout from running the tests and stuff
@@ -46,6 +33,32 @@ amountOfThreads = 8
 # The tests right now run from make which causes nix-shell to get called all the time.
 #    It's better to just have the one time nix-shell call when starting the test.py 
 
+import subprocess as sp
+import threading
+import sys
+import json
+import argparse
+import codecs
+import queue
+import time
+import traceback
+import shutil
+import os
+from dataclasses import dataclass
+from enum import Enum,auto
+
+amountOfThreads = 8
+jsonfilePath = None
+
+COLOR_BASE   = '\33[0m'
+COLOR_RED    = '\33[31m'
+COLOR_GREEN  = '\33[32m'
+COLOR_YELLOW = '\33[33m'
+COLOR_BLUE   = '\33[34m'
+COLOR_MAGENTA= '\33[35m'
+COLOR_CYAN   = '\33[36m'
+COLOR_WHITE  = '\33[37m'
+
 # Order of these are important. Assuming that failing sim-run means that it passed pc-emul 
 class Stage(Enum):
    DISABLED = auto()
@@ -54,6 +67,11 @@ class Stage(Enum):
    PC_EMUL = auto()
    SIM_RUN = auto()
    FPGA_RUN = auto()
+
+def IsStageDisabled(stage):
+   assert(type(stage) == Stage) 
+   res = (stage == Stage.DISABLED or stage == Stage.TEMP_DISABLED)
+   return res
 
 class ErrorType(Enum):
    NONE = auto()
@@ -83,29 +101,73 @@ def IsError(errorType):
    res = (errorType != ErrorType.NONE)
    return res
 
-def DefaultStage():
-   return Stage.NOT_WORKING
+class WorkState(Enum):
+   INITIAL = auto()
+   PROCESS = auto()
+   FINISH = auto()
 
-def IsStageDisabled(stage):
-   assert(type(stage) == Stage) 
-   res = (stage == Stage.DISABLED or stage == Stage.TEMP_DISABLED)
-   return res
+@dataclass
+class TestInfo:
+   name: str
+   finalStage: Stage
+   comment: str
+   tokens: int
+   hashVal: int
+   stage: Stage
+   tempDisabledStage: Stage
 
-COLOR_BASE   = '\33[0m'
-COLOR_RED    = '\33[31m'
-COLOR_GREEN  = '\33[32m'
-COLOR_YELLOW = '\33[33m'
-COLOR_BLUE   = '\33[34m'
-COLOR_MAGENTA= '\33[35m'
-COLOR_CYAN   = '\33[36m'
-COLOR_WHITE  = '\33[37m'
+@dataclass
+class TestData:
+   defaultArgs: str
+   tests: list[TestInfo]
+
+@dataclass
+class ThreadWork:
+   test: TestInfo
+   args: str
+   index: int
+   cached: bool = False
+   didTokenize: bool = False
+   error: Error = Error()
+   tokens: int = 0
+   hashVal: int = 0
+   workStage: WorkState = WorkState.INITIAL
+   stageToProcess: Stage = Stage.PC_EMUL
+   lastStageReached: Stage = Stage.NOT_WORKING
 
 class MyJsonEncoder(json.JSONEncoder):
    def default(self,o):
-      if(type(o) == Stage):
+      if(type(o) == TestData):
+         return vars(o)   
+      elif(type(o) == TestInfo):
+         asDict = vars(o)
+         asDict = {x:y for x,y in asDict.items() if y is not None}
+         return asDict
+      elif(type(o) == Stage):
          return o.name
       else:
          return super().default(o)
+
+def ParseJson(jsonContent):
+   defaultArgs = jsonContent['defaultArgs']
+
+   testList = []
+   for test in jsonContent['tests']:
+      name = test['name']
+      finalStage = Stage[test['finalStage']]
+      comment = test['comment'] if 'comment' in test else None
+      tokens = int(test['tokens']) if 'tokens' in test else None
+      hashVal = int(test['hashVal']) if 'hashVal' in test else None
+      stage = Stage[test['stage']] if 'stage' in test else Stage.NOT_WORKING
+      tempDisabledStage = Stage[test['tempDisabledStage']] if 'tempDisabledStage' in test else None
+
+      if(finalStage != Stage.TEMP_DISABLED):
+         tempDisabledStage = None
+
+      info = TestInfo(name,finalStage,comment,tokens,hashVal,stage,tempDisabledStage)
+      testList.append(info)
+
+   return TestData(defaultArgs,testList)
 
 def FindAndParseFilepathList(content):
    # Probably bottleneck
@@ -128,6 +190,13 @@ def FindAndParseFilepathList(content):
 
    return filePathList
 
+def JoinOutputAndErrorOutput(subprocessResult):
+   decoder = codecs.getdecoder("utf-8")
+   output = "" if subprocessResult.stdout == None else decoder(subprocessResult.stdout)[0]
+   errorOutput = "" if subprocessResult.stderr == None else decoder(subprocessResult.stderr)[0]
+
+   return output + errorOutput
+
 def RunVersat(testName,testFolder,versatExtra):
    args = ["./submodules/VERSAT/versat"]
 
@@ -141,24 +210,22 @@ def RunVersat(testName,testFolder,versatExtra):
    try:
       result = sp.run(args,capture_output=True,timeout=10) # Maybe a bit low for merge based tests, eventually add timeout 'option' to the test itself
    except sp.TimeoutExpired as t:
-      output = "" if t.stdout == None else codecs.getdecoder("utf-8")(t.stdout)[0]
-      errorOutput = "" if t.stderr == None else codecs.getdecoder("utf-8")(t.stderr)[0]
-      return Error(ErrorType.TIMEOUT,ErrorSource.VERSAT),[],output + errorOutput
+      return Error(ErrorType.TIMEOUT,ErrorSource.VERSAT),[],JoinOutputAndErrorOutput(t)
    except Exception as e:
       print(f"Except on calling Versat:{e}") # This should not happen
       return Error(ErrorType.EXCEPT,ErrorSource.VERSAT),[],""
 
    returnCode = result.returncode
-   output = codecs.getdecoder("unicode_escape")(result.stdout)[0]
-   errorOutput = codecs.getdecoder("unicode_escape")(result.stderr)[0]
 
    if(returnCode != 0):
-      return Error(ErrorType.PROGRAM_ERROR,ErrorSource.VERSAT),[],output + errorOutput
+      return Error(ErrorType.PROGRAM_ERROR,ErrorSource.VERSAT),[],JoinOutputAndErrorOutput(result)
 
+   decoder = codecs.getdecoder("utf-8")
+   output = decoder(result.stdout)[0]
    filePathList = FindAndParseFilepathList(output)
 
    # Parse result.
-   return Error(),filePathList,output + errorOutput
+   return Error(),filePathList,JoinOutputAndErrorOutput(result)
 
 def TempDir(testName):
    path = f"./testCache/{testName}"
@@ -178,8 +245,9 @@ def ComputeFilesTokenSizeAndHash(files):
       return Error(ErrorType.EXCEPT,ErrorSource.HASHER),-1,-1
 
    returnCode = result.returncode
-   output = codecs.getdecoder("unicode_escape")(result.stdout)[0]
-   errorOutput = codecs.getdecoder("unicode_escape")(result.stderr)[0]
+   decoder = codecs.getdecoder("utf-8")
+   output = decoder(result.stdout)[0]
+   #errorOutput = decoder(result.stderr)[0]
 
    if(returnCode == 0):
       amountOfTokens,hashVal = [int(x) for x in output.split(":")]
@@ -196,19 +264,14 @@ def RunMakefile(target,testName,timeout=60):
 
       result = sp.run(command,capture_output=True,shell=True,timeout=timeout) # 60
    except sp.TimeoutExpired as t:
-      output = "" if t.stdout == None else codecs.getdecoder("utf-8")(t.stdout)[0]
-      errorOutput = "" if t.stdout == None else codecs.getdecoder("utf-8")(t.stderr)[0]
-
-      return Error(ErrorType.TIMEOUT,ErrorSource.MAKEFILE),output + errorOutput
+      return Error(ErrorType.TIMEOUT,ErrorSource.MAKEFILE),JoinOutputAndErrorOutput(t)
    except Exception as e:
       print(f"Except on calling makefile:{e}")
       return Error(ErrorType.EXCEPT,ErrorSource.MAKEFILE),""
 
    returnCode = result.returncode
-   output = codecs.getdecoder("utf-8")(result.stdout)[0]
-   errorOutput = codecs.getdecoder("utf-8")(result.stderr)[0]
 
-   return Error(),output + errorOutput
+   return Error(),JoinOutputAndErrorOutput(result)
 
 def CheckTestPassed(testOutput):
    #print(testOutput)
@@ -276,48 +339,18 @@ def PerformTest(test,stage):
 
    print(f"Error, PerformTest called with: {stage}. Fix this")
 
-class WorkState(Enum):
-   INITIAL = auto()
-   PROCESS = auto()
-   FINISH = auto()
-
-@dataclass
-class ThreadWork:
-   test: dict
-   index: int
-   cached: bool = False
-   didTokenize: bool = False
-   error: Error = Error()
-   tokens: int = 0
-   hashVal: int = 0
-   workStage: WorkState = WorkState.INITIAL
-   stageToProcess: Stage = Stage.PC_EMUL
-   lastStageReached: Stage = Stage.NOT_WORKING
-   
-def GetTestFinalStage(test):
-   try:
-      content = test['finalStage']
-      splitted = content.split(" ")
-      return Stage[splitted[0]]
-   except:
-      return DefaultStage()
-
-def GetComment(test):
-   content = test['comment'] if "comment" in test else None
-   return content
-
 def PrintResult(result,firstColumnSize):
    def GeneratePad(word,amount,padding = '.'):
       return padding * (amount - len(word))
 
    test = result.test
-   name = test['name']
+   name = test.name
 
-   finalStage = GetTestFinalStage(test)
+   finalStage = test.finalStage
    stage = result.lastStageReached
 
    testName = name
-   actualComment = GetComment(test)
+   actualComment = test.comment
    comments = f" - {actualComment}" if actualComment else ""
    failing = "FAIL"
    partial = f"PARTIAL"
@@ -344,7 +377,7 @@ def PrintResult(result,firstColumnSize):
       partialVal = ""
       color = COLOR_YELLOW
    elif(stage == Stage.NOT_WORKING):
-      condition = failing
+      condition = failing + " " + str(result.error)
       partialVal = ""
       color = COLOR_RED
    elif(result.error.error == ErrorType.TEST_FAILED):
@@ -367,21 +400,20 @@ def PrintResult(result,firstColumnSize):
    print(f"{testName}{firstPad}{secondPad}{color}{condition}{COLOR_BASE}{partialVal}{cached}{comments}")
 
 def CppLocation(test):
-   name = test['name']
-   return f"./software/src/Tests/{name}.cpp"   
+   return f"./software/src/Tests/{test.name}.cpp"
 
 def ProcessWork(work):
    test = work.test
-   name = test['name']
+   name = test.name
 
-   finalStage = GetTestFinalStage(test)
+   finalStage = test.finalStage
 
    if(work.workStage == WorkState.INITIAL):
       assert not IsStageDisabled(finalStage)
 
       testTempDir = TempDir(name)
 
-      versatError,filepaths,output = RunVersat(name,testTempDir,testInfoJson["default_args"])
+      versatError,filepaths,output = RunVersat(name,testTempDir,work.args)
       SaveOutput(name,"versat",output)
 
       if(IsError(versatError)):
@@ -398,8 +430,8 @@ def ProcessWork(work):
          work.workStage = WorkState.FINISH
          return work
 
-      testTokens = test.get('tokens',0)
-      testHashVal = test.get('hash',0)
+      testTokens = test.tokens if test.tokens else 0
+      testHashVal = test.hashVal if test.hashVal else 0
 
       work.tokens = tokenAmount
       work.hashVal = hashVal
@@ -407,7 +439,7 @@ def ProcessWork(work):
 
       if(tokenAmount == testTokens and hashVal == testHashVal):
          work.cached = True
-         work.lastStageReached = Stage[test.get('stage')]
+         work.lastStageReached = test.stage
          if(work.lastStageReached == finalStage):
             work.workStage = WorkState.FINISH
             return work
@@ -421,7 +453,7 @@ def ProcessWork(work):
       return work
    elif(work.workStage == WorkState.PROCESS):
       stage = work.stageToProcess
-      error = PerformTest(test['name'],stage)
+      error = PerformTest(test.name,stage)
       passed = (not IsError(error))
 
       if(passed):
@@ -456,9 +488,9 @@ def ThreadMain(workQueue,resultQueue,index):
          resultQueue.put(result)
          workQueue.task_done()
 
-def RunTests(testInfoJson):
+def RunTests(testList,defaultArgs):
    global amountOfThreads
-   amountOfTests = len(testInfoJson['tests'])
+   amountOfTests = len(testList)
 
    workQueue = queue.Queue()
    resultQueue = queue.Queue()
@@ -466,14 +498,13 @@ def RunTests(testInfoJson):
    for thread in threadList:
       thread.start()
 
-   maxNameLength = max([len(test['name']) for test in testInfoJson['tests']]) + 1
+   maxNameLength = max([len(test.name) for test in testList]) + 1
 
    amountOfWork = 0
-   for index,test in enumerate(testInfoJson['tests']):
-      work = ThreadWork(test,index)
+   for index,test in enumerate(testList):
+      work = ThreadWork(test,defaultArgs,index)
 
-      finalStage = GetTestFinalStage(test)
-      if(IsStageDisabled(finalStage)):
+      if(IsStageDisabled(test.finalStage)):
          PrintResult(work,maxNameLength)
          continue
 
@@ -494,8 +525,6 @@ def RunTests(testInfoJson):
 
       amountOfWork -= 1
 
-      #print("ResultMainThread:",result)
-
       if(IsError(result.error) or result.workStage == WorkState.FINISH):
          PrintResult(result,maxNameLength)
 
@@ -513,30 +542,38 @@ def RunTests(testInfoJson):
 
    return resultList
 
-def TempDisableTest(json,testIndex):
-   finalStage = json['tests'][testIndex]['finalStage']
-   splitted = finalStage.split(" ")
-   if(splitted[0] == "TEMP_DISABLED"):
-      return
-   
-   json['tests'][testIndex]['finalStage'] = f"TEMP_DISABLED - WAS:{finalStage}"
+def TempDisableTest(test):
+   test.tempDisabledStage = test.finalStage
+   test.finalStage = Stage.TEMP_DISABLED
 
 if __name__ == "__main__":
    testInfoJson = None
-   command = sys.argv[1]
-   jsonfilePath = sys.argv[2]
+   jsonfilePath = "testInfo.json"
 
-   doUpdate = (command != "run-only") 
-   SIMULATE = (command == "simulate")
+   parser = argparse.ArgumentParser(prog="Tester",description="Test Versat, using cache to prevent rerunning unnecessary tests")
+
+   allCommands = ["run","run-only","reset","reenable-temp","disable-failed","disable-temp"]
+
+   parser.add_argument("command",choices=allCommands)
+   parser.add_argument("testFilter",nargs='*')
+
+   args = parser.parse_args()
+
+   command = args.command
+   testFilter = args.testFilter[0] if len(args.testFilter) > 0 else ""
 
    with open(jsonfilePath,"r") as file:
       try:
          testInfoJson = json.load(file)
+
       except Exception as e:
          print(f"Failed to parse testInfo file: {e}")
          sys.exit(0)
 
-   allTestNames = [x['name'] for x in testInfoJson['tests']]
+   testInfo = ParseJson(testInfoJson)
+   testList = [test for test in testInfo.tests if testFilter in test.name]
+
+   allTestNames = [x.name for x in testList]
 
    nameCount = {}
    for name in allTestNames:
@@ -548,62 +585,40 @@ if __name__ == "__main__":
       print("Exiting. Fix test info and run again.")
       sys.exit(0)
 
-   # Put any check to the data above this line. # From this point assume data is correct
+   # Put any check to the data above this line. 
+   # From this point assume data is correct
 
    if(command == "reset"):
-      for i in range(0,len(testInfoJson['tests'])):
-         if 'tokens' in testInfoJson['tests'][i]:
-            del testInfoJson['tests'][i]['tokens']
-         if 'hash' in testInfoJson['tests'][i]:
-            del testInfoJson['tests'][i]['hash']
-         if 'stage' in testInfoJson['tests'][i]:
-            del testInfoJson['tests'][i]['stage']
+      for test in testList:
+         test.tokens = None
+         test.hashVal = None
+         test.stage = None
 
-         #testInfoJson['tests'][i] = {
-         #   'name' : testInfoJson['tests'][i]['name'],
-         #   'finalStage' : testInfoJson['tests'][i].get('finalStage',DefaultStage().name)
-         #}
-
-      with open(jsonfilePath,"w") as file:
-         json.dump(testInfoJson,file,cls=MyJsonEncoder,indent=2)
-
-      sys.exit(0)
-
-   print("Gonna start running tests")
-
-   resultList = None
-   if(command == "run" or command == "run-only" or command == "disable-failed"):
-      resultList = RunTests(testInfoJson)
+   elif(command == "run" or command == "run-only" or command == "disable-failed"):
+      resultList = RunTests(testList,testInfo.defaultArgs)
 
       if(command == 'run'):
          for result in resultList:
-            if(result.didTokenize and not SIMULATE and result.lastStageReached.value >= Stage.PC_EMUL.value):
-               testInfoJson['tests'][result.index]['tokens'] = result.tokens
-               testInfoJson['tests'][result.index]['hash'] = result.hashVal
-               testInfoJson['tests'][result.index]['stage'] = result.lastStageReached.name
+            if(result.didTokenize and result.lastStageReached.value >= Stage.PC_EMUL.value):
+               result.test.tokens = result.tokens
+               result.test.hashVal = result.hashVal
+               result.test.stage = result.lastStageReached.name
 
-   if(command == "reenable"):
-      for index,test in enumerate(testInfoJson['tests']):
-         finalStage = test['finalStage']
-         splitted = finalStage.split(" ")
-         if(splitted[0] == "TEMP_DISABLED"):
-            trueStage = splitted[2].split(":")[1]
-            testInfoJson['tests'][index]['finalStage'] = trueStage
+      if(command == "disable-failed"):
+         for result in resultList:
+            if(IsError(result.error)):
+               TempDisableTest(result.test)
 
-   if(command == "disable-all"):
-      for index,test in enumerate(testInfoJson['tests']):
-         TempDisableTest(testInfoJson,index)
+   elif(command == "reenable-temp"):
+      for index,test in enumerate(testList):
+         if(test.finalStage == Stage.TEMP_DISABLED):
+            test.finalStage = test.tempDisabledStage
+            test.tempDisabledStage = None
 
-   if(command == "disable-failed"):
-      doUpdate = True
-      for result in resultList:
-         if(IsError(result.error)):
-            finalStage = GetTestFinalStage(result.test)
-            TempDisableTest(testInfoJson,result.index)
+   elif(command == "disable-temp"):
+      for index,test in enumerate(testList):
+         TempDisableTest(test)
 
-   # TODO: maybe delete everything if all tests passed from cache
-   #shutil.rmtree("./testCache",True)
 
-   if doUpdate:
-      with open(jsonfilePath,"w") as file:
-         json.dump(testInfoJson,file,cls=MyJsonEncoder,indent=2)
+   with open(jsonfilePath,"w") as file:
+      json.dump(testInfo,file,cls=MyJsonEncoder,indent=2)

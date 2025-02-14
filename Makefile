@@ -69,25 +69,6 @@ versat-only:
 	cd ./submodules/VERSAT ; $(MAKE) -j 8 versat
 	cd ./submodules/VERSAT ; $(VERSAT_CALL) $(VERSAT_ARGUMENTS)
 
-# Multi test rules
-test-disable-failed:
-	$(FAST_COMPILE_VERSAT) && python3 ./scripts/test.py disable-failed testInfo.json
-
-test-disable-all:
-	python3 ./scripts/test.py disable-all testInfo.json
-
-test-reenable:
-	$(FAST_COMPILE_VERSAT) && python3 ./scripts/test.py reenable testInfo.json
-
-test-update:
-	$(FAST_COMPILE_VERSAT) && python3 ./scripts/test.py run testInfo.json
-
-test-no-update:
-	$(FAST_COMPILE_VERSAT) && python3 ./scripts/test.py run-only testInfo.json
-
-test-reset:
-	python3 ./scripts/test.py reset testInfo.json
-
 test-clean:
 	rm -r ../$(CORE)_V0.70_*/
 
