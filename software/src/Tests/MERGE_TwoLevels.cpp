@@ -11,7 +11,7 @@ void SingleTest(Arena* arena){
 
    RunAccelerator(3);
 
-   Assert_Eq(15,accelState->TOP_output_0_currentValue);
+   Assert_Eq(accelState->TOP_output_0_currentValue,15);
 
    ActivateMergedAccelerator(MergeType_TestDoubleMerge0_TestDoubleMerge01);
 
@@ -23,7 +23,7 @@ void SingleTest(Arena* arena){
 
    RunAccelerator(3);
 
-   Assert_Eq(27,accelState->TOP_output_0_currentValue);
+   Assert_Eq(accelState->TOP_output_0_currentValue,27);
 
    ActivateMergedAccelerator(MergeType_TestDoubleMerge1_TestDoubleMerge10);
 
@@ -32,7 +32,7 @@ void SingleTest(Arena* arena){
 
    RunAccelerator(3);
 
-   Assert_Eq(-2,accelState->TOP_output_0_currentValue);
+   Assert_Eq(accelState->TOP_output_0_currentValue,-2);
 
    ActivateMergedAccelerator(MergeType_TestDoubleMerge1_TestDoubleMerge11);
    
@@ -41,5 +41,5 @@ void SingleTest(Arena* arena){
 
    RunAccelerator(3);
 
-   Assert_Eq(18,accelState->TOP_output_0_currentValue);
+   Assert_Eq(accelState->TOP_output_0_currentValue,18);
 }

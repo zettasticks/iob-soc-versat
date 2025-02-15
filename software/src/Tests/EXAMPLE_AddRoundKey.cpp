@@ -10,7 +10,7 @@ void SingleTest(Arena* arena){
 
    for(int i = 0; i < ARRAY_SIZE(expected); i++){
       printf("%d\n",i);
-      Assert_Eq(expected[i],SimpleOutputStart[i]);
+      Assert_Eq(SimpleOutputStart[i],expected[i]);
    }
 }
 

@@ -1263,7 +1263,6 @@ void SingleTest(Arena* arena){
 
    char buffer[2048];
    GetHexadecimal((char*) digest,buffer, HASH_SIZE);
-   //Assert_Eq("42e61e174fbb3897d6dd6cef3dd2802fe67b331953b06114a65c772859dfc1aa",buffer);
-   Assert_Eq("42e61e174fbb3897d6dd6cef3dd2802fe67b331953b06114a65c772859dfc1aa",buffer); 
+   Assert_Eq(buffer,"42e61e174fbb3897d6dd6cef3dd2802fe67b331953b06114a65c772859dfc1aa"); 
    }
 }

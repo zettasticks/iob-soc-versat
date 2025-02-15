@@ -16,15 +16,15 @@
     {
       "name": "EXAMPLE_AddRoundKey",
       "finalStage": "SIM_RUN",
-      "tokens": 41843,
-      "hashVal": 9473763225452443050,
+      "tokens": 41160,
+      "hashVal": 11012116201752785437,
       "stage": "SIM_RUN"
     },
     {
       "name": "EXAMPLE_Simple",
       "finalStage": "SIM_RUN",
-      "tokens": 8855,
-      "hashVal": 8341188680261553610,
+      "tokens": 8808,
+      "hashVal": 9376905707088674472,
       "stage": "SIM_RUN"
     },
     {
@@ -36,48 +36,72 @@
     {
       "name": "EXAMPLE_Variety1",
       "finalStage": "SIM_RUN",
-      "tokens": 37472,
-      "hashVal": 12509396785074497375,
+      "tokens": 36712,
+      "hashVal": 12162561408796273760,
       "stage": "SIM_RUN"
     },
     {
       "name": "MEM_SimpleTransfer",
       "finalStage": "SIM_RUN",
-      "tokens": 32588,
-      "hashVal": 11659598299103037691,
+      "tokens": 31921,
+      "hashVal": 11862290324239985577,
       "stage": "SIM_RUN"
     },
     {
       "name": "DATABUS_SimpleTransfer",
       "finalStage": "SIM_RUN",
-      "tokens": 27783,
-      "hashVal": 8447745705117985312,
+      "tokens": 27254,
+      "hashVal": 919505090394068203,
       "stage": "SIM_RUN"
     },
     {
       "name": "DATABUS_MultipleTransfers",
       "finalStage": "SIM_RUN",
-      "tokens": 31288,
-      "hashVal": 8249853067143146662,
+      "tokens": 30645,
+      "hashVal": 2270518139556005160,
       "stage": "SIM_RUN"
     },
     {
       "name": "CONFIG_SimpleShare",
-      "finalStage": "TEMP_DISABLED",
-      "stage": "NOT_WORKING",
-      "tempDisabledStage": "SIM_RUN"
+      "finalStage": "SIM_RUN",
+      "tokens": 12378,
+      "hashVal": 11559217083612269135,
+      "stage": "SIM_RUN"
     },
     {
       "name": "CONFIG_PartialShare",
-      "finalStage": "TEMP_DISABLED",
-      "stage": "NOT_WORKING",
-      "tempDisabledStage": "PC_EMUL"
+      "finalStage": "SIM_RUN",
+      "tokens": 11742,
+      "hashVal": 7254384844439993060,
+      "stage": "SIM_RUN"
+    },
+    {
+      "name": "CONFIG_PartialShare3Units",
+      "finalStage": "SIM_RUN",
+      "tokens": 13840,
+      "hashVal": 5359237402840716735,
+      "stage": "SIM_RUN"
+    },
+    {
+      "name": "CONFIG_PartialShareContained",
+      "finalStage": "SIM_RUN",
+      "tokens": 17654,
+      "hashVal": 15109223350569701354,
+      "stage": "SIM_RUN"
+    },
+    {
+      "name": "CONFIG_SharePartialContained",
+      "finalStage": "SIM_RUN",
+      "tokens": 14888,
+      "hashVal": 8298298749723983106,
+      "stage": "SIM_RUN"
     },
     {
       "name": "CONFIG_SimpleStatic",
-      "finalStage": "TEMP_DISABLED",
-      "stage": "NOT_WORKING",
-      "tempDisabledStage": "SIM_RUN"
+      "finalStage": "SIM_RUN",
+      "tokens": 12233,
+      "hashVal": 2880194381079938311,
+      "stage": "SIM_RUN"
     },
     {
       "name": "CONFIG_ShareStatic",
@@ -86,38 +110,44 @@
       "tempDisabledStage": "SIM_RUN"
     },
     {
+      "name": "CONFIG_SharePartialAndStaticSameModule",
+      "finalStage": "SIM_RUN",
+      "stage": "NOT_WORKING"
+    },
+    {
       "name": "DELAYS_AddedDelays",
       "finalStage": "SIM_RUN",
-      "tokens": 8759,
-      "hashVal": 16257074154208201111,
+      "tokens": 8724,
+      "hashVal": 11830816089299638313,
       "stage": "SIM_RUN"
     },
     {
       "name": "DELAYS_Variable",
       "finalStage": "SIM_RUN",
-      "tokens": 8741,
-      "hashVal": 15375856682605693006,
+      "tokens": 8694,
+      "hashVal": 14218850554853516364,
       "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_Simple",
       "finalStage": "SIM_RUN",
-      "tokens": 11066,
-      "hashVal": 1325789956754150648,
+      "tokens": 10995,
+      "hashVal": 15660369438964407262,
       "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_Inputs",
       "finalStage": "SIM_RUN",
-      "tokens": 10892,
-      "hashVal": 1122849672286115141,
+      "tokens": 10819,
+      "hashVal": 11588066740209821430,
       "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_SameTypeChildren",
-      "finalStage": "TEMP_DISABLED",
-      "stage": "NOT_WORKING",
-      "tempDisabledStage": "SIM_RUN"
+      "finalStage": "SIM_RUN",
+      "tokens": 90956,
+      "hashVal": 1067677509185373388,
+      "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_ModuleWithMultipleMerged",
@@ -132,50 +162,50 @@
     {
       "name": "UNIT_LookupTable",
       "finalStage": "SIM_RUN",
-      "tokens": 13272,
-      "hashVal": 12491532075146229970,
+      "tokens": 13205,
+      "hashVal": 7605691328423595971,
       "stage": "SIM_RUN"
     },
     {
       "name": "ADDRESS_GEN_Simple",
       "finalStage": "SIM_RUN",
-      "tokens": 25501,
-      "hashVal": 18068971329772840471,
+      "tokens": 24994,
+      "hashVal": 14790764292551660588,
       "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_TwoLevels",
       "finalStage": "SIM_RUN",
-      "tokens": 56320,
-      "hashVal": 11368366320157311657,
+      "tokens": 55283,
+      "hashVal": 8072774714301891961,
       "stage": "SIM_RUN"
     },
     {
       "name": "UNIT_Generator",
       "finalStage": "SIM_RUN",
-      "tokens": 25470,
-      "hashVal": 8869583341596290044,
+      "tokens": 24963,
+      "hashVal": 15048933264458284247,
       "stage": "SIM_RUN"
     },
     {
       "name": "MERGE_Delays",
       "finalStage": "SIM_RUN",
-      "tokens": 25635,
-      "hashVal": 11014859952348278237,
+      "tokens": 25210,
+      "hashVal": 2855494778988627642,
       "stage": "SIM_RUN"
     },
     {
       "name": "EXAMPLE_Variety2",
       "finalStage": "SIM_RUN",
-      "tokens": 48668,
-      "hashVal": 5186251456697328651,
+      "tokens": 47639,
+      "hashVal": 11060816467641840503,
       "stage": "SIM_RUN"
     },
     {
       "name": "GRAPH_SimpleLoop",
       "finalStage": "SIM_RUN",
-      "tokens": 10101,
-      "hashVal": 17357221771541787520,
+      "tokens": 10048,
+      "hashVal": 17793747429064343692,
       "stage": "SIM_RUN"
     },
     {

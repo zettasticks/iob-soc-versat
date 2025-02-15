@@ -24,6 +24,6 @@ void SingleTest(Arena* arena){
   RunAccelerator(3);
 
   for(int i = 0; i < 22; i++){
-    Assert_Eq(expectedOutput[i],outputBuffer[i]);
+    Assert_Eq(outputBuffer[i],expectedOutput[i]);
   }
 }

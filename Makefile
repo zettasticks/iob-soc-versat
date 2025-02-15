@@ -64,6 +64,9 @@ fpga-run-only:
 	cp ./software/src/Tests/unitConfiguration.hpp ../$(CORE)_V0.70_$(TEST)/software/src/
 	+nix-shell --run "make -C ../$(CORE)_V0.70_$(TEST)/ fpga-fw-build fpga-run BOARD=$(BOARD)"
 
+fast-compile-versat:
+	cd ./submodules/VERSAT ; $(MAKE) -j 8 versat
+
 versat-only:
 	mkdir -p ../$(CORE)_V0.70_$(TEST)
 	cd ./submodules/VERSAT ; $(MAKE) -j 8 versat
@@ -71,10 +74,6 @@ versat-only:
 
 test-clean:
 	rm -r ../$(CORE)_V0.70_*/
-
-# This is a debug rule for the test script itself. Mostly unneded unless working on the test.py script.
-test-simulate:
-	$(FAST_COMPILE_VERSAT) && python3 ./scripts/test.py simulate testInfo.json
 
 .PHONY: setup test-setup
 

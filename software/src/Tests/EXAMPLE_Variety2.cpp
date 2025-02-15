@@ -19,5 +19,5 @@ void SingleTest(Arena* arena){
 
    RunAccelerator(3);
 
-   Assert_Eq(15,*output);
+   Assert_Eq(*output,15);
 }

@@ -21,14 +21,14 @@ void SingleTest(Arena* arena){
 
    RunAccelerator(3);
      
-   Assert_Eq((unsigned int) 0x568f3f84,(unsigned int) accelState->TOP_output_0_currentValue);
-   Assert_Eq((unsigned int) 0x6a09e667,(unsigned int) accelState->TOP_output_1_currentValue);
-   Assert_Eq((unsigned int) 0xbb67ae85,(unsigned int) accelState->TOP_output_2_currentValue);
-   Assert_Eq((unsigned int) 0x3c6ef372,(unsigned int) accelState->TOP_output_3_currentValue);
-   Assert_Eq((unsigned int) 0xf34e99d9,(unsigned int) accelState->TOP_output_4_currentValue);
-   Assert_Eq((unsigned int) 0x510e527f,(unsigned int) accelState->TOP_output_5_currentValue);
-   Assert_Eq((unsigned int) 0x9b05688c,(unsigned int) accelState->TOP_output_6_currentValue);
-   Assert_Eq((unsigned int) 0x1f83d9ab,(unsigned int) accelState->TOP_output_7_currentValue);
+   Assert_Eq((unsigned int) accelState->TOP_output_0_currentValue,(unsigned int) 0x568f3f84);
+   Assert_Eq((unsigned int) accelState->TOP_output_1_currentValue,(unsigned int) 0x6a09e667);
+   Assert_Eq((unsigned int) accelState->TOP_output_2_currentValue,(unsigned int) 0xbb67ae85);
+   Assert_Eq((unsigned int) accelState->TOP_output_3_currentValue,(unsigned int) 0x3c6ef372);
+   Assert_Eq((unsigned int) accelState->TOP_output_4_currentValue,(unsigned int) 0xf34e99d9);
+   Assert_Eq((unsigned int) accelState->TOP_output_5_currentValue,(unsigned int) 0x510e527f);
+   Assert_Eq((unsigned int) accelState->TOP_output_6_currentValue,(unsigned int) 0x9b05688c);
+   Assert_Eq((unsigned int) accelState->TOP_output_7_currentValue,(unsigned int) 0x1f83d9ab);
 }
 
 

@@ -402,24 +402,24 @@ TestValue* PushTestValue(Arena* arena,const char* val,const char* marker){
   return s;
 }
 
-static void Assert_Eq(int val1,int val2,const char* marker = ""){
-  PushTestValue(&expectedArena,val1,marker);
-  PushTestValue(&gotArena     ,val2,marker);
+static void Assert_Eq(int got,int expected,const char* marker = ""){
+  PushTestValue(&expectedArena,expected,marker);
+  PushTestValue(&gotArena     ,got,marker);
 }
 
-static void Assert_Eq(unsigned int val1,unsigned int val2,const char* marker = ""){
-  PushTestValue(&expectedArena,val1,marker);
-  PushTestValue(&gotArena     ,val2,marker);
+static void Assert_Eq(unsigned int got,unsigned int expected,const char* marker = ""){
+  PushTestValue(&expectedArena,expected,marker);
+  PushTestValue(&gotArena     ,got,marker);
 }
 
-static void Assert_Eq(float val1,float val2,const char* marker = ""){
-  PushTestValue(&expectedArena,val1,marker);
-  PushTestValue(&gotArena     ,val2,marker);
+static void Assert_Eq(float got,float expected,const char* marker = ""){
+  PushTestValue(&expectedArena,expected,marker);
+  PushTestValue(&gotArena     ,got,marker);
 }
 
-static void Assert_Eq(const char* str1,const char* str2,const char* marker = ""){
-  PushTestValue(&expectedArena,str1,marker);
-  PushTestValue(&gotArena     ,str2,marker);
+static void Assert_Eq(const char* got,const char* expected,const char* marker = ""){
+  PushTestValue(&expectedArena,expected,marker);
+  PushTestValue(&gotArena     ,got,marker);
 }
 
 // ClearCache is very important otherwise sim-run might read past values

@@ -69,6 +69,52 @@ module CONFIG_PartialShare(){
    units[1]:0..1 -> outputs[2..3];
 }
 
+module CONFIG_PartialShare3Units(){
+   share config Const2(constant){
+      units[3];
+   }
+   Reg outputs[6];
+#
+   units[0]:0..1 -> outputs[0..1];
+   units[1]:0..1 -> outputs[2..3];
+   units[2]:0..1 -> outputs[4..5];
+}
+
+module CONFIG_PartialShareContained(){
+   CONFIG_PartialShare shares[2];
+#
+}
+
+module CONFIG_SharePartialContained(){
+   share config CONFIG_PartialShare{
+      shares[2];
+   }
+#
+}
+
+module CONFIG_SharePartialAndStaticSameModule(){
+   share config Const2{
+      consts[2];
+   }
+   static Const2 consts2;
+   share config Const2(constant){
+      consts3[2];
+   }
+   static Const2 consts4;
+
+   Reg outputs[12];
+#
+   consts[0]:0..1 -> outputs[0..1];
+   consts[1]:0..1 -> outputs[2..3];
+
+   consts2:0..1 -> outputs[4..5];
+
+   consts3[0]:0..1 -> outputs[6..7];
+   consts3[1]:0..1 -> outputs[8..9];
+
+   consts4:0..1 -> outputs[10..11];
+}
+
 module TestShareStaticChild() -> 2{
    static TestShareChild shareChild;
 #

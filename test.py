@@ -13,25 +13,17 @@
 #   here is some mixup somewhere
 
 # TODO:
-# Add a update-if-better mode, where we only update values if the test gave the same or better result.
-# The code is a bit complex for no good reason. Maybe simplify a bit if have time. Seems to work fine though
-# Refactor commands if adding more commands. Maybe add argparse and work from there.
-# Save the text/output of the tests that fail. The stdout from running the tests and stuff
-# Add some commands to the tool that allow us to force stuff, like forcing the tokens/hash of a bad test case and stuff like that.
-# Maybe useful to group tests that are similar into groups and take groups into account when outputting stuff.
-#  Only consider this if we start having a huge amount of tests.
+# Add a command that reenables tests, runs them, and disables them if they fail. (Instead of doing a enable + disabled-failed)
 # Can easily add per test information. Something like custom timeouts for commands and stuff like that.
 # Can also start saving some info regarding the tests itself, like the average amount of time spend per versat and stuff like that.
 #
 # For things like architecture change at the hardware level, it should be something that is done for all the tests at the same time.
 #   Our maybe it is better if we do it by group. Things like AXI DATA_W changing does not affect config share and stuff like that, so no point in running those tests for those cases. We want to run the VRead/VWrite tests and stuff like that
 #
-# Need to catch the exceptions by timeout and report to the user that a timeout occured (and at what stage).
-#
 # Check if we can run sim-run without doing a clean first
 #
 # The tests right now run from make which causes nix-shell to get called all the time.
-#    It's better to just have the one time nix-shell call when starting the test.py 
+#    It's better to just have the one time nix-shell call when starting the test.py, if possible
 
 import subprocess as sp
 import threading
@@ -92,6 +84,9 @@ class ErrorSource(Enum):
 class Error():
    error: ErrorType = ErrorType.NONE
    source: ErrorSource = ErrorSource.NO_SOURCE
+
+   def __repr__(self):
+      return "Error[" + self.error.name + ":" + self.source.name + "]"
 
 def IsError(errorType):
    if(type(errorType) == Error):
@@ -195,7 +190,11 @@ def JoinOutputAndErrorOutput(subprocessResult):
    output = "" if subprocessResult.stdout == None else decoder(subprocessResult.stdout)[0]
    errorOutput = "" if subprocessResult.stderr == None else decoder(subprocessResult.stderr)[0]
 
-   return output + errorOutput
+   header = "\n============\n"
+
+   res = header + "   stdout" + header + "\n" + output + header + "   stderr" + header + "\n" + errorOutput
+
+   return res
 
 def RunVersat(testName,testFolder,versatExtra):
    args = ["./submodules/VERSAT/versat"]
@@ -395,8 +394,9 @@ def PrintResult(result,firstColumnSize):
    else:
       print(f"Stage not handled: {stage},{finalStage}")
 
-   firstPad = GeneratePad(testName,firstColumnSize)
-   secondPad = GeneratePad(condition,1)
+   firstPad = ' ' + GeneratePad(testName,firstColumnSize - 1)
+   #secondPad = GeneratePad(condition,1)
+   secondPad = ' '
    print(f"{testName}{firstPad}{secondPad}{color}{condition}{COLOR_BASE}{partialVal}{cached}{comments}")
 
 def CppLocation(test):
@@ -550,9 +550,21 @@ if __name__ == "__main__":
    testInfoJson = None
    jsonfilePath = "testInfo.json"
 
+   try:
+      args = ["make fast-compile-versat"]
+      result = sp.run(args,capture_output=False,shell=True,timeout=10)
+      print("\n\n\n")
+   except sp.TimeoutExpired as t:
+      print("Timeout on versat compilation")
+      sys.exit(0)
+   except Exception as e:
+      print("Error on versat compilation")
+      print(e)
+      sys.exit(0)
+
    parser = argparse.ArgumentParser(prog="Tester",description="Test Versat, using cache to prevent rerunning unnecessary tests")
 
-   allCommands = ["run","run-only","reset","reenable-temp","disable-failed","disable-temp"]
+   allCommands = ["run","run-only","reset","enable","disable-failed","disable-temp"]
 
    parser.add_argument("command",choices=allCommands)
    parser.add_argument("testFilter",nargs='*')
@@ -560,7 +572,11 @@ if __name__ == "__main__":
    args = parser.parse_args()
 
    command = args.command
-   testFilter = args.testFilter[0] if len(args.testFilter) > 0 else ""
+   testFilter = args.testFilter if args.testFilter else [""]
+
+   if(len(testFilter) == 0):
+      print("No tests passed the filter")
+      sys.exit(0)
 
    with open(jsonfilePath,"r") as file:
       try:
@@ -571,7 +587,14 @@ if __name__ == "__main__":
          sys.exit(0)
 
    testInfo = ParseJson(testInfoJson)
-   testList = [test for test in testInfo.tests if testFilter in test.name]
+
+   def Filter(name,filters):
+      for fil in filters:
+         if(fil in name):
+            return True
+      return False
+
+   testList = [test for test in testInfo.tests if Filter(test.name,testFilter)]
 
    allTestNames = [x.name for x in testList]
 
@@ -609,16 +632,19 @@ if __name__ == "__main__":
             if(IsError(result.error)):
                TempDisableTest(result.test)
 
-   elif(command == "reenable-temp"):
+   elif(command == "enable"):
       for index,test in enumerate(testList):
          if(test.finalStage == Stage.TEMP_DISABLED):
             test.finalStage = test.tempDisabledStage
             test.tempDisabledStage = None
+         elif(test.finalStage == Stage.DISABLED):
+            print(f"Test {test.name} was not temp disabled, so cannot enable again")
 
    elif(command == "disable-temp"):
       for index,test in enumerate(testList):
          TempDisableTest(test)
 
+   print("\n\n\n") # A few new lines to make easier to see results
 
    with open(jsonfilePath,"w") as file:
       json.dump(testInfo,file,cls=MyJsonEncoder,indent=2)
