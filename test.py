@@ -148,6 +148,14 @@ def ParseJson(jsonContent):
 
    testList = []
    for test in jsonContent['tests']:
+
+      # Check if all the contents inside a test are valid
+      for member in test:
+         if not member in ["name","finalStage","comment","tokens","hashVal","stage","tempDisabledStage"]:
+            print(f"Member '{member}' was not found in the test:")
+            print(test)
+            sys.exit(0)
+
       name = test['name']
       finalStage = Stage[test['finalStage']]
       comment = test['comment'] if 'comment' in test else None
@@ -230,6 +238,14 @@ def TempDir(testName):
    path = f"./testCache/{testName}"
    os.makedirs(path,exist_ok=True)
    return path
+
+def LastGoodTempDir(testName):
+   path = f"./testCacheGood/{testName}"
+   os.makedirs(path,exist_ok=True)
+   return path
+
+def LastGoodDir():
+   return "./testCacheGood/"
 
 def ComputeFilesTokenSizeAndHash(files):
    args = ["./submodules/VERSAT/build/calculateHash"] + files
@@ -553,7 +569,6 @@ if __name__ == "__main__":
    try:
       args = ["make fast-compile-versat"]
       result = sp.run(args,capture_output=False,shell=True,timeout=10)
-      print("\n\n\n")
    except sp.TimeoutExpired as t:
       print("Timeout on versat compilation")
       sys.exit(0)
@@ -596,6 +611,10 @@ if __name__ == "__main__":
 
    testList = [test for test in testInfo.tests if Filter(test.name,testFilter)]
 
+   print(f"\n\nFound and processing {len(testList)} test(s)\n")
+
+   print("\n\n")
+
    allTestNames = [x.name for x in testList]
 
    nameCount = {}
@@ -610,6 +629,15 @@ if __name__ == "__main__":
 
    # Put any check to the data above this line. 
    # From this point assume data is correct
+
+   def SaveResultAsLastGood(result):
+      name = result.test.name
+      lastGoodLoc = LastGoodTempDir(name)
+      lastGoodPath = LastGoodDir()
+      pathLoc = TempDir(name)
+
+      shutil.rmtree(lastGoodLoc,ignore_errors=True)
+      shutil.copytree(pathLoc,lastGoodLoc,dirs_exist_ok=True)
 
    if(command == "reset"):
       for test in testList:
@@ -626,6 +654,8 @@ if __name__ == "__main__":
                result.test.tokens = result.tokens
                result.test.hashVal = result.hashVal
                result.test.stage = result.lastStageReached.name
+               if(not result.cached):
+                  SaveResultAsLastGood(result)
 
       if(command == "disable-failed"):
          for result in resultList:

@@ -33,6 +33,13 @@ module CONFIG_SimpleStatic(){
    a -> output:0;
 }
 
+module CONFIG_OnlyStatic(){
+   static Const unit;
+   static Reg output;
+#
+   unit -> output;
+}
+
 module TestShareChild() -> 2{
    share config Const {
       x[2]; // x[0] and x[1] are equal
@@ -115,6 +122,16 @@ module CONFIG_SharePartialAndStaticSameModule(){
    consts4:0..1 -> outputs[10..11];
 }
 
+module CONFIG_SharePartialAndStaticSameModuleContained(){
+   CONFIG_SharePartialAndStaticSameModule container;
+#   
+}
+
+module CONFIG_StaticContainsPartialShare(){
+   static CONFIG_PartialShare unit;
+#
+}
+
 module TestShareStaticChild() -> 2{
    static TestShareChild shareChild;
 #
@@ -186,6 +203,18 @@ module TestMergeInputs2(a,b){
 }
 
 merge MERGE_Inputs = TestMergeInputs1 | TestMergeInputs2;
+
+module TestMergeNames1(){
+   Const unit[2];
+#
+}
+
+module TestMergeNames2(){
+   Const unit;
+#
+}
+
+merge MERGE_Names = TestMergeNames1 | TestMergeNames2;
 
 module MERGE_SameTypeChildren(){
    MERGE_TwoLevels m[2];

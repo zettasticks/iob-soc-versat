@@ -11,6 +11,7 @@ TAGS
 compile_commands.json
 debug/
 testCache
+testCacheGood
 
 #software/pc-emul/*
 #!software/pc-emul/Makefile
