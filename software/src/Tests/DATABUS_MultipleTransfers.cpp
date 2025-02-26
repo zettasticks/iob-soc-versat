@@ -1,8 +1,3 @@
-#define ADDRESS_GEN_VReadMultipleLoad
-#define ADDRESS_GEN_VReadMultipleOutput
-#define ADDRESS_GEN_VWriteMultipleStore
-#define ADDRESS_GEN_VWriteMultipleInput
-
 #include "testbench.hpp"
 
 void SingleTest(Arena* arena){
@@ -13,12 +8,12 @@ void SingleTest(Arena* arena){
   // Input reads 4 in 4 with a stride of 4;
   // Output writes 4 in 4 with a stride of 2;
 
-  Configure_VReadMultipleLoad(&accelConfig->read,(iptr) input,4,4,8);
-  Configure_VReadMultipleOutput(&accelConfig->read,4,4);
+  Configure_VReadMultipleLoad_VReadMultiple(&accelConfig->read,(iptr) input,4,4,8);
+  Configure_VReadMultipleOutput_VReadMultiple(&accelConfig->read,4,4);
   accelConfig->read.read_enabled = 1;
 
-  Configure_VWriteMultipleStore(&accelConfig->write,(iptr) outputBuffer,4,4,6);
-  Configure_VWriteMultipleInput(&accelConfig->write,4,4);
+  Configure_VWriteMultipleStore_VWriteMultiple(&accelConfig->write,(iptr) outputBuffer,4,4,6);
+  Configure_VWriteMultipleInput_VWriteMultiple(&accelConfig->write,4,4);
   accelConfig->write.write_enabled = 1;
 
   RunAccelerator(3);

@@ -8,17 +8,20 @@
 
 # BUGS:
 # Some tests randomly fail, even though they work when testing individually.
-#   Probably some problem with the iob-soc setup not being properly setup to handle 
-#   multiple make setups at the same time or we are not deleting old files and 
-#   here is some mixup somewhere
+#   Probably some problem with the iob-soc setup containing non parallelizable code  
+#     (Adding a time.sleep(1) before sim-run appears to have fixed this)
 
 # TODO:
 # Add a command that reenables tests, runs them, and disables them if they fail. (Instead of doing a enable + disabled-failed)
 # Can easily add per test information. Something like custom timeouts for commands and stuff like that.
 # Can also start saving some info regarding the tests itself, like the average amount of time spend per versat and stuff like that.
+#    Would really like to start saving the size of things controlable by Versat (amount of buffers added, muxes added, graph weights [when we get to it], etc...)
+# 
+# If the test passes sucessfully, I think we could just call make clean and delete the folder.
+#    Have not found a situation where I would like to see the result of a good run, unless maybe if I want the tests to generate VCDs.
 #
 # For things like architecture change at the hardware level, it should be something that is done for all the tests at the same time.
-#   Our maybe it is better if we do it by group. Things like AXI DATA_W changing does not affect config share and stuff like that, so no point in running those tests for those cases. We want to run the VRead/VWrite tests and stuff like that
+#   Our maybe it is better if we do it by group. Things like AXI_DATA_W changing does not affect config share and stuff like that, so no point in running those tests for those cases. We want to run the VRead/VWrite tests and stuff like that
 #
 # Check if we can run sim-run without doing a clean first
 #

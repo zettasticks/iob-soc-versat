@@ -41,10 +41,10 @@ module CONFIG_OnlyStatic(){
 }
 
 module TestShareChild() -> 2{
-   share config Const {
+   share(config) Const {
       x[2]; // x[0] and x[1] are equal
    }
-   share config Const {
+   share(config) Const {
       y[2]; // y[0] and y[1] are equal
    }
 #
@@ -56,7 +56,7 @@ module TestShareChild() -> 2{
 }
 
 module CONFIG_SimpleShare(){
-   share config TestShareChild{
+   share(config) TestShareChild{
       childs[2];
    }
    Reg outputs[4];
@@ -67,7 +67,7 @@ module CONFIG_SimpleShare(){
 }
 
 module CONFIG_PartialShare(){
-   share config Const2(constant){
+   share(config) Const2(constant){
       units[2];
    }
    Reg outputs[4];
@@ -77,7 +77,7 @@ module CONFIG_PartialShare(){
 }
 
 module CONFIG_PartialShare3Units(){
-   share config Const2(constant){
+   share(config) Const2(constant){
       units[3];
    }
    Reg outputs[6];
@@ -93,18 +93,18 @@ module CONFIG_PartialShareContained(){
 }
 
 module CONFIG_SharePartialContained(){
-   share config CONFIG_PartialShare{
+   share(config) CONFIG_PartialShare{
       shares[2];
    }
 #
 }
 
 module CONFIG_SharePartialAndStaticSameModule(){
-   share config Const2{
+   share(config) Const2{
       consts[2];
    }
    static Const2 consts2;
-   share config Const2(constant){
+   share(config) Const2(constant){
       consts3[2];
    }
    static Const2 consts4;
@@ -139,7 +139,7 @@ module TestShareStaticChild() -> 2{
 }
 
 module CONFIG_ShareStatic(){
-   share config TestStaticChild1 {
+   share(config) TestStaticChild1 {
       testShare[2]; // Should only share the Const inside
    }
    TestShareStaticChild testStatic[2];
@@ -299,8 +299,8 @@ module DATABUS_SimpleTransfer(){
 }
 
 module DATABUS_MultipleTransfers(){
-   VReadMultiple #(.AXI_ADDR_W(AXI_ADDR_W),.ADDR_W(20)) read;
-   VWriteMultiple #(.AXI_ADDR_W(AXI_ADDR_W)) write;
+   using(VReadMultipleLoad,VReadMultipleOutput) VReadMultiple #(.AXI_ADDR_W(AXI_ADDR_W),.ADDR_W(20)) read;
+   using(VWriteMultipleStore,VWriteMultipleInput) VWriteMultiple #(.AXI_ADDR_W(AXI_ADDR_W)) write;
 #
    read -> write;
 }
@@ -2474,16 +2474,16 @@ module McEliece(){
 // We need to be able to map round.x0 to state:0, round.x1 to state:1 and so on.
 
 module FullAES(){
-   share config RegFile{
+   share(config) RegFile{
       key[16];
    }
-   share config Reg{
+   share(config) Reg{
       state[16];
    }
-   share config Reg{
+   share(config) Reg{
       lastResult[16];
    }
-   share config Reg{
+   share(config) Reg{
       lastValToAdd[16];
    }
 
@@ -2529,10 +2529,19 @@ AddressGen VReadLoad VReadMultipleLoad(ext,xWidth,yWidth,imageWidthSize)
    for x 0..xWidth
    mem[y * xWidth + x] = ext[y * imageWidthSize + x];
 
+AddressGen VReadOutput VReadLinear(xWidth)
+   for x 0..xWidth
+   addr = x;
+
 AddressGen VReadOutput VReadMultipleOutput(xWidth,yWidth)
    for y 0..yWidth
    for x 0..xWidth
    addr = y * xWidth + x;
+
+AddressGen VReadOutput VReadMultipleOutputPhased(xWidth,yWidth,imageWidthSize)
+   for y 0..yWidth
+   for x 0..xWidth
+   addr = y * imageWidthSize + x;
 
 AddressGen VWriteInput VWriteMultipleInput(xWidth,yWidth)
    for y 0..yWidth
@@ -2561,17 +2570,6 @@ AddressGen VReadOutput OutputWeights(id,trueX,sizeX,nMacs,inputChannels,outputCh
    for k 0..9
    addr = start + id * 9 * nMacs + outC * 9 * nMacs + k;
 
-module ADDRESS_GEN_Simple(){
-   Generator3 gen;
-   Mem output;
-#
-   gen -> output;
-}
-
-module Test(){
-#
-   }
-
 AddressGen Mem TestAddressGen(xMax,yMax,zMax,wMax,aMax)
    //for a 0..aMax
    for b 0..aMax
@@ -2581,25 +2579,42 @@ AddressGen Mem TestAddressGen(xMax,yMax,zMax,wMax,aMax)
    for x 0..xMax
    addr = y * yMax + x;
 
-/*
+module ADDRESS_GEN_Simple(){
+   using(TestAddressGen) Generator3 gen;
+   Mem output;
+#
+   gen -> output;
+}
 
-AddressGen VReadLoad LoadFeatures(ext,xMax,fmSize,yMax)
-   for y 0..yMax
+module ADDRESS_GEN_SimulateLoop(){
+   using(VReadLinear,
+         VReadMultipleLoad,
+         VReadMultipleOutput,
+         VReadMultipleOutputPhased) VReadMultiple read;
+#
+}
+
+AddressGen Mem TestAddressGen2(xMax)
    for x 0..xMax
-   addr = ext + y * fmSize + x;
-
-AddressGen VReadOutput OutputFeatures(a)
-   for x 0..a
    addr = x;
 
-AddressGen VWriteInput InputFeatures(a)
-   for x 0..a
+AddressGen Mem SimpleMem(length)
+   for x 0..length
    addr = x;
 
-AddressGen VWriteStore WriteFeatures(a)
-   for x 0..a
-   addr = x;
-*/
+module CONFIG_ADDRESS_GEN_PartialSharing(){
+   using(VReadLinear,VReadMultipleLoad) share(config) VReadMultiple(ext_addr){
+      read[2];
+   }
+   /* using(SimpleMem) */ Mem output;
+#
+   read[0] -> output:0;
+   read[1] -> output:1;
+}
+
+merge MERGE_CONFIG_ADDRESS_GEN_MaxComplexity = CONFIG_ADDRESS_GEN_PartialSharing | ADDRESS_GEN_Simple;
+
+/*
 
 //merge GoodCryptoAlgos = SHA | McEliece | FullAES;
 
