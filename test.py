@@ -12,7 +12,11 @@
 #     (Adding a time.sleep(1) before sim-run appears to have fixed this)
 
 # TODO:
+# JSON parsing/encoding/decoding needs to be automatic otherwise becomes clubersome to extend.
+#    At the same time, I want proper error reporting if a member is misspelled or something like that, so a little bit rigit is fine if proper error reporting/handling 
+#      Code defines what members the json is supposed to have and the encoding/decoding/parsing is done automatic from that
 # Add a command that reenables tests, runs them, and disables them if they fail. (Instead of doing a enable + disabled-failed)
+# When any test has a change in the accel data, it should report it. If the amount of configs/states bits decreases or increases I should know about it.
 # Can easily add per test information. Something like custom timeouts for commands and stuff like that.
 # Can also start saving some info regarding the tests itself, like the average amount of time spend per versat and stuff like that.
 #    Would really like to start saving the size of things controlable by Versat (amount of buffers added, muxes added, graph weights [when we get to it], etc...)
@@ -105,6 +109,22 @@ class WorkState(Enum):
    FINISH = auto()
 
 @dataclass
+class VersatAcceleratorData:
+   configBits: str = None
+   stateBits: str = None
+   memUsed: str = None
+   unitsUsed: str = None
+
+def ParseAccelData(jsonContent):
+   # TODO: Find a way of automatizing this if we end up storing more data
+   configBits = jsonContent['configBits'] if 'configBits' in jsonContent else None
+   stateBits = jsonContent['stateBits'] if 'stateBits' in jsonContent else None
+   memUsed = jsonContent['memUsed'] if 'memUsed' in jsonContent else None
+   unitsUsed = jsonContent['unitsUsed'] if 'unitsUsed' in jsonContent else None
+
+   return VersatAcceleratorData(configBits,stateBits,memUsed,unitsUsed)
+
+@dataclass
 class TestInfo:
    name: str
    finalStage: Stage
@@ -113,6 +133,7 @@ class TestInfo:
    hashVal: int
    stage: Stage
    tempDisabledStage: Stage
+   accelData: VersatAcceleratorData
 
 @dataclass
 class TestData:
@@ -127,6 +148,7 @@ class ThreadWork:
    cached: bool = False
    didTokenize: bool = False
    error: Error = Error()
+   accelData: VersatAcceleratorData = None
    tokens: int = 0
    hashVal: int = 0
    workStage: WorkState = WorkState.INITIAL
@@ -135,7 +157,7 @@ class ThreadWork:
 
 class MyJsonEncoder(json.JSONEncoder):
    def default(self,o):
-      if(type(o) == TestData):
+      if(type(o) == TestData or type(o) == VersatAcceleratorData):
          return vars(o)   
       elif(type(o) == TestInfo):
          asDict = vars(o)
@@ -154,7 +176,7 @@ def ParseJson(jsonContent):
 
       # Check if all the contents inside a test are valid
       for member in test:
-         if not member in ["name","finalStage","comment","tokens","hashVal","stage","tempDisabledStage"]:
+         if not member in ["name","finalStage","comment","tokens","hashVal","stage","tempDisabledStage","accelData"]:
             print(f"Member '{member}' was not found in the test:")
             print(test)
             sys.exit(0)
@@ -167,13 +189,26 @@ def ParseJson(jsonContent):
       stage = Stage[test['stage']] if 'stage' in test else Stage.NOT_WORKING
       tempDisabledStage = Stage[test['tempDisabledStage']] if 'tempDisabledStage' in test else None
 
+      accelData = ParseAccelData(test['accelData']) if 'accelData' in test else None
+
       if(finalStage != Stage.TEMP_DISABLED):
          tempDisabledStage = None
 
-      info = TestInfo(name,finalStage,comment,tokens,hashVal,stage,tempDisabledStage)
+      info = TestInfo(name,finalStage,comment,tokens,hashVal,stage,tempDisabledStage,accelData)
       testList.append(info)
 
    return TestData(defaultArgs,testList)
+
+# Used to find values in the form "NAME:VAL"
+# TODO: Simple and slow but should be fine
+def FindAndParseValue(content,valueToFind):
+   for line in content.split("\n"):
+      tokens = line.split(":")
+
+      if(tokens[0] == valueToFind):
+         return tokens[1].strip()
+
+   return None
 
 def FindAndParseFilepathList(content):
    # Probably bottleneck
@@ -220,10 +255,10 @@ def RunVersat(testName,testFolder,versatExtra):
    try:
       result = sp.run(args,capture_output=True,timeout=10) # Maybe a bit low for merge based tests, eventually add timeout 'option' to the test itself
    except sp.TimeoutExpired as t:
-      return Error(ErrorType.TIMEOUT,ErrorSource.VERSAT),[],JoinOutputAndErrorOutput(t)
+      return Error(ErrorType.TIMEOUT,ErrorSource.VERSAT),[],None,JoinOutputAndErrorOutput(t)
    except Exception as e:
       print(f"Except on calling Versat:{e}") # This should not happen
-      return Error(ErrorType.EXCEPT,ErrorSource.VERSAT),[],""
+      return Error(ErrorType.EXCEPT,ErrorSource.VERSAT),[],None,""
 
    returnCode = result.returncode
 
@@ -232,10 +267,17 @@ def RunVersat(testName,testFolder,versatExtra):
 
    decoder = codecs.getdecoder("utf-8")
    output = decoder(result.stdout)[0]
+
    filePathList = FindAndParseFilepathList(output)
 
+   data = VersatAcceleratorData()   
+   data.configBits = FindAndParseValue(output,"CONFIG_BITS")
+   data.stateBits = FindAndParseValue(output,"STATE_BITS")
+   data.memUsed = FindAndParseValue(output,"MEM_USED")
+   data.unitsUsed = FindAndParseValue(output,"UNITS")
+
    # Parse result.
-   return Error(),filePathList,JoinOutputAndErrorOutput(result)
+   return Error(),filePathList,data,JoinOutputAndErrorOutput(result)
 
 def TempDir(testName):
    path = f"./testCache/{testName}"
@@ -432,8 +474,10 @@ def ProcessWork(work):
 
       testTempDir = TempDir(name)
 
-      versatError,filepaths,output = RunVersat(name,testTempDir,work.args)
+      versatError,filepaths,versatData,output = RunVersat(name,testTempDir,work.args)
       SaveOutput(name,"versat",output)
+
+      work.accelData = versatData
 
       if(IsError(versatError)):
          work.error = versatError
@@ -593,10 +637,10 @@ def ReprintButOrganized(testResultList,maxNameLength):
       for group in groups:
          testGroups[group] = True
 
-   print("Reprint result by group\n")
+   print("\n\nReprinting results grouped:\n\n")
 
    for group in testGroups.keys():
-      print(f"\n{COLOR_CYAN}{group}{COLOR_BASE}:\n")
+      print(f"{COLOR_CYAN}{group}{COLOR_BASE}:")
       for result in testResultList:
          test = result.test
          name = test.name   
@@ -606,7 +650,7 @@ def ReprintButOrganized(testResultList,maxNameLength):
          if group in groups:
             PrintResult(result,maxNameLength)
 
-      print("\n")
+      print("")
 
 if __name__ == "__main__":
    testInfoJson = None
@@ -706,6 +750,8 @@ if __name__ == "__main__":
                result.test.tokens = result.tokens
                result.test.hashVal = result.hashVal
                result.test.stage = result.lastStageReached.name
+               result.test.accelData = result.accelData
+
                if(not result.cached):
                   SaveResultAsLastGood(result)
 
