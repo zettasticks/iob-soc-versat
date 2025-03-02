@@ -565,6 +565,49 @@ def TempDisableTest(test):
    test.tempDisabledStage = test.finalStage
    test.finalStage = Stage.TEMP_DISABLED
 
+def ReprintButOrganized(testResultList,maxNameLength):
+   def AllCaps(name):
+      for x in name:
+         if('A' <= x <= "Z"):
+            continue
+         return False
+      return True
+
+   def TestGroups(testName):
+      group = []
+      splitted = testName.split("_")
+
+      for split in splitted:
+         if(AllCaps(split) and len(split) > 3): # LEN > 3 is mainly because of SHA and F stage and the likes.
+            group.append(split)
+
+      return group
+
+   testGroups = {}
+   for result in testResultList:
+      test = result.test
+      name = test.name   
+
+      groups = TestGroups(name)
+
+      for group in groups:
+         testGroups[group] = True
+
+   print("Reprint result by group\n")
+
+   for group in testGroups.keys():
+      print(f"\n{COLOR_CYAN}{group}{COLOR_BASE}:\n")
+      for result in testResultList:
+         test = result.test
+         name = test.name   
+
+         groups = TestGroups(name)
+
+         if group in groups:
+            PrintResult(result,maxNameLength)
+
+      print("\n")
+
 if __name__ == "__main__":
    testInfoJson = None
    jsonfilePath = "testInfo.json"
@@ -618,6 +661,8 @@ if __name__ == "__main__":
       printf("No tests found")
       sys.exit(0)
 
+   maxNameLength = max([len(test.name) for test in testList]) + 1
+
    print(f"\n\nFound and processing {len(testList)} test(s)\n")
 
    print("\n\n")
@@ -668,6 +713,8 @@ if __name__ == "__main__":
          for result in resultList:
             if(IsError(result.error)):
                TempDisableTest(result.test)
+
+      ReprintButOrganized(resultList,maxNameLength)
 
    elif(command == "enable"):
       for index,test in enumerate(testList):

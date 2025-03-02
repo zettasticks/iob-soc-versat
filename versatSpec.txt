@@ -2579,14 +2579,14 @@ AddressGen Mem TestAddressGen(xMax,yMax,zMax,wMax,aMax)
    for x 0..xMax
    addr = y * yMax + x;
 
-module ADDRESS_GEN_Simple(){
+module ADDRESSGEN_Simple(){
    using(TestAddressGen) Generator3 gen;
    Mem output;
 #
    gen -> output;
 }
 
-module ADDRESS_GEN_SimulateLoop(){
+module ADDRESSGEN_SimulateLoop(){
    using(VReadLinear,
          VReadMultipleLoad,
          VReadMultipleOutput,
@@ -2631,7 +2631,7 @@ AddressGen Mem SimpleMem(length)
    for x 0..length
    addr = x;
 
-module CONFIG_ADDRESS_GEN_PartialSharing(){
+module CONFIG_ADDRESSGEN_PartialSharing(){
    using(VReadLinear,VReadMultipleLoad) share(config) VReadMultiple(ext_addr){
       read[2];
    }
@@ -2641,7 +2641,7 @@ module CONFIG_ADDRESS_GEN_PartialSharing(){
    read[1] -> output:1;
 }
 
-merge MERGE_CONFIG_ADDRESS_GEN_MaxComplexity = CONFIG_ADDRESS_GEN_PartialSharing | ADDRESS_GEN_Simple;
+merge MERGE_CONFIG_ADDRESSGEN_MaxComplexity = CONFIG_ADDRESSGEN_PartialSharing | ADDRESSGEN_Simple;
 
 /*
 

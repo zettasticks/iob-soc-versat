@@ -203,11 +203,11 @@
       "stage": "SIM_RUN"
     },
     {
-      "name": "MERGE_CONFIG_ADDRESS_GEN_MaxComplexity",
+      "name": "MERGE_CONFIG_ADDRESSGEN_MaxComplexity",
       "finalStage": "SIM_RUN",
       "comment": "[NO SOFT TEST] Test not finished. Need to put something here that exercises the merged accelerator",
-      "tokens": 51315,
-      "hashVal": 3550844219909900297,
+      "tokens": 51245,
+      "hashVal": 16945754077328903724,
       "stage": "SIM_RUN"
     },
     {
@@ -218,18 +218,18 @@
       "stage": "SIM_RUN"
     },
     {
-      "name": "ADDRESS_GEN_Simple",
+      "name": "ADDRESSGEN_Simple",
       "finalStage": "SIM_RUN",
-      "tokens": 24816,
-      "hashVal": 6036732781413472424,
+      "tokens": 24774,
+      "hashVal": 18233321300942162365,
       "stage": "SIM_RUN"
     },
     {
-      "name": "ADDRESS_GEN_SimulateLoop",
+      "name": "ADDRESSGEN_SimulateLoop",
       "finalStage": "PC_EMUL",
       "comment": "If adding more address gen types, add more to this test, do not make individual tests unless you have too",
-      "tokens": 20826,
-      "hashVal": 15992183053468999429,
+      "tokens": 20790,
+      "hashVal": 1766746795732474487,
       "stage": "PC_EMUL"
     },
     {
