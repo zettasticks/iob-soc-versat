@@ -8,11 +8,11 @@ void SingleTest(Arena* arena){
 
    RunAccelerator(3);
 
-   Assert_Eq(accelState->TOP_output_0_currentValue,15);
+   Assert_Eq(accelState->output_0.currentValue,15);
 
    ActivateMergedAccelerator(MergeType_TestMergeInputs2);
 
    RunAccelerator(3);
 
-   Assert_Eq(accelState->TOP_output_0_currentValue,5);
+   Assert_Eq(accelState->output_0.currentValue,5);
 }

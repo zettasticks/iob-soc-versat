@@ -9,9 +9,9 @@ void SingleTest(Arena* arena){
 
    RunAccelerator(3);
 
-   Assert_Eq(accelState->TOP_outputs_0_currentValue,5);
-   Assert_Eq(accelState->TOP_outputs_1_currentValue,20);
-   Assert_Eq(accelState->TOP_outputs_2_currentValue,15);
-   Assert_Eq(accelState->TOP_outputs_3_currentValue,20);
+   Assert_Eq(accelState->outputs_0.currentValue,5);
+   Assert_Eq(accelState->outputs_1.currentValue,20);
+   Assert_Eq(accelState->outputs_2.currentValue,15);
+   Assert_Eq(accelState->outputs_3.currentValue,20);
 #endif
 }

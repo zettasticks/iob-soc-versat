@@ -2594,6 +2594,35 @@ module ADDRESS_GEN_SimulateLoop(){
 #
 }
 
+module FullShare(){
+   share(config) Const{
+      unitsX[3];
+   }
+   Reg output[3]; 
+#
+   unitsX[0..2] -> output[0..2];
+}
+
+module SomeShare(){
+   share(config) Const{
+      unitsY[2];
+   }
+   Const nonShared;
+   Reg output[3]; 
+#
+   unitsY[0..1] -> output[0..1];
+   nonShared -> output[2];
+}
+
+module NoShare(){
+   Const unitsZ[3];
+   Reg output[3]; 
+#
+   unitsZ[0..2] -> output[0..2];
+}
+
+merge MERGE_CONFIG_Share = FullShare | SomeShare | NoShare;
+
 AddressGen Mem TestAddressGen2(xMax)
    for x 0..xMax
    addr = x;

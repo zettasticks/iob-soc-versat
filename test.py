@@ -614,6 +614,10 @@ if __name__ == "__main__":
 
    testList = [test for test in testInfo.tests if Filter(test.name,testFilter)]
 
+   if(len(testList) == 0):
+      printf("No tests found")
+      sys.exit(0)
+
    print(f"\n\nFound and processing {len(testList)} test(s)\n")
 
    print("\n\n")

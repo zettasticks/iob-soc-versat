@@ -12,15 +12,15 @@ void SingleTest(Arena* arena){
 
    RunAccelerator(3);
 
-   Assert_Eq(accelState->TOP_outputs_0_currentValue,3);
-   Assert_Eq(accelState->TOP_outputs_1_currentValue,4);
-   Assert_Eq(accelState->TOP_outputs_2_currentValue,2);
-   Assert_Eq(accelState->TOP_outputs_3_currentValue,3);
-   Assert_Eq(accelState->TOP_outputs_4_currentValue,4);
-   Assert_Eq(accelState->TOP_outputs_5_currentValue,2);
+   Assert_Eq(accelState->outputs_0.currentValue,3);
+   Assert_Eq(accelState->outputs_1.currentValue,4);
+   Assert_Eq(accelState->outputs_2.currentValue,2);
+   Assert_Eq(accelState->outputs_3.currentValue,3);
+   Assert_Eq(accelState->outputs_4.currentValue,4);
+   Assert_Eq(accelState->outputs_5.currentValue,2);
 
-   Assert_Eq(accelState->TOP_outputs_6_currentValue,11);
-   Assert_Eq(accelState->TOP_outputs_7_currentValue,11);
-   Assert_Eq(accelState->TOP_outputs_8_currentValue,11);
-   Assert_Eq(accelState->TOP_outputs_9_currentValue,11);
+   Assert_Eq(accelState->outputs_6.currentValue,11);
+   Assert_Eq(accelState->outputs_7.currentValue,11);
+   Assert_Eq(accelState->outputs_8.currentValue,11);
+   Assert_Eq(accelState->outputs_9.currentValue,11);
 }

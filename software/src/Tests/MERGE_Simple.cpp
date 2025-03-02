@@ -8,7 +8,7 @@ void SingleTest(Arena* arena){
 
    RunAccelerator(3);
 
-   Assert_Eq(accelState->TOP_output_output_currentValue,15);
+   Assert_Eq(accelState->TestMergeChild1.output.currentValue,15);
 
    ActivateMergedAccelerator(MergeType_TestMergeChild2);
 
@@ -17,5 +17,5 @@ void SingleTest(Arena* arena){
 
    RunAccelerator(3);
 
-   Assert_Eq(accelState->TOP_output_output_currentValue,20);
+   Assert_Eq(accelState->TestMergeChild2.output.currentValue,20);
 }

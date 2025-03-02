@@ -15,6 +15,6 @@ void SingleTest(Arena* arena){
    
    RunAccelerator(3);
   
-   Assert_Eq(accelState->TOP_output_0_currentValue,0xf0);
-   Assert_Eq(accelState->TOP_output_1_currentValue,0xf4);
+   Assert_Eq(accelState->output_0.currentValue,0xf0);
+   Assert_Eq(accelState->output_1.currentValue,0xf4);
 }
