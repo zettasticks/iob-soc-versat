@@ -218,8 +218,8 @@
     {
       "name": "CONFIG_SharePartialAndStaticSameModule",
       "finalStage": "SIM_RUN",
-      "tokens": 20782,
-      "hashVal": 1437973920372381322,
+      "tokens": 20757,
+      "hashVal": 13847146735954348217,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "384",
@@ -231,8 +231,8 @@
     {
       "name": "CONFIG_SharePartialAndStaticSameModuleContained",
       "finalStage": "SIM_RUN",
-      "tokens": 23066,
-      "hashVal": 354582560566546525,
+      "tokens": 23041,
+      "hashVal": 199941348580964428,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "384",

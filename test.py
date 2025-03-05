@@ -12,6 +12,10 @@
 #     (Adding a time.sleep(1) before sim-run appears to have fixed this)
 
 # TODO:
+# Sometimes I make a change and that causes some tests to run that I did not expect to.
+#   If they pass, they overwrite the testCacheGood and so I cannot see immediatly what changed. I could just revert the change and rerun the tests to see, but I kinda want another cache to save the trouble.
+#     Something like a testCacheGoodPrevious where we saved the previous testCacheGood if it existed. That way I can compare the new run with the old good and see if the change was intended or not.
+#
 # JSON parsing/encoding/decoding needs to be automatic otherwise becomes clubersome to extend.
 #    At the same time, I want proper error reporting if a member is misspelled or something like that, so a little bit rigit is fine if proper error reporting/handling 
 #      Code defines what members the json is supposed to have and the encoding/decoding/parsing is done automatic from that
@@ -263,7 +267,7 @@ def RunVersat(testName,testFolder,versatExtra):
    returnCode = result.returncode
 
    if(returnCode != 0):
-      return Error(ErrorType.PROGRAM_ERROR,ErrorSource.VERSAT),[],JoinOutputAndErrorOutput(result)
+      return Error(ErrorType.PROGRAM_ERROR,ErrorSource.VERSAT),[],None,JoinOutputAndErrorOutput(result)
 
    decoder = codecs.getdecoder("utf-8")
    output = decoder(result.stdout)[0]
