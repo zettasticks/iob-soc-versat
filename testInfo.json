@@ -95,8 +95,8 @@
     {
       "name": "DATABUS_SimpleTransfer",
       "finalStage": "SIM_RUN",
-      "tokens": 26747,
-      "hashVal": 5932091409612683108,
+      "tokens": 26739,
+      "hashVal": 12245377495021419654,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "766",
@@ -107,14 +107,15 @@
     },
     {
       "name": "DATABUS_MultipleTransfers",
-      "finalStage": "SIM_RUN",
-      "tokens": 33954,
-      "hashVal": 13790675116267213442,
+      "finalStage": "TEMP_DISABLED",
+      "tokens": 34997,
+      "hashVal": 5387843719002787136,
       "stage": "SIM_RUN",
+      "tempDisabledStage": "SIM_RUN",
       "accelData": {
-        "configBits": "1094",
+        "configBits": "908",
         "stateBits": "0",
-        "memUsed": "8.000 megabytes",
+        "memUsed": "513.000 kilobytes",
         "unitsUsed": "3"
       }
     },
@@ -276,8 +277,8 @@
     {
       "name": "MERGE_Simple",
       "finalStage": "SIM_RUN",
-      "tokens": 10501,
-      "hashVal": 6211443655457102638,
+      "tokens": 10479,
+      "hashVal": 10798719330737418251,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "75",
@@ -290,8 +291,8 @@
       "name": "MERGE_Names",
       "finalStage": "SIM_RUN",
       "comment": "[NO SOFT TEST] This test should push merge names as much as possible. Write a proper test eventually",
-      "tokens": 7543,
-      "hashVal": 7578984753815279079,
+      "tokens": 7521,
+      "hashVal": 4783380797680844548,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "64",
@@ -303,8 +304,8 @@
     {
       "name": "MERGE_Inputs",
       "finalStage": "SIM_RUN",
-      "tokens": 10228,
-      "hashVal": 2449605244639668821,
+      "tokens": 10206,
+      "hashVal": 9319555631090469490,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "89",
@@ -317,8 +318,8 @@
       "name": "MERGE_SameTypeChildren",
       "finalStage": "SIM_RUN",
       "comment": "[NO SOFT TEST] Only see if Versat produces valid Verilog. Eventually make proper test",
-      "tokens": 90445,
-      "hashVal": 654696916919929375,
+      "tokens": 90423,
+      "hashVal": 2949135029504134364,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "1156",
@@ -342,8 +343,8 @@
     {
       "name": "MERGE_CONFIG_Share",
       "finalStage": "SIM_RUN",
-      "tokens": 16963,
-      "hashVal": 11595875290562247479,
+      "tokens": 16941,
+      "hashVal": 6561676660679788756,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "187",
@@ -356,13 +357,13 @@
       "name": "MERGE_CONFIG_ADDRESSGEN_MaxComplexity",
       "finalStage": "SIM_RUN",
       "comment": "[NO SOFT TEST] Test not finished. Need to put something here that exercises the merged accelerator",
-      "tokens": 51245,
-      "hashVal": 16945754077328903724,
+      "tokens": 51045,
+      "hashVal": 11366711281166088966,
       "stage": "SIM_RUN",
       "accelData": {
-        "configBits": "1300",
+        "configBits": "1237",
         "stateBits": "0",
-        "memUsed": "8.16384 megabytes",
+        "memUsed": "1.16384 megabytes",
         "unitsUsed": "6"
       }
     },
@@ -396,21 +397,26 @@
       "name": "ADDRESSGEN_SimulateLoop",
       "finalStage": "PC_EMUL",
       "comment": "If adding more address gen types, add more to this test, do not make individual tests unless you have too",
-      "tokens": 20790,
-      "hashVal": 1766746795732474487,
+      "tokens": 20610,
+      "hashVal": 10504762846293886878,
       "stage": "PC_EMUL",
       "accelData": {
-        "configBits": "586",
+        "configBits": "523",
         "stateBits": "0",
-        "memUsed": "4.000 megabytes",
+        "memUsed": "512.000 kilobytes",
         "unitsUsed": "2"
       }
     },
     {
+      "name": "ADDRESSGEN_Advanced",
+      "finalStage": "PC_EMUL",
+      "stage": "NOT_WORKING"
+    },
+    {
       "name": "MERGE_TwoLevels",
       "finalStage": "SIM_RUN",
-      "tokens": 54766,
-      "hashVal": 15237812117124403480,
+      "tokens": 54744,
+      "hashVal": 18363523681240354965,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "593",
@@ -435,8 +441,8 @@
     {
       "name": "MERGE_Delays",
       "finalStage": "SIM_RUN",
-      "tokens": 24716,
-      "hashVal": 12762470323199442288,
+      "tokens": 24694,
+      "hashVal": 5469676443875366381,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "260",

@@ -706,7 +706,7 @@ if __name__ == "__main__":
    testList = [test for test in testInfo.tests if Filter(test.name,testFilter)]
 
    if(len(testList) == 0):
-      printf("No tests found")
+      print("No tests found")
       sys.exit(0)
 
    maxNameLength = max([len(test.name) for test in testList]) + 1
