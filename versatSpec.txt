@@ -2600,17 +2600,57 @@ module ADDRESSGEN_Simple(){
    gen -> output;
 }
 
-AddressGen Read AddressGenAdvanced(test)
-   for y 0..2
-   for x 0..2
-   addr = 5 * x + y * 100;
-
 AddressGen Mem SimpleMem(length)
    for x 0..length
    addr = x;
 
+// Best way of testing multiple address gens and rules?
+// Also would like to test everything, including the parsing process.
+// Maybe it's for the best if we just make it so versat always tests the address generated as part of the compilation process, at least for now anyway and fails if it detects a problem.
+
+AddressGen Read AddressGenAdvanced()
+   for y 0..2
+   for x 0..2
+   addr = 5 * x + 100 * y;
+
+AddressGen Read AddressGenAdvanced2()
+   for z 0..2
+   for y 0..2
+   for x 0..2
+   addr = 2 * x + 5 * y + 11 * z;
+
+AddressGen Read AddressGenAdvanced3()
+   for w 0..2
+   for z 0..2
+   for y 0..2
+   for x 0..2
+   addr = 2 * x + 5 * y + 11 * z + 20 * w;
+
+AddressGen Read AddressGenAdvanced4()
+   for a 0..2
+   for w 0..2
+   for z 0..2
+   for y 0..2
+   for x 0..2
+   addr = 2 * x + 5 * y + 11 * z + 20 * w + 100 * a;
+
+AddressGen Read AddressGenAdvanced5()
+   for y 0..2
+   for x 0..2
+   addr = x + y;
+
+AddressGen Read AddressGenAdvanced6(a)
+   for y 0..2
+   for x 0..a
+   addr = x + y;
+
 module ADDRESSGEN_Advanced(){
-   using(AddressGenAdvanced) VReadMultiple read;
+   using(AddressGenAdvanced,
+         AddressGenAdvanced2,
+         AddressGenAdvanced3,
+         AddressGenAdvanced4,
+         AddressGenAdvanced5,
+         AddressGenAdvanced6) VReadMultiple read;
    Mem output;
 #
    read -> output;
