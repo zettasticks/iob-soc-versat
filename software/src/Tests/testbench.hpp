@@ -3,8 +3,6 @@
 #ifndef INCLUDED_TESTBENCH
 #define INCLUDED_TESTBENCH
 
-#include "versat_accel.h"
-
 #include <limits>
 #include <algorithm>
 #include <cassert>
@@ -15,6 +13,7 @@ extern "C" {
 #include "printf.h"
 };
 
+#include "versat_accel.h"
 #include "unitConfiguration.hpp"
 
 #define TEST_PASSED 0

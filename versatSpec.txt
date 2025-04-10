@@ -2608,49 +2608,97 @@ AddressGen Mem SimpleMem(length)
 // Also would like to test everything, including the parsing process.
 // Maybe it's for the best if we just make it so versat always tests the address generated as part of the compilation process, at least for now anyway and fails if it detects a problem.
 
-AddressGen Read AddressGenAdvanced()
-   for y 0..2
-   for x 0..2
-   addr = 5 * x + 100 * y;
-
+// Not having a constant for the first term
 AddressGen Read AddressGenAdvanced2()
    for z 0..2
    for y 0..2
    for x 0..2
-   addr = 2 * x + 5 * y + 11 * z;
+   addr = x + 5 * y + 11 * z;
 
-AddressGen Read AddressGenAdvanced3()
-   for w 0..2
-   for z 0..2
+// Same memory can be accessed multiple times 
+AddressGen Read AddressGenAdvanced3() 
+   for y 0..2 
+   for x 0..2 
+   addr = 2 * x + y;
+
+// Same memory can be accessed multiple times 
+AddressGen Read AddressGenAdvanced31() 
+   for y 0..2 
+   for x 0..3 
+   addr = 2 * x + y;
+
+// What happens if we add a free term? 
+AddressGen Read AddressGenAdvanced32() 
+   for y 0..2 
+   for x 0..3 
+   addr = 2 * x + y + 20;
+
+// A single loop but the innermost variable is not a constant
+AddressGen Read AddressGenAdvanced33() 
+   for x 0..4 
+   addr = 2 * x;
+
+// A single loop with a constant
+AddressGen Read AddressGenAdvanced34(a) 
+   for x 0..a
+   addr = 2 * x;
+
+// Two loops with a constant
+AddressGen Read AddressGenAdvanced4(a)
    for y 0..2
-   for x 0..2
-   addr = 2 * x + 5 * y + 11 * z + 20 * w;
+   for x 0..a
+   addr = 2 * x + 5 * y;
 
-AddressGen Read AddressGenAdvanced4()
+// Two loops but the constant is replaced by a literal.
+AddressGen Read AddressGenAdvanced41(a)
+   for y 0..2
+   for x 0..5
+   addr = 2 * x + 5 * y;
+
+// If the constant of the first loop is large enough, what happens?
+AddressGen Read AddressGenAdvanced42(a)
+   for y 0..2
+   for x 0..5
+   addr = 1000 * x + 5 * y;
+
+AddressGen Read AddressGenAdvanced5(a,b,c,d)
+   for y 0..2
+   for x 0..a
+   addr = 2 * a * b * x + 5 * (c + 1) * y + d + 2 * (3 + d * x);
+
+
+AddressGen Read AddressGenAdvancedTest(var1,var2,var3,var4)
+   for y 0..var1
+   for x 0..var2
+   addr = var3 * x + var4 * y;
+
+// A simple multiloop address gen where the constants of each term "guarantee" that incremental memory is being accessed.
+AddressGen Read AddressGenAdvanced()
    for a 0..2
    for w 0..2
    for z 0..2
    for y 0..2
    for x 0..2
-   addr = 2 * x + 5 * y + 11 * z + 20 * w + 100 * a;
+   addr = 2 * x + 5 * y + 11 * z + 20 * w + 3 * a;
 
-AddressGen Read AddressGenAdvanced5()
+AddressGen Read AddressGenAdvancedAllVariables(var1,var2,var3,var4,var5)
+   for a 0..2
+   for w 0..2
+   for z 0..2
    for y 0..2
    for x 0..2
-   addr = x + y;
+   addr = var1 * x + var2 * y + var3 * z + var4 * w + var5 * a;
 
-AddressGen Read AddressGenAdvanced6(a)
-   for y 0..2
-   for x 0..a
-   addr = x + y;
+AddressGen Read AddressGenAdvancedAllVariablesAndLoops(var1,var2,var3,var4,var5)
+   for a 0..var5
+   for w 0..var4
+   for z 0..var3
+   for y 0..var2
+   for x 0..var1
+   addr = var1 * x + var2 * y + var3 * z + var4 * w + var5 * a;
 
 module ADDRESSGEN_Advanced(){
-   using(AddressGenAdvanced,
-         AddressGenAdvanced2,
-         AddressGenAdvanced3,
-         AddressGenAdvanced4,
-         AddressGenAdvanced5,
-         AddressGenAdvanced6) VReadMultiple read;
+   using(AddressGenAdvancedTest) VReadMultiple read;
    Mem output;
 #
    read -> output;
