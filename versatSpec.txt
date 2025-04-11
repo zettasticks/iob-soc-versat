@@ -2666,11 +2666,16 @@ AddressGen Read AddressGenAdvanced5(a,b,c,d)
    for x 0..a
    addr = 2 * a * b * x + 5 * (c + 1) * y + d + 2 * (3 + d * x);
 
-
 AddressGen Read AddressGenAdvancedTest(var1,var2,var3,var4)
    for y 0..var1
    for x 0..var2
    addr = var3 * x + var4 * y;
+
+AddressGen Read AddressGenAdvancedTestSimple()
+   for y 0..2
+   for x 0..4
+   addr = 2 * x + 5 * y;
+
 
 // A simple multiloop address gen where the constants of each term "guarantee" that incremental memory is being accessed.
 AddressGen Read AddressGenAdvanced()
