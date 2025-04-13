@@ -29,8 +29,8 @@ void SingleTest(Arena* arena){
   
     RunAccelerator(1);
 
-    accelConfig->write.write_enabled = 0;
-    accelConfig->read.read_enabled = 0;
+    accelConfig->write.enabled = 0;
+    accelConfig->read.enabled = 0;
 
     RunAccelerator(2); // Flush accelerator
 

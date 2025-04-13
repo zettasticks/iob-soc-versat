@@ -4,8 +4,8 @@
     {
       "name": "EXAMPLE_M_Stage",
       "finalStage": "SIM_RUN",
-      "tokens": 17376,
-      "hashVal": 17905454270370188875,
+      "tokens": 17151,
+      "hashVal": 4401586247260233373,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "356",
@@ -17,8 +17,8 @@
     {
       "name": "EXAMPLE_F_Stage",
       "finalStage": "SIM_RUN",
-      "tokens": 30085,
-      "hashVal": 2887877042832800835,
+      "tokens": 29860,
+      "hashVal": 12290181128677544597,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "646",
@@ -30,8 +30,8 @@
     {
       "name": "EXAMPLE_AddRoundKey",
       "finalStage": "SIM_RUN",
-      "tokens": 41398,
-      "hashVal": 7647628681904653114,
+      "tokens": 41173,
+      "hashVal": 11473245040939102732,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "1376",
@@ -43,8 +43,8 @@
     {
       "name": "EXAMPLE_Simple",
       "finalStage": "SIM_RUN",
-      "tokens": 8965,
-      "hashVal": 16200485279063296416,
+      "tokens": 8740,
+      "hashVal": 5509359079489730738,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "72",
@@ -56,34 +56,34 @@
     {
       "name": "EXAMPLE_SHA",
       "finalStage": "SIM_RUN",
-      "tokens": 46914,
-      "hashVal": 16562564992173140106,
+      "tokens": 48106,
+      "hashVal": 9265411284391167935,
       "stage": "SIM_RUN",
       "accelData": {
-        "configBits": "642",
+        "configBits": "684",
         "stateBits": "256",
-        "memUsed": "4.65536 megabytes",
+        "memUsed": "576.000 kilobytes",
         "unitsUsed": "84"
       }
     },
     {
       "name": "EXAMPLE_Variety1",
       "finalStage": "SIM_RUN",
-      "tokens": 36240,
-      "hashVal": 1377508789221033940,
-      "stage": "SIM_RUN",
+      "tokens": 37552,
+      "hashVal": 1744112741874304773,
+      "stage": "PC_EMUL",
       "accelData": {
-        "configBits": "758",
+        "configBits": "800",
         "stateBits": "64",
-        "memUsed": "4.16384 megabytes",
+        "memUsed": "528.000 kilobytes",
         "unitsUsed": "16"
       }
     },
     {
       "name": "MEM_SimpleTransfer",
       "finalStage": "SIM_RUN",
-      "tokens": 32042,
-      "hashVal": 1687566332705451115,
+      "tokens": 31817,
+      "hashVal": 17737625066974134429,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "498",
@@ -95,11 +95,11 @@
     {
       "name": "DATABUS_SimpleTransfer",
       "finalStage": "SIM_RUN",
-      "tokens": 26739,
-      "hashVal": 12245377495021419654,
+      "tokens": 25862,
+      "hashVal": 17578241603227507561,
       "stage": "SIM_RUN",
       "accelData": {
-        "configBits": "766",
+        "configBits": "670",
         "stateBits": "0",
         "memUsed": "8.000 megabytes",
         "unitsUsed": "3"
@@ -122,8 +122,8 @@
     {
       "name": "CONFIG_SimpleShare",
       "finalStage": "SIM_RUN",
-      "tokens": 12522,
-      "hashVal": 5731395258490436792,
+      "tokens": 12297,
+      "hashVal": 17659297841413770410,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "96",
@@ -135,8 +135,8 @@
     {
       "name": "CONFIG_PartialShare",
       "finalStage": "SIM_RUN",
-      "tokens": 11910,
-      "hashVal": 5781579061999100788,
+      "tokens": 11685,
+      "hashVal": 1191116668955206918,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "128",
@@ -148,8 +148,8 @@
     {
       "name": "CONFIG_PartialShare3Units",
       "finalStage": "SIM_RUN",
-      "tokens": 14014,
-      "hashVal": 6746918459267226034,
+      "tokens": 13789,
+      "hashVal": 5359558672643932068,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "176",
@@ -161,8 +161,8 @@
     {
       "name": "CONFIG_PartialShareContained",
       "finalStage": "SIM_RUN",
-      "tokens": 17845,
-      "hashVal": 8911126252514309004,
+      "tokens": 17620,
+      "hashVal": 15064513461930404638,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "256",
@@ -174,8 +174,8 @@
     {
       "name": "CONFIG_SharePartialContained",
       "finalStage": "SIM_RUN",
-      "tokens": 15079,
-      "hashVal": 6014897361943536036,
+      "tokens": 14854,
+      "hashVal": 4618905286033321238,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "156",
@@ -187,8 +187,8 @@
     {
       "name": "CONFIG_SimpleStatic",
       "finalStage": "SIM_RUN",
-      "tokens": 12420,
-      "hashVal": 7261214568108525612,
+      "tokens": 12195,
+      "hashVal": 6638818530575562142,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "200",
@@ -206,8 +206,8 @@
     {
       "name": "CONFIG_ShareStatic",
       "finalStage": "SIM_RUN",
-      "tokens": 19759,
-      "hashVal": 2890293858342956439,
+      "tokens": 19534,
+      "hashVal": 16935441367560721545,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "240",
@@ -219,8 +219,8 @@
     {
       "name": "CONFIG_SharePartialAndStaticSameModule",
       "finalStage": "SIM_RUN",
-      "tokens": 21445,
-      "hashVal": 17458066530889246234,
+      "tokens": 21220,
+      "hashVal": 14034766316453373932,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "384",
@@ -232,8 +232,8 @@
     {
       "name": "CONFIG_SharePartialAndStaticSameModuleContained",
       "finalStage": "SIM_RUN",
-      "tokens": 23729,
-      "hashVal": 3682279742740740013,
+      "tokens": 23504,
+      "hashVal": 16206367132701423167,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "384",
@@ -251,8 +251,8 @@
     {
       "name": "DELAYS_AddedDelays",
       "finalStage": "SIM_RUN",
-      "tokens": 8881,
-      "hashVal": 1252737288051531763,
+      "tokens": 8656,
+      "hashVal": 7862371106709720869,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "40",
@@ -264,8 +264,8 @@
     {
       "name": "DELAYS_Variable",
       "finalStage": "SIM_RUN",
-      "tokens": 8851,
-      "hashVal": 12016972355311573064,
+      "tokens": 8626,
+      "hashVal": 10886881100682294938,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "47",
@@ -277,8 +277,8 @@
     {
       "name": "MERGE_Simple",
       "finalStage": "SIM_RUN",
-      "tokens": 11167,
-      "hashVal": 7033890447397096844,
+      "tokens": 10922,
+      "hashVal": 15383649265389423267,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "75",
@@ -291,8 +291,8 @@
       "name": "MERGE_Names",
       "finalStage": "SIM_RUN",
       "comment": "[NO SOFT TEST] This test should push merge names as much as possible. Write a proper test eventually",
-      "tokens": 8209,
-      "hashVal": 2046264106222791557,
+      "tokens": 7964,
+      "hashVal": 18241575198295528252,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "64",
@@ -304,8 +304,8 @@
     {
       "name": "MERGE_Inputs",
       "finalStage": "SIM_RUN",
-      "tokens": 10894,
-      "hashVal": 2771790399510045171,
+      "tokens": 10649,
+      "hashVal": 10200396887769449354,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "89",
@@ -318,8 +318,8 @@
       "name": "MERGE_SameTypeChildren",
       "finalStage": "SIM_RUN",
       "comment": "[NO SOFT TEST] Only see if Versat produces valid Verilog. Eventually make proper test",
-      "tokens": 91111,
-      "hashVal": 393326701495467517,
+      "tokens": 90866,
+      "hashVal": 16570441548300557748,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "1156",
@@ -343,8 +343,8 @@
     {
       "name": "MERGE_CONFIG_Share",
       "finalStage": "SIM_RUN",
-      "tokens": 17629,
-      "hashVal": 10107170267779604885,
+      "tokens": 17384,
+      "hashVal": 15182009795268516524,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "187",
@@ -370,8 +370,8 @@
     {
       "name": "UNIT_LookupTable",
       "finalStage": "SIM_RUN",
-      "tokens": 13367,
-      "hashVal": 15187129269678892928,
+      "tokens": 13142,
+      "hashVal": 6553804853821251250,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "80",
@@ -397,11 +397,11 @@
       "name": "ADDRESSGEN_SimulateLoop",
       "finalStage": "PC_EMUL",
       "comment": "If adding more address gen types, add more to this test, do not make individual tests unless you have too",
-      "tokens": 20610,
-      "hashVal": 10504762846293886878,
+      "tokens": 17985,
+      "hashVal": 11421184840635735807,
       "stage": "PC_EMUL",
       "accelData": {
-        "configBits": "523",
+        "configBits": "425",
         "stateBits": "0",
         "memUsed": "512.000 kilobytes",
         "unitsUsed": "2"
@@ -423,8 +423,8 @@
     {
       "name": "MERGE_TwoLevels",
       "finalStage": "SIM_RUN",
-      "tokens": 55432,
-      "hashVal": 13793174798046353398,
+      "tokens": 55187,
+      "hashVal": 10456734222666983245,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "593",
@@ -436,8 +436,8 @@
     {
       "name": "UNIT_Generator",
       "finalStage": "SIM_RUN",
-      "tokens": 25084,
-      "hashVal": 9561318598950429351,
+      "tokens": 24859,
+      "hashVal": 10025071311527827513,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "640",
@@ -449,8 +449,8 @@
     {
       "name": "MERGE_Delays",
       "finalStage": "SIM_RUN",
-      "tokens": 25382,
-      "hashVal": 12189825220352297614,
+      "tokens": 25137,
+      "hashVal": 5207883735937015877,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "260",
@@ -462,11 +462,11 @@
     {
       "name": "EXAMPLE_Variety2",
       "finalStage": "SIM_RUN",
-      "tokens": 47128,
-      "hashVal": 3768669588559594140,
+      "tokens": 46031,
+      "hashVal": 13024152969790698708,
       "stage": "SIM_RUN",
       "accelData": {
-        "configBits": "1132",
+        "configBits": "1036",
         "stateBits": "0",
         "memUsed": "12.000 megabytes",
         "unitsUsed": "15"
@@ -475,8 +475,8 @@
     {
       "name": "GRAPH_SimpleLoop",
       "finalStage": "SIM_RUN",
-      "tokens": 10230,
-      "hashVal": 17764410555054097599,
+      "tokens": 10005,
+      "hashVal": 11982700537179096241,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "55",

@@ -1,6 +1,10 @@
 #ifndef INCLUDED_UNIT_CONFIGURATION
 #define INCLUDED_UNIT_CONFIGURATION
 
+// TODO: This should go away. Change AddressGen to take over this and generate the functions 
+
+#if 0
+
 extern "C" {
    #include "printf.h" 
 }
@@ -20,27 +24,24 @@ static void ConfigureSimpleVReadBare(volatile VReadConfig* inst){
    IntSet(inst,0,sizeof(VReadConfig));
 
    // Memory side
-   inst->read_incr = 1;
    inst->pingPong = 1;
 
    // B - versat side
-   inst->output_iter = 1;
-   inst->output_incr = 1;
-   inst->output_duty = 1;
+   inst->iter = 1;
+   inst->incr = 1;
+   inst->duty = 1;
 }
 
 static void ConfigureSimpleVReadShallow(volatile VReadConfig* inst, int numberItems,int* memory){
-   inst->read_enabled = 1;
+   inst->enabled = 1;
 
    // Memory side
-   inst->read_per = numberItems;
-   inst->read_duty = numberItems;
    inst->ext_addr = (iptr) memory;
-   inst->read_length = numberItems * sizeof(int);
+   inst->length = numberItems * sizeof(int);
 
    // B - versat side
-   inst->output_per = numberItems;
-   inst->output_duty = numberItems;
+   inst->per = numberItems;
+   inst->duty = numberItems;
 }
 
 static void ConfigureSimpleVRead(volatile VReadConfig* inst, int numberItems,int* memory){
@@ -53,26 +54,22 @@ static void ConfigureSimpleVRead(volatile VReadConfig* inst, int numberItems,int
 static void ConfigureSimpleVWriteBare(volatile VWriteConfig* inst){
    IntSet(inst,0,sizeof(VWriteConfig));
 
-   inst->write_incr = 1;
    inst->pingPong = 1;
 
-   inst->input_iter = 1;
-   inst->input_duty = 1;
-   inst->input_incr = 1;
+   inst->iter = 1;
+   inst->duty = 1;
+   inst->incr = 1;
 }
 
 static void ConfigureSimpleVWriteShallow(volatile VWriteConfig* inst, int numberItems,int* memory){
-   inst->write_enabled = 1;
+   inst->enabled = 1;
 
    // Write side
-   inst->write_per = numberItems;
-   inst->write_duty = numberItems;
-   inst->write_length = numberItems * sizeof(int);
    inst->ext_addr = (iptr) memory;
 
    // Memory side
-   inst->input_per = numberItems;
-   inst->input_duty = numberItems;
+   inst->per = numberItems;
+   inst->duty = numberItems;
 }
 
 static void ConfigureSimpleVWrite(volatile VWriteConfig* inst, int numberItems,int* memory){
@@ -104,7 +101,6 @@ static void ConfigureSimpleMemory(volatile MemConfig* inst, int amountOfData){
    inst->perA = amountOfData;
    inst->dutyA = amountOfData;
    inst->incrA = 1;
-   //inst->in0_wr = 1;
 }
 
 static void ConfigureMemoryReceive(volatile MemConfig* inst, int amountOfData){
@@ -116,6 +112,8 @@ static void ConfigureMemoryReceive(volatile MemConfig* inst, int amountOfData){
    inst->incrA = 1;
    inst->in0_wr = 1;
 }
+#endif
+
 #endif
 
 #endif // INCLUDED_UNIT_CONFIGURATION

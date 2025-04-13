@@ -483,6 +483,7 @@ void SingleTest(Arena* arena);
 #include "iob_soc_versat_periphs.h"
 
 static int* ddr = (int*) (EXTRA_BASE + (1<<(IOB_SOC_VERSAT_SRAM_ADDR_W + 2)));
+static int printResults = false;
 
 extern "C" int RunTest(int versatBase){   
   versat_init(versatBase);
@@ -545,6 +546,20 @@ extern "C" int RunTest(int versatBase){
   if(!error){
     printf("TEST_RESULT:TEST_PASSED\n");
     printf("OK (%d samples)\n",gotIndex);
+
+    if(printResults){
+      printf("Force printing all results\n");
+      char* gotPtr      = (char*) gotArena.mem;
+      int index = 0;
+      while(gotPtr < gotEnd){
+        TestValue* testGot = (TestValue*) gotPtr;
+        printf("===== Index: %d\n",index++);
+        PrintTestValue(testGot);
+        printf("\n");
+
+        gotPtr += testGot->size;
+      }
+    }
     return TEST_PASSED;
   }
 
