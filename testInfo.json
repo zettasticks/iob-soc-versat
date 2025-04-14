@@ -56,8 +56,8 @@
     {
       "name": "EXAMPLE_SHA",
       "finalStage": "SIM_RUN",
-      "tokens": 48106,
-      "hashVal": 9265411284391167935,
+      "tokens": 48606,
+      "hashVal": 2362084456772916460,
       "stage": "SIM_RUN",
       "accelData": {
         "configBits": "684",
@@ -69,9 +69,9 @@
     {
       "name": "EXAMPLE_Variety1",
       "finalStage": "SIM_RUN",
-      "tokens": 37552,
-      "hashVal": 1744112741874304773,
-      "stage": "PC_EMUL",
+      "tokens": 38060,
+      "hashVal": 2524323217138674138,
+      "stage": "SIM_RUN",
       "accelData": {
         "configBits": "800",
         "stateBits": "64",
@@ -95,22 +95,20 @@
     {
       "name": "DATABUS_SimpleTransfer",
       "finalStage": "SIM_RUN",
-      "tokens": 25862,
-      "hashVal": 17578241603227507561,
+      "tokens": 27267,
+      "hashVal": 13206507914438414488,
       "stage": "SIM_RUN",
       "accelData": {
-        "configBits": "670",
+        "configBits": "773",
         "stateBits": "0",
-        "memUsed": "8.000 megabytes",
+        "memUsed": "768.000 kilobytes",
         "unitsUsed": "3"
       }
     },
     {
       "name": "DATABUS_MultipleTransfers",
       "finalStage": "TEMP_DISABLED",
-      "tokens": 34997,
-      "hashVal": 5387843719002787136,
-      "stage": "SIM_RUN",
+      "stage": "NOT_WORKING",
       "tempDisabledStage": "SIM_RUN",
       "accelData": {
         "configBits": "908",
@@ -357,9 +355,7 @@
       "name": "MERGE_CONFIG_ADDRESSGEN_MaxComplexity",
       "finalStage": "SIM_RUN",
       "comment": "[NO SOFT TEST] Test not finished. Need to put something here that exercises the merged accelerator",
-      "tokens": 51045,
-      "hashVal": 11366711281166088966,
-      "stage": "SIM_RUN",
+      "stage": "NOT_WORKING",
       "accelData": {
         "configBits": "1237",
         "stateBits": "0",
@@ -383,9 +379,7 @@
     {
       "name": "ADDRESSGEN_Simple",
       "finalStage": "SIM_RUN",
-      "tokens": 24774,
-      "hashVal": 18233321300942162365,
-      "stage": "SIM_RUN",
+      "stage": "NOT_WORKING",
       "accelData": {
         "configBits": "640",
         "stateBits": "0",
@@ -397,8 +391,8 @@
       "name": "ADDRESSGEN_SimulateLoop",
       "finalStage": "PC_EMUL",
       "comment": "If adding more address gen types, add more to this test, do not make individual tests unless you have too",
-      "tokens": 17985,
-      "hashVal": 11421184840635735807,
+      "tokens": 17983,
+      "hashVal": 15608966178122835732,
       "stage": "PC_EMUL",
       "accelData": {
         "configBits": "425",
@@ -410,9 +404,22 @@
     {
       "name": "ADDRESSGEN_Advanced",
       "finalStage": "PC_EMUL",
-      "tokens": 32445,
-      "hashVal": 8134876064826852883,
+      "tokens": 31396,
+      "hashVal": 2586847182855683916,
       "stage": "PC_EMUL",
+      "accelData": {
+        "configBits": "674",
+        "stateBits": "0",
+        "memUsed": "528.000 kilobytes",
+        "unitsUsed": "3"
+      }
+    },
+    {
+      "name": "ADDRESSGEN_EmptyLoops",
+      "finalStage": "SIM_RUN",
+      "tokens": 33036,
+      "hashVal": 6737081315438085174,
+      "stage": "SIM_RUN",
       "accelData": {
         "configBits": "674",
         "stateBits": "0",
@@ -462,13 +469,13 @@
     {
       "name": "EXAMPLE_Variety2",
       "finalStage": "SIM_RUN",
-      "tokens": 46031,
-      "hashVal": 13024152969790698708,
+      "tokens": 47608,
+      "hashVal": 8612083819569779726,
       "stage": "SIM_RUN",
       "accelData": {
-        "configBits": "1036",
+        "configBits": "1139",
         "stateBits": "0",
-        "memUsed": "12.000 megabytes",
+        "memUsed": "1.000 megabytes",
         "unitsUsed": "15"
       }
     },

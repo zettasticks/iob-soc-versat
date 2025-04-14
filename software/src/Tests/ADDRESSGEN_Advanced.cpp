@@ -7,7 +7,7 @@ void ClearBuffer(int* buffer){
    }
 }
 
-void CheckEfficiency(AddressVReadArguments args){
+void CheckEfficiency(AddressVArguments args){
    SimulateVReadResult sim = SimulateVRead(args);
    float percent = ((float) sim.amountOfInternalValuesUsed) / ((float) sim.amountOfExternalValuesRead);
    printf("Efficiency: %2f\n",percent);
@@ -31,8 +31,8 @@ void SingleTest(Arena* arena){
    buffer[9]  = 70;
    buffer[11] = 80;
 
-   AddressVReadArguments compiled = CompileVUnit_AddressGenAdvancedTest((iptr) buffer,2,4,2,5);
-   LoadVUnit_VReadMultiple(&accelConfig->read,compiled);
+   AddressVArguments compiled = CompileVUnit_AddressGenAdvancedTest(buffer,2,4,2,5);
+   LoadVUnit_VRead(&accelConfig->read,compiled);
    CheckEfficiency(compiled);
 
    RunAccelerator(3);
@@ -54,8 +54,8 @@ void SingleTest(Arena* arena){
    buffer[104] = 70;
    buffer[106] = 80;
 
-   AddressVReadArguments compiled = CompileVUnit_AddressGenAdvancedTest((iptr) buffer,2,4,2,100);
-   LoadVUnit_VReadMultiple(&accelConfig->read,compiled);
+   AddressVArguments compiled = CompileVUnit_AddressGenAdvancedTest(buffer,2,4,2,100);
+   LoadVUnit_VRead(&accelConfig->read,compiled);
    CheckEfficiency(compiled);
 
    RunAccelerator(3);
@@ -77,8 +77,8 @@ void SingleTest(Arena* arena){
    buffer[12] = 70;
    buffer[17] = 80;
 
-   AddressVReadArguments compiled = CompileVUnit_AddressGenAdvancedTest((iptr) buffer,4,2,5,4);
-   LoadVUnit_VReadMultiple(&accelConfig->read,compiled);
+   AddressVArguments compiled = CompileVUnit_AddressGenAdvancedTest(buffer,4,2,5,4);
+   LoadVUnit_VRead(&accelConfig->read,compiled);
    CheckEfficiency(compiled);
 
    RunAccelerator(3);
@@ -100,8 +100,8 @@ void SingleTest(Arena* arena){
    buffer[12] = 70;
    buffer[17] = 80;
 
-   AddressVReadArguments compiled = CompileVUnit_AddressGenAdvancedTest((iptr) buffer,2,4,5,2);
-   LoadVUnit_VReadMultiple(&accelConfig->read,compiled);
+   AddressVArguments compiled = CompileVUnit_AddressGenAdvancedTest(buffer,2,4,5,2);
+   LoadVUnit_VRead(&accelConfig->read,compiled);
    CheckEfficiency(compiled);
 
    RunAccelerator(3);

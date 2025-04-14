@@ -9,16 +9,6 @@ extern "C" {
    #include "printf.h" 
 }
 
-static void IntSet(volatile void* buffer,int value,int byteSize){
-   volatile int* asInt = (int*) buffer;
-
-   int nInts = byteSize / 4;
-
-   for(int i = 0; i < nInts; i++){
-      asInt[i] = value;
-   }
-}
-
 #ifdef VERSAT_DEFINED_VRead
 static void ConfigureSimpleVReadBare(volatile VReadConfig* inst){
    IntSet(inst,0,sizeof(VReadConfig));
@@ -78,6 +68,18 @@ static void ConfigureSimpleVWrite(volatile VWriteConfig* inst, int numberItems,i
 }
 #endif
 
+#endif
+
+static void IntSet(volatile void* buffer,int value,int byteSize){
+   volatile int* asInt = (int*) buffer;
+
+   int nInts = byteSize / 4;
+
+   for(int i = 0; i < nInts; i++){
+      asInt[i] = value;
+   }
+}
+
 #ifdef VERSAT_DEFINED_Mem
 static void ConfigureSimpleMemory(volatile MemConfig* inst, int amountOfData, int start){
    IntSet(inst,0,sizeof(MemConfig));
@@ -112,8 +114,6 @@ static void ConfigureMemoryReceive(volatile MemConfig* inst, int amountOfData){
    inst->incrA = 1;
    inst->in0_wr = 1;
 }
-#endif
-
 #endif
 
 #endif // INCLUDED_UNIT_CONFIGURATION

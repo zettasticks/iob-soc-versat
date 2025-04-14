@@ -1,3 +1,12 @@
+AddressGen Read VLinear(xWidth)
+   for x 0..xWidth
+   addr = x;
+
+AddressGen Read VDouble(xWidth,yWidth,shift)
+   for y 0..yWidth
+   for x 0..xWidth
+   addr = x + shift * y;
+
 module EXAMPLE_Simple(){
   Const a;
   Const b;
@@ -292,14 +301,14 @@ module TestMergeStruct(){
 merge MERGE_MergeWithStructMerge = TestMergeStruct | TestDoubleMerge1;
 
 module DATABUS_SimpleTransfer(){
-   VRead read;
-   VWrite write;
+   using(VLinear) VRead read;
+   using(VLinear) VWrite write;
 #
    read -> write;
 }
 
 module DATABUS_MultipleTransfers(){
-   using(VReadLinear,VReadMultipleLoad,VReadMultipleLoad2,VReadMultipleOutput) VRead read;
+   using(VLinear,VReadMultipleLoad,VReadMultipleLoad2,VReadMultipleOutput) VRead read;
    using(VWriteStoreLinear,VWriteInputLinear,VWriteMultipleStore,VWriteMultipleInput) VWriteMultiple write;
 #
    read -> write;
@@ -781,7 +790,7 @@ module Constants(){
 }
 
 module EXAMPLE_SHA(){
-   VRead MemRead;
+   using(VLinear) VRead MemRead;
    SwapEndian Swap;
    xunitF F0;
    xunitF F1;
@@ -2265,7 +2274,7 @@ module SimpleCGRA(){
 }
 
 module EXAMPLE_Variety1(x,y){
-   VRead read;
+   using(VLinear) VRead read;
    Mem mem;
    Const constant;
    Reg reg;
@@ -2277,9 +2286,9 @@ module EXAMPLE_Variety1(x,y){
 }
 
 module EXAMPLE_Variety2(x,y,z){
-   VRead read;
+   using(VLinear) VRead read;
    Mem mem;
-   VWrite write;
+   using(VLinear) VWrite write;
 #
    total = x + y + z + read + mem;
    total -> write;
@@ -2516,54 +2525,6 @@ module CryptoAlgos(){
 #
 }
 
-AddressGen Read VReadLinear(xWidth)
-   for x 0..xWidth
-   addr = x;
-
-AddressGen Read VReadDouble(xWidth,yWidth,shift)
-   for y 0..yWidth
-   for x 0..xWidth
-   addr = x + shift * y;
-
-AddressGen VReadLoad VReadMultipleLoad(ext,xWidth,yWidth,stride)
-   for y 0..yWidth
-   for x 0..xWidth
-   mem[y * xWidth + x] = ext[y * stride + x];
-
-AddressGen VReadLoad VReadMultipleLoad2(ext,xWidth,yWidth,zWidth,stride,stride2)
-   for z 0..zWidth
-   for y 0..yWidth
-   for x 0..xWidth
-   mem[z * yWidth + y * xWidth + x] = ext[z * stride2 + y * stride + x];
-
-AddressGen VReadOutput VReadMultipleOutput(xWidth,yWidth)
-   for y 0..yWidth
-   for x 0..xWidth
-   addr = y * xWidth + x;
-
-AddressGen VReadOutput VReadMultipleOutputPhased(xWidth,yWidth,stride)
-   for y 0..yWidth
-   for x 0..xWidth
-   addr = y * stride + x;
-
-AddressGen VWriteInput VWriteInputLinear(xWidth)
-   for x 0..xWidth
-   addr = x;
-
-AddressGen VWriteStore VWriteStoreLinear(ext,xWidth)
-   for x 0..xWidth
-   ext[x] = mem[x];
-
-AddressGen VWriteInput VWriteMultipleInput(xWidth,yWidth)
-   for y 0..yWidth
-   for x 0..xWidth
-   addr = y * xWidth + x;
-
-AddressGen VWriteStore VWriteMultipleStore(ext,xWidth,yWidth,imageWidthSize)
-   for y 0..yWidth
-   for x 0..xWidth
-   ext[y * imageWidthSize + x] = mem[y * xWidth + x];
-
 AddressGen Mem TestAddressGen(xMax,yMax,zMax,wMax,aMax)
    //for a 0..aMax
    for b 0..aMax
@@ -2689,8 +2650,33 @@ module ADDRESSGEN_Advanced(){
    read -> output;
 }
 
+AddressGen Read AddressGenEmptyLoops()
+   for y 0..2
+   for x 0..2
+   for empty 0..2
+   addr = 2 * x + 5 * y;
+
+AddressGen Read AddressGenEmptyLoops2()
+   for y 0..2
+   for empty 0..2
+   for x 0..2
+   addr = 2 * x + 5 * y;
+
+AddressGen Read AddressGenEmptyLoops3()
+   for empty 0..2
+   for y 0..2
+   for x 0..2
+   addr = 2 * x + 5 * y;
+
+module ADDRESSGEN_EmptyLoops(){
+   using(AddressGenEmptyLoops,AddressGenEmptyLoops2,AddressGenEmptyLoops3) VRead read;
+   Mem output;
+#
+   read -> output;
+}
+
 module ADDRESSGEN_SimulateLoop(){
-   using(VReadDouble) VRead read;
+   using(VDouble) VRead read;
 #
 }
 
@@ -2724,7 +2710,7 @@ module NoShare(){
 merge MERGE_CONFIG_Share = FullShare | SomeShare | NoShare;
 
 module CONFIG_ADDRESSGEN_PartialSharing(){
-   using(VReadLinear,VReadMultipleLoad) share(config) VRead(ext_addr){
+   using(VLinear,VReadMultipleLoad) share(config) VRead(ext_addr){
       read[2];
    }
    /* using(SimpleMem) */ Mem output;

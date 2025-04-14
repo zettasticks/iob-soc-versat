@@ -1,7 +1,7 @@
 #include "testbench.hpp"
 
 void ConfigureVariety1(volatile EXAMPLE_Variety1Config* config,int* memory){
-   ConfigureSimpleVRead(&config->read,1,memory);
+   VLinear_VRead(&config->read,memory,1);
 
    ConfigureSimpleMemory(&config->mem,1,0);
    VersatUnitWrite(TOP_simple_mem_addr,0,2);
@@ -17,7 +17,7 @@ void SingleTest(Arena* arena){
 
    ConfigureVariety1(&accelConfig->simple,&memory);
 
-   RunAccelerator(3);
+   RunAccelerator(2);
 
    Assert_Eq(accelState->output_0.currentValue,15);
 }

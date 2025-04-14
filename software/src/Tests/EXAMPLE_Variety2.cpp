@@ -1,11 +1,12 @@
 #include "testbench.hpp"
 
 void ConfigureVariety2(volatile EXAMPLE_Variety2Config* config,int* output,int* memory){
-   ConfigureSimpleVRead(&config->read,1,memory);
+   VLinear_VRead(&config->read,memory,1);
 
    ConfigureSimpleMemory(&config->mem,1,0);
    VersatUnitWrite(TOP_simple_mem_addr,0,1);
-   ConfigureSimpleVWrite(&config->write,1,output);
+
+   VLinear_VWrite(&config->write,output,1);
 }
 
 void SingleTest(Arena* arena){

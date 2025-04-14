@@ -24,15 +24,15 @@ void SingleTest(Arena* arena){
     }
     ClearCache(arena->mem);
 
-    ConfigureSimpleVRead(&accelConfig->read,SIZE,input);
-    ConfigureSimpleVWrite(&accelConfig->write,SIZE,output);
+    VLinear_VRead(&accelConfig->read,input,SIZE);
+    VLinear_VWrite(&accelConfig->write,output,SIZE);
   
     RunAccelerator(1);
 
-    accelConfig->write.enabled = 0;
     accelConfig->read.enabled = 0;
+    accelConfig->write.enabled = 0;
 
-    RunAccelerator(2); // Flush accelerator
+    RunAccelerator(2);
 
     ClearCache(arena->mem);
 
