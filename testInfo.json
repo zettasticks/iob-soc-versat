@@ -415,6 +415,19 @@
       }
     },
     {
+      "name": "ADDRESSGEN_Constants",
+      "finalStage": "PC_EMUL",
+      "tokens": 30435,
+      "hashVal": 931828177245135024,
+      "stage": "PC_EMUL",
+      "accelData": {
+        "configBits": "674",
+        "stateBits": "0",
+        "memUsed": "528.000 kilobytes",
+        "unitsUsed": "3"
+      }
+    },
+    {
       "name": "ADDRESSGEN_EmptyLoops",
       "finalStage": "SIM_RUN",
       "tokens": 33036,

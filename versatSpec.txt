@@ -2650,6 +2650,17 @@ module ADDRESSGEN_Advanced(){
    read -> output;
 }
 
+AddressGen Read AddressGenConstant(var1)
+   for x 0..5
+   addr = x + var1 + 5;
+
+module ADDRESSGEN_Constants(){
+   using(AddressGenConstant) VRead read;
+   Mem output;
+#
+   read -> output;
+}
+
 AddressGen Read AddressGenEmptyLoops()
    for y 0..2
    for x 0..2
@@ -2668,8 +2679,13 @@ AddressGen Read AddressGenEmptyLoops3()
    for x 0..2
    addr = 2 * x + 5 * y;
 
+AddressGen Read AddressGenEmptyLoops4()
+   for t 0..4
+   for x 0..5
+   addr = t;
+
 module ADDRESSGEN_EmptyLoops(){
-   using(AddressGenEmptyLoops,AddressGenEmptyLoops2,AddressGenEmptyLoops3) VRead read;
+   using(AddressGenEmptyLoops,AddressGenEmptyLoops2,AddressGenEmptyLoops3,AddressGenEmptyLoops4) VRead read;
    Mem output;
 #
    read -> output;
