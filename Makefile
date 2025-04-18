@@ -34,7 +34,10 @@ ifeq ($(DEBUG),1)
 VERSAT_CALL := gdb -ex run --args ./versat
 endif
 
-VERSAT_ARGUMENTS:=$(CUR_DIR)/$(VERSAT_SPEC) -s -b32 -d -t $(TEST) -u $(CUR_DIR)/submodules/VERSAT/hardware/src/units 
+AXI_DATA_W?=32
+SETUP_ARGS+=AXI_DATA_W=$(AXI_DATA_W)
+
+VERSAT_ARGUMENTS:=$(CUR_DIR)/$(VERSAT_SPEC) -s -b$(AXI_DATA_W) -d -t $(TEST) -u $(CUR_DIR)/submodules/VERSAT/hardware/src/units 
 VERSAT_ARGUMENTS+=-I $(CUR_DIR)/submodules/VERSAT/hardware/src -O $(CUR_DIR)/../iob_soc_versat_V0.70_$(TEST)/software
 VERSAT_ARGUMENTS+=-o $(CUR_DIR)/../iob_soc_versat_V0.70_$(TEST)/hardware/src -g $(CUR_DIR)/../debug -u $(CUR_DIR)/hardware/src/units -x64
 

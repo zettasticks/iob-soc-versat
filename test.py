@@ -67,6 +67,7 @@ class Stage(Enum):
    DISABLED = auto()
    TEMP_DISABLED = auto()
    NOT_WORKING = auto()
+   VERSAT = auto()
    PC_EMUL = auto()
    SIM_RUN = auto()
    FPGA_RUN = auto()
@@ -488,6 +489,11 @@ def ProcessWork(work):
          work.workStage = WorkState.FINISH
          return work
 
+      if(test.finalStage == Stage.VERSAT):
+         work.lastStageReached = Stage.VERSAT
+         work.workStage = WorkState.FINISH
+         return work
+
       sourceLocation = CppLocation(test)
       filepathsToHash = filepaths + [sourceLocation]
       hashError,tokenAmount,hashVal = ComputeFilesTokenSizeAndHash(filepathsToHash)
@@ -750,7 +756,7 @@ if __name__ == "__main__":
 
       if(command == 'run'):
          for result in resultList:
-            if(result.didTokenize and result.lastStageReached.value >= Stage.PC_EMUL.value):
+            if(result.didTokenize and result.lastStageReached.value >= Stage.VERSAT.value):
                result.test.tokens = result.tokens
                result.test.hashVal = result.hashVal
                result.test.stage = result.lastStageReached.name

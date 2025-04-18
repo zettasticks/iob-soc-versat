@@ -74,8 +74,6 @@ EMUL_SRC+=src/printf.c
 # PERIPHERAL SOURCES
 EMUL_SRC+=$(filter-out src/iob-versat.c, $(wildcard src/iob-*.c))
 
-#Auto-generated target to create init_ddr_contents.hex
-HEX+=init_ddr_contents.hex
-# init file for external mem with firmware of both systems
-init_ddr_contents.hex: iob_soc_versat_firmware.hex
-	../../scripts/joinHexFiles.py $^ - 24 > $@
+test.hex: iob_soc_versat_firmware.bin
+	echo -n "\`define IOB_SOC_VERSAT_INIT_DDR_SIZE " >> ../../hardware/src/iob_soc_versat_conf.vh
+	../../scripts/BinToHex.py iob_soc_versat_firmware.bin test.hex 8 >> ../../hardware/src/iob_soc_versat_conf.vh

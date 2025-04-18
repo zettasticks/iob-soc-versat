@@ -16,7 +16,7 @@ SIM_USER=$(VSIM_USER)
 
 SIM_OBJ=V$(VTOP)
 
-comp: $(VHDR) $(VSRC) $(HEX)
+comp: $(VHDR) $(VSRC) iob_soc_versat_boot.hex test.hex #$(HEX)
 	verilator $(VFLAGS) $(VSRC) src/$(NAME)_tb.cpp
 	cd ./obj_dir && make -j 8 -f $(SIM_OBJ).mk
 

@@ -24,29 +24,25 @@ VERSAT_EXTRA_UNITS = os.path.realpath(
 
 print("IOB_SOC_VERSAT", file=sys.stderr)
 
-
-def GetTestName():
+def GetTestParameter():
     # Check for test type
+    axiDataW = 32
     testName = "M_Stage"  # Default test
+    pcEmul = False
     for arg in sys.argv[1:]:
         if arg[:5] == "TEST=":
             testName = arg[5:]
-
-    return testName
-
+        if arg[:11] == "AXI_DATA_W=":
+            axiDataW = int(arg[11:])
+        if arg == "PC_EMUL":
+            pcEmul = True
+    return testName,axiDataW,pcEmul
 
 def GetBuildDir(name):
-    testName = GetTestName()
+    testName,axiDataW,pcEmul = GetTestParameter()
 
     # TODO: Remove default test and use the version string if not running a test
     return os.path.realpath(f"../{name}_V0.70_{testName}")
-
-
-pc_emul = False
-for arg in sys.argv[1:]:
-    if arg == "PC_EMUL":
-        pc_emul = True
-
 
 class iob_soc_versat(iob_soc):
     name = "iob_soc_versat"
@@ -68,13 +64,15 @@ class iob_soc_versat(iob_soc):
     @classmethod
     def _create_submodules_list(cls, extra_submodules=[]):
         """Create submodules list with dependencies of this module"""
+        testName,axiDataW,pcEmul = GetTestParameter()
 
         cls.versat_type = CreateVersatClass(
-            pc_emul,
+            pcEmul,
             VERSAT_SPEC,
-            GetTestName(),
+            testName,
             VERSAT_EXTRA_UNITS,
             GetBuildDir("iob_soc_versat"),
+            axiDataW,
             os.path.realpath(os.path.join(cls.setup_dir,"../debug/")),
         )
 
@@ -109,9 +107,11 @@ class iob_soc_versat(iob_soc):
     @classmethod
     def _post_setup(cls):
         super()._post_setup()
+        
+        testName,axiDataW,pcEmul = GetTestParameter()
 
         shutil.copy(
-            f"{cls.build_dir}/software/src/Tests/{GetTestName()}.cpp",
+            f"{cls.build_dir}/software/src/Tests/{testName}.cpp",
             f"{cls.build_dir}/software/src/test.cpp",
         )
 
@@ -126,6 +126,12 @@ class iob_soc_versat(iob_soc):
         )
 
         shutil.copytree(
+            f"{cls.setup_dir}/scripts",
+            f"{cls.build_dir}/scripts",
+            dirs_exist_ok=True,
+        )
+
+        shutil.copytree(
             f"{cls.setup_dir}/hardware/src/units",
             f"{cls.build_dir}/hardware/src",
             dirs_exist_ok=True,
@@ -136,6 +142,8 @@ class iob_soc_versat(iob_soc):
     @classmethod
     def _setup_confs(cls, extra_confs=[]):
         # Append confs or override them if they exist
+
+        testName,axiDataW,pcEmul = GetTestParameter()
 
         confs = [
             {
@@ -150,6 +158,7 @@ class iob_soc_versat(iob_soc):
 
         if cls.versat_type.USE_EXTMEM:
             print("USING EXT MEM BECAUSE VERSAT", file=sys.stderr)
+            
             confs.append(
                 {
                     "name": "USE_EXTMEM",
@@ -164,9 +173,9 @@ class iob_soc_versat(iob_soc):
                 {
                     "name": "AXI_DATA_W",
                     "type": "P",
-                    "val": "32",
+                    "val": f"{axiDataW}",
                     "min": "0",
-                    "max": "32",
+                    "max": "256",
                     "descr": "Versat AXI datapath size",
                 }
             )

@@ -2691,6 +2691,39 @@ module ADDRESSGEN_EmptyLoops(){
    read -> output;
 }
 
+AddressGen Read AddressGenComplexLoopExpression(var1,var2)
+   for x 0..(var1 / var2)
+   addr = x;
+
+module ADDRESSGEN_ComplexLoopExpression(){
+   using(AddressGenComplexLoopExpression) VRead read;
+   Mem output;
+#
+   read -> output;
+}
+
+
+AddressGen Read TooManyLoops()
+   for h 0..2
+   for g 0..2
+   for f 0..2
+   for e 0..2
+   for d 0..2
+   for c 0..2
+   for b 0..2
+   for a 0..2
+   for z 0..2
+   for y 0..2
+   for x 0..2
+   addr = x + y + z + a + b + c + d + e + f + g + h;
+
+module ADDRESSGEN_TooManyLoops(){
+   using(TooManyLoops) VRead read;
+   Mem output;
+#
+   read -> output;
+}
+
 module ADDRESSGEN_SimulateLoop(){
    using(VDouble) VRead read;
 #

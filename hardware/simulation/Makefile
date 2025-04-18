@@ -57,7 +57,7 @@ ifneq ($(SIM_SERVER),)
 	rsync $(SIM_SYNC_FLAGS) -avz --force --delete ../.. $(SIM_USER)@$(SIM_SERVER):$(REMOTE_BUILD_DIR)
 endif
 
-build: $(VHDR) $(VSRC) $(HEX) remote_build_dir
+build: $(VHDR) $(VSRC) test.hex remote_build_dir #$(HEX) 
 ifeq ($(SIM_SERVER),)
 	make comp
 else
@@ -73,7 +73,7 @@ run: test.log
 	@-test "$$(cat test.log)" = "Test passed!" || echo "$(DIR): Failed"  1>&2
 	@-test "$$(cat test.log)" = "Test passed!" && echo "$(DIR): Success" 1>&2
 
-test.log: remote_build_dir
+test.log: remote_build_dir test.hex
 ifeq ($(SIM_SERVER),)
 ifneq ($(CONSOLE_CMD),)
 	$(BOARD_GRAB_CMD) -s 'make exec' -c '$(CONSOLE_CMD)' && echo "Checking test log..." && sleep 2

@@ -47,7 +47,7 @@ module iob_soc_versat_sim_wrapper (
    localparam AXI_ID_W = 4;
    localparam AXI_LEN_W = 8;
    localparam AXI_ADDR_W = `DDR_ADDR_W;
-   localparam AXI_DATA_W = 32;
+   localparam AXI_DATA_W = `IOB_SOC_VERSAT_AXI_DATA_W;
 
    wire uart_txd_o;
    wire uart_rxd_i;
@@ -154,10 +154,8 @@ module iob_soc_versat_sim_wrapper (
    iob_soc_versat #(
       .AXI_ID_W  (AXI_ID_W),
       .AXI_LEN_W (AXI_LEN_W),
-      .AXI_ADDR_W(AXI_ADDR_W)
-
-
-      //.AXI_DATA_W(AXI_DATA_W)
+      .AXI_ADDR_W(AXI_ADDR_W),
+      .AXI_DATA_W(AXI_DATA_W)
    ) iob_soc_versat0 (
       .uart_txd_o(uart_txd_o),
       .uart_rxd_i(uart_rxd_i),
@@ -330,8 +328,9 @@ module iob_soc_versat_sim_wrapper (
    //IOb-SoC and SUT access the same memory.
    axi_ram #(
 `ifdef IOB_SOC_VERSAT_INIT_MEM
-      .FILE      ("init_ddr_contents.hex"),  //This file contains firmware for both systems
-      .FILE_SIZE (2 ** (AXI_ADDR_W - 2)),
+      .FILE      ("test.hex"),  //This file contains firmware for both systems
+      .FILE_SIZE (`IOB_SOC_VERSAT_INIT_DDR_SIZE),
+      //.FILE_SIZE (2 ** (AXI_ADDR_W - 2)),
 `endif
       .ID_WIDTH  (AXI_ID_W),
       .DATA_WIDTH(AXI_DATA_W),
