@@ -1,5 +1,12 @@
 #!/usr/bin/python
 
+#####
+# This tests the entire iob-soc system, whose entry point is the top level makefile.
+# As such, we build everything on top of the makefile used by iob-soc to setup the project
+# Parameters and arguments need to be makefile arguments and any test that actually runs code needs to do it through the makefile.
+# We are essentially testing that the makefile works for all the combination of parameters and tests that we want to test.
+#####
+
 ##############
 # TODO: Add a brief description here of what we are doing
 # Bunch of stuff that was supposed to be on Json, but since it does not support comments, put it here.

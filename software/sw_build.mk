@@ -73,7 +73,3 @@ EMUL_SRC+=src/printf.c
 
 # PERIPHERAL SOURCES
 EMUL_SRC+=$(filter-out src/iob-versat.c, $(wildcard src/iob-*.c))
-
-test.hex: iob_soc_versat_firmware.bin
-	echo -n "\`define IOB_SOC_VERSAT_INIT_DDR_SIZE " >> ../../hardware/src/iob_soc_versat_conf.vh
-	../../scripts/BinToHex.py iob_soc_versat_firmware.bin test.hex 8 >> ../../hardware/src/iob_soc_versat_conf.vh
