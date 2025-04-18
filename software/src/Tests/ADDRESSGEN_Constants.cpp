@@ -30,6 +30,8 @@ void SingleTest(Arena* arena){
 
    ClearBuffer(buffer);
 
+   printf("Test: %p\n",buffer);
+
    buffer[5+1]    = 100;
    buffer[5+10]   = 200;
    buffer[5+100]  = 300;

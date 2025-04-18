@@ -34,7 +34,7 @@ ifeq ($(DEBUG),1)
 VERSAT_CALL := gdb -ex run --args ./versat
 endif
 
-AXI_DATA_W?=32
+AXI_DATA_W?=64
 SETUP_ARGS+=AXI_DATA_W=$(AXI_DATA_W)
 
 VERSAT_ARGUMENTS:=$(CUR_DIR)/$(VERSAT_SPEC) -s -b$(AXI_DATA_W) -d -t $(TEST) -u $(CUR_DIR)/submodules/VERSAT/hardware/src/units 
