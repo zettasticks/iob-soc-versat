@@ -41,8 +41,10 @@ def GetTestParameter():
 def GetBuildDir(name):
     testName,axiDataW,pcEmul = GetTestParameter()
 
+    sanitized = f"b{axiDataW}"
+
     # TODO: Remove default test and use the version string if not running a test
-    return os.path.realpath(f"../{name}_V0.70_{testName}")
+    return os.path.realpath(f"../{name}_V0.70_{testName}_{sanitized}")
 
 class iob_soc_versat(iob_soc):
     name = "iob_soc_versat"

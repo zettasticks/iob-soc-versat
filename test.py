@@ -19,6 +19,9 @@
 #     (Adding a time.sleep(1) before sim-run appears to have fixed this)
 
 # TODO:
+# Test code is kinda of a mess after addition of subtests. 
+# Also need lock the fact that makefile and this test need to agree on names for things. It might be helpful to put everything that depends on this kinda of stuff in functions that make it easy to change if needed, especially as we add more parameters
+#
 # Sometimes I make a change and that causes some tests to run that I did not expect to.
 #   If they pass, they overwrite the testCacheGood and so I cannot see immediatly what changed. I could just revert the change and rerun the tests to see, but I kinda want another cache to save the trouble.
 #     Something like a testCacheGoodPrevious where we saved the previous testCacheGood if it existed. That way I can compare the new run with the old good and see if the change was intended or not.
@@ -137,10 +140,8 @@ def ParseAccelData(jsonContent):
    return VersatAcceleratorData(configBits,stateBits,memUsed,unitsUsed)
 
 @dataclass
-class TestInfo:
-   name: str
-   finalStage: Stage
-   comment: str
+class SubTestInfo:
+   args: str
    tokens: int
    hashVal: int
    stage: Stage
@@ -148,14 +149,32 @@ class TestInfo:
    accelData: VersatAcceleratorData
 
 @dataclass
+class TestInfo:
+   name: str
+   finalStage: Stage
+   comment: str
+   subTests: list[SubTestInfo]
+
+   def __hash__(self):
+      return hash(self.name)
+   #tokens: int
+   #hashVal: int
+   #stage: Stage
+   #tempDisabledStage: Stage
+   #accelData: VersatAcceleratorData
+
+@dataclass
 class TestData:
    defaultArgs: str
+   sameArgs: str
    tests: list[TestInfo]
 
 @dataclass
 class ThreadWork:
    test: TestInfo
+   subTest: SubTestInfo
    args: str
+   makefileArgs: str
    index: int
    cached: bool = False
    didTokenize: bool = False
@@ -175,6 +194,10 @@ class MyJsonEncoder(json.JSONEncoder):
          asDict = vars(o)
          asDict = {x:y for x,y in asDict.items() if y is not None}
          return asDict
+      elif(type(o) == SubTestInfo):
+         asDict = vars(o)
+         asDict = {x:y for x,y in asDict.items() if y is not None}
+         return asDict
       elif(type(o) == Stage):
          return o.name
       else:
@@ -182,13 +205,14 @@ class MyJsonEncoder(json.JSONEncoder):
 
 def ParseJson(jsonContent):
    defaultArgs = jsonContent['defaultArgs']
+   sameArgs = jsonContent['sameArgs']
 
    testList = []
    for test in jsonContent['tests']:
 
       # Check if all the contents inside a test are valid
       for member in test:
-         if not member in ["name","finalStage","comment","tokens","hashVal","stage","tempDisabledStage","accelData"]:
+         if not member in ["name","finalStage","comment","tokens","hashVal","stage","tempDisabledStage","accelData","subTests"]:
             print(f"Member '{member}' was not found in the test:")
             print(test)
             sys.exit(0)
@@ -196,20 +220,27 @@ def ParseJson(jsonContent):
       name = test['name']
       finalStage = Stage[test['finalStage']]
       comment = test['comment'] if 'comment' in test else None
-      tokens = int(test['tokens']) if 'tokens' in test else None
-      hashVal = int(test['hashVal']) if 'hashVal' in test else None
-      stage = Stage[test['stage']] if 'stage' in test else Stage.NOT_WORKING
-      tempDisabledStage = Stage[test['tempDisabledStage']] if 'tempDisabledStage' in test else None
+      subTests = test['subTests']
 
-      accelData = ParseAccelData(test['accelData']) if 'accelData' in test else None
+      subTestList = []
+      for subTest in subTests:
+         tokens = int(subTest['tokens']) if 'tokens' in subTest else None
+         hashVal = int(subTest['hashVal']) if 'hashVal' in subTest else None
+         args = subTest['args'] if "args" in subTest else None
+         stage = Stage[subTest['stage']] if 'stage' in subTest else Stage.NOT_WORKING
+         tempDisabledStage = Stage[subTest['tempDisabledStage']] if 'tempDisabledStage' in subTest else None
+
+         accelData = ParseAccelData(subTest['accelData']) if 'accelData' in subTest else None
+
+         subTestList.append(SubTestInfo(args,tokens,hashVal,stage,tempDisabledStage,accelData))
 
       if(finalStage != Stage.TEMP_DISABLED):
          tempDisabledStage = None
 
-      info = TestInfo(name,finalStage,comment,tokens,hashVal,stage,tempDisabledStage,accelData)
+      info = TestInfo(name,finalStage,comment,subTestList)
       testList.append(info)
 
-   return TestData(defaultArgs,testList)
+   return TestData(defaultArgs,sameArgs,testList)
 
 # Used to find values in the form "NAME:VAL"
 # TODO: Simple and slow but should be fine
@@ -243,14 +274,14 @@ def FindAndParseFilepathList(content):
 
    return filePathList
 
-def JoinOutputAndErrorOutput(subprocessResult):
+def GenerateProgramOutput(args,subprocessResult):
    decoder = codecs.getdecoder("utf-8")
    output = "" if subprocessResult.stdout == None else decoder(subprocessResult.stdout)[0]
    errorOutput = "" if subprocessResult.stderr == None else decoder(subprocessResult.stderr)[0]
 
    header = "\n============\n"
 
-   res = header + "   stdout" + header + "\n" + output + header + "   stderr" + header + "\n" + errorOutput
+   res = args + "\n\n" + header + "   stdout" + header + "\n" + output + header + "   stderr" + header + "\n" + errorOutput
 
    return res
 
@@ -267,7 +298,7 @@ def RunVersat(testName,testFolder,versatExtra):
    try:
       result = sp.run(args,capture_output=True,timeout=10) # Maybe a bit low for merge based tests, eventually add timeout 'option' to the test itself
    except sp.TimeoutExpired as t:
-      return Error(ErrorType.TIMEOUT,ErrorSource.VERSAT),[],None,JoinOutputAndErrorOutput(t)
+      return Error(ErrorType.TIMEOUT,ErrorSource.VERSAT),[],None,GenerateProgramOutput(" ".join(args),t)
    except Exception as e:
       print(f"Except on calling Versat:{e}") # This should not happen
       return Error(ErrorType.EXCEPT,ErrorSource.VERSAT),[],None,""
@@ -275,7 +306,7 @@ def RunVersat(testName,testFolder,versatExtra):
    returnCode = result.returncode
 
    if(returnCode != 0):
-      return Error(ErrorType.PROGRAM_ERROR,ErrorSource.VERSAT),[],None,JoinOutputAndErrorOutput(result)
+      return Error(ErrorType.PROGRAM_ERROR,ErrorSource.VERSAT),[],None,GenerateProgramOutput(" ".join(args),result)
 
    decoder = codecs.getdecoder("utf-8")
    output = decoder(result.stdout)[0]
@@ -289,20 +320,25 @@ def RunVersat(testName,testFolder,versatExtra):
    data.unitsUsed = FindAndParseValue(output,"UNITS")
 
    # Parse result.
-   return Error(),filePathList,data,JoinOutputAndErrorOutput(result)
+   return Error(),filePathList,data,GenerateProgramOutput(" ".join(args),result)
 
 def TempDir(testName):
    path = f"./testCache/{testName}"
    os.makedirs(path,exist_ok=True)
    return path
 
+def LastGoodDir():
+   return "./testCacheGood"
+
 def LastGoodTempDir(testName):
-   path = f"./testCacheGood/{testName}"
+   path = f"{LastGoodDir()}/{testName}"
    os.makedirs(path,exist_ok=True)
    return path
 
-def LastGoodDir():
-   return "./testCacheGood/"
+def PairTestsAndSubtests(testList):
+   for test in testList:
+      for subTest in test.subTests:
+         yield (test,subTest)
 
 def ComputeFilesTokenSizeAndHash(files):
    args = ["./submodules/VERSAT/build/calculateHash"] + files
@@ -319,7 +355,6 @@ def ComputeFilesTokenSizeAndHash(files):
    returnCode = result.returncode
    decoder = codecs.getdecoder("utf-8")
    output = decoder(result.stdout)[0]
-   #errorOutput = decoder(result.stderr)[0]
 
    if(returnCode == 0):
       amountOfTokens,hashVal = [int(x) for x in output.split(":")]
@@ -329,21 +364,23 @@ def ComputeFilesTokenSizeAndHash(files):
       return Error(ErrorType.PROGRAM_ERROR,ErrorSource.HASHER),-1,-1
 
 # Probably do not want to use makefile, but for now...
-def RunMakefile(target,testName,timeout=60):
+def RunMakefile(target,testName,extraArgs,timeout=60):
    result = None
    try:
-      command = " ".join(["make",target,f"TEST={testName}"])
+      command = " ".join(["make",target,f"TEST={testName}",extraArgs if extraArgs else ""])
+
+      #print(command)
 
       result = sp.run(command,capture_output=True,shell=True,timeout=timeout) # 60
    except sp.TimeoutExpired as t:
-      return Error(ErrorType.TIMEOUT,ErrorSource.MAKEFILE),JoinOutputAndErrorOutput(t)
+      return Error(ErrorType.TIMEOUT,ErrorSource.MAKEFILE),GenerateProgramOutput(command,t)
    except Exception as e:
       print(f"Except on calling makefile:{e}")
       return Error(ErrorType.EXCEPT,ErrorSource.MAKEFILE),""
 
    returnCode = result.returncode
 
-   return Error(),JoinOutputAndErrorOutput(result)
+   return Error(),GenerateProgramOutput(command,result)
 
 def CheckTestPassed(testOutput):
    #print(testOutput)
@@ -365,7 +402,7 @@ def SaveOutput(testName,fileName,output):
       file.write(output)
 
 # Need to not only do the test but also get the list of the files generated from versat in order to perform the comparation
-def PerformTest(test,stage):
+def PerformTest(test,testTrueName,makefileArg,stage):
    # This function was previously taking the output from the makefile and checking the files using the hasher.
    # This was done because there might be changes from the sim-run and the pc-emul files (stuff like 32bit vs 64 bit addresses and stuff like that)
    # (Although must of the changes right now are "abstracted" inside the verilator makefile, so the hardware is the same (or should be the same))
@@ -375,8 +412,8 @@ def PerformTest(test,stage):
    #print("Reached perform Test")
 
    if stage == Stage.PC_EMUL:
-      error,output = RunMakefile("clean pc-emul-run",test)
-      SaveOutput(test,"pc-emul",output)
+      error,output = RunMakefile("clean pc-emul-run",test,makefileArg)
+      SaveOutput(testTrueName,"pc-emul",output)
 
       if(IsError(error)):
          return error
@@ -390,10 +427,10 @@ def PerformTest(test,stage):
       # Something weird happens if we clean and sim-run in same makefile call
       # Since this test already takes a well, adding a few sleeps does not change much
       time.sleep(1)
-      error,output = RunMakefile("clean",test,10)
+      error,output = RunMakefile("clean",test,makefileArg,10)
       time.sleep(1)
-      error,output = RunMakefile("sim-run",test,240)
-      SaveOutput(test,"sim-run",output)
+      error,output = RunMakefile("sim-run",test,makefileArg,300)
+      SaveOutput(testTrueName,"sim-run",output)
 
       if(IsError(error)):
          return error
@@ -411,12 +448,22 @@ def PerformTest(test,stage):
 
    print(f"Error, PerformTest called with: {stage}. Fix this")
 
+def GetTestTrueName(test,subTest):
+   name = test.name
+
+   if(subTest.args and len(subTest.args) > 0):
+      sanitizedName = subTest.args.replace("-","_")
+      name = test.name + sanitizedName
+
+   return name
+
 def PrintResult(result,firstColumnSize):
    def GeneratePad(word,amount,padding = '.'):
       return padding * (amount - len(word))
 
    test = result.test
-   name = test.name
+   subTest = result.subTest
+   name = GetTestTrueName(test,subTest)
 
    finalStage = test.finalStage
    stage = result.lastStageReached
@@ -472,13 +519,15 @@ def PrintResult(result,firstColumnSize):
    secondPad = ' '
    print(f"{testName}{firstPad}{secondPad}{color}{condition}{COLOR_BASE}{partialVal}{cached}{comments}")
 
-def CppLocation(test):
-   return f"./software/src/Tests/{test.name}.cpp"
+def CppLocation(testName):
+   return f"./software/src/Tests/{testName}.cpp"
 
 def ProcessWork(work):
    test = work.test
-   name = test.name
+   subTest = work.subTest
+   makefileArg = work.makefileArgs
 
+   name = GetTestTrueName(test,subTest)
    finalStage = test.finalStage
 
    if(work.workStage == WorkState.INITIAL):
@@ -486,7 +535,7 @@ def ProcessWork(work):
 
       testTempDir = TempDir(name)
 
-      versatError,filepaths,versatData,output = RunVersat(name,testTempDir,work.args)
+      versatError,filepaths,versatData,output = RunVersat(test.name,testTempDir,work.args)
       SaveOutput(name,"versat",output)
 
       work.accelData = versatData
@@ -496,12 +545,12 @@ def ProcessWork(work):
          work.workStage = WorkState.FINISH
          return work
 
-      if(test.finalStage == Stage.VERSAT):
+      if(finalStage == Stage.VERSAT):
          work.lastStageReached = Stage.VERSAT
          work.workStage = WorkState.FINISH
          return work
 
-      sourceLocation = CppLocation(test)
+      sourceLocation = CppLocation(test.name)
       filepathsToHash = filepaths + [sourceLocation]
       hashError,tokenAmount,hashVal = ComputeFilesTokenSizeAndHash(filepathsToHash)
       if(IsError(hashError)):
@@ -510,8 +559,8 @@ def ProcessWork(work):
          work.workStage = WorkState.FINISH
          return work
 
-      testTokens = test.tokens if test.tokens else 0
-      testHashVal = test.hashVal if test.hashVal else 0
+      testTokens = subTest.tokens if subTest.tokens else 0
+      testHashVal = subTest.hashVal if subTest.hashVal else 0
 
       work.tokens = tokenAmount
       work.hashVal = hashVal
@@ -519,7 +568,7 @@ def ProcessWork(work):
 
       if(tokenAmount == testTokens and hashVal == testHashVal):
          work.cached = True
-         work.lastStageReached = test.stage
+         work.lastStageReached = subTest.stage
          if(work.lastStageReached == finalStage):
             work.workStage = WorkState.FINISH
             return work
@@ -533,7 +582,7 @@ def ProcessWork(work):
       return work
    elif(work.workStage == WorkState.PROCESS):
       stage = work.stageToProcess
-      error = PerformTest(test.name,stage)
+      error = PerformTest(test.name,name,makefileArg,stage)
       passed = (not IsError(error))
 
       if(passed):
@@ -568,7 +617,31 @@ def ThreadMain(workQueue,resultQueue,index):
          resultQueue.put(result)
          workQueue.task_done()
 
-def RunTests(testList,defaultArgs):
+def CalculateMaxLengthOfTestNames(testList):
+   maxNameLength = 0
+   for test,subTest in PairTestsAndSubtests(testList):
+      trueName = GetTestTrueName(test,subTest)
+      maxNameLength = max(maxNameLength,len(trueName))
+   return (maxNameLength + 1)
+
+# TODO: Probably not gonna need to improve this any time soon, but if we do need to add more stuff, rewrite this.
+def ParseVersatArgsIntoMakefile(versatArgs):
+   versatArgs = versatArgs.strip()
+   if(versatArgs == None or versatArgs == ''):
+      return ""
+
+   if(versatArgs == '-b32'):
+      return "AXI_DATA_W=32"
+   elif(versatArgs == '-b64'):
+      return "AXI_DATA_W=64"
+   elif(versatArgs == '-b128'):
+      return "AXI_DATA_W=128"
+   elif(versatArgs == '-b256'):
+      return "AXI_DATA_W=256"
+   else:
+      print(f"[ParseVersatArgsIntoMakefile] Need to add logic for Versat arg: {versatArgs}")
+
+def RunTests(testAndSubTestList,sameArgs,defaultArgs):
    global amountOfThreads
    amountOfTests = len(testList)
 
@@ -578,11 +651,20 @@ def RunTests(testList,defaultArgs):
    for thread in threadList:
       thread.start()
 
-   maxNameLength = max([len(test.name) for test in testList]) + 1
+   maxNameLength = CalculateMaxLengthOfTestNames(testList)
 
    amountOfWork = 0
-   for index,test in enumerate(testList):
-      work = ThreadWork(test,defaultArgs,index)
+   for index,testAndSubTest in enumerate(testAndSubTestList):
+      test,subTest = testAndSubTest
+      args = None
+      makefileArgs = None
+      if(subTest.args):
+         args = sameArgs + ' ' + subTest.args
+         makefileArgs = ParseVersatArgsIntoMakefile(subTest.args)
+      else:
+         args = sameArgs + ' ' + defaultArgs
+
+      work = ThreadWork(test,subTest,args,makefileArgs,index)
 
       if(IsStageDisabled(test.finalStage)):
          PrintResult(work,maxNameLength)
@@ -716,16 +798,20 @@ if __name__ == "__main__":
             return True
       return False
 
-   testList = [test for test in testInfo.tests if Filter(test.name,testFilter)]
+   allTests = list(PairTestsAndSubtests(testInfo.tests))
+
+   testAndSubTestList = [(test,subTest) for test,subTest in allTests if Filter(GetTestTrueName(test,subTest),testFilter)]
+
+   testList = list(set([test for test,subTest in testAndSubTestList]))
+   subTestList = [subTest for test,subTest in testAndSubTestList]
 
    if(len(testList) == 0):
       print("No tests found")
       sys.exit(0)
 
-   maxNameLength = max([len(test.name) for test in testList]) + 1
+   maxNameLength = CalculateMaxLengthOfTestNames(testList)
 
-   print(f"\n\nFound and processing {len(testList)} test(s)\n")
-
+   print(f"\n\nFound and processing {len(testList)} test(s) and {len(subTestList)} subtest(s)\n")
    print("\n\n")
 
    allTestNames = [x.name for x in testList]
@@ -744,9 +830,11 @@ if __name__ == "__main__":
    # From this point assume data is correct
 
    def SaveResultAsLastGood(result):
-      name = result.test.name
-      lastGoodLoc = LastGoodTempDir(name)
-      lastGoodPath = LastGoodDir()
+      test = result.test
+      subTest = result.subTest
+
+      trueName = GetTestTrueName(test,subTest)
+      lastGoodLoc = LastGoodTempDir(trueName)
       pathLoc = TempDir(name)
 
       shutil.rmtree(lastGoodLoc,ignore_errors=True)
@@ -754,20 +842,22 @@ if __name__ == "__main__":
 
    if(command == "reset"):
       for test in testList:
-         test.tokens = None
-         test.hashVal = None
-         test.stage = None
+         for subTest in test.subTests:
+            subTest.tokens = None
+            subTest.hashVal = None
+            subTest.stage = None
+            subTest.accelData = None
 
    elif(command == "run" or command == "run-only" or command == "disable-failed"):
-      resultList = RunTests(testList,testInfo.defaultArgs)
+      resultList = RunTests(testAndSubTestList,testInfo.sameArgs,testInfo.defaultArgs)
 
       if(command == 'run'):
          for result in resultList:
             if(result.didTokenize and result.lastStageReached.value >= Stage.VERSAT.value):
-               result.test.tokens = result.tokens
-               result.test.hashVal = result.hashVal
-               result.test.stage = result.lastStageReached.name
-               result.test.accelData = result.accelData
+               result.subTest.tokens = result.tokens
+               result.subTest.hashVal = result.hashVal
+               result.subTest.stage = result.lastStageReached.name
+               result.subTest.accelData = result.accelData
 
                if(not result.cached):
                   SaveResultAsLastGood(result)
@@ -795,3 +885,6 @@ if __name__ == "__main__":
 
    with open(jsonfilePath,"w") as file:
       json.dump(testInfo,file,cls=MyJsonEncoder,indent=2)
+
+# MAYBE- Parse Versat and generate makefile args.
+# MAYBE- Parse Makefile and generate versat.
