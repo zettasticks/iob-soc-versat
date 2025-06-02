@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 #####
 # This tests the entire iob-soc system, whose entry point is the top level makefile.
@@ -14,9 +14,8 @@
 ##############
 
 # BUGS:
-# Some tests randomly fail, even though they work when testing individually.
-#   Probably some problem with the iob-soc setup containing non parallelizable code  
-#     (Adding a time.sleep(1) before sim-run appears to have fixed this)
+#   The testCacheGood was only saving Variety1 for every single testcase.
+#   Very likely some python var being poluted and we only save one testcase, need to do a proper test and look at this more closely.
 
 # TODO:
 # Test code is kinda of a mess after addition of subtests. 
@@ -145,13 +144,13 @@ class SubTestInfo:
    tokens: int
    hashVal: int
    stage: Stage
-   tempDisabledStage: Stage
    accelData: VersatAcceleratorData
 
 @dataclass
 class TestInfo:
    name: str
    finalStage: Stage
+   tempDisabledStage: Stage
    comment: str
    subTests: list[SubTestInfo]
 
@@ -220,6 +219,7 @@ def ParseJson(jsonContent):
       name = test['name']
       finalStage = Stage[test['finalStage']]
       comment = test['comment'] if 'comment' in test else None
+      tempDisabledStage = Stage[test['tempDisabledStage']] if 'tempDisabledStage' in test else None
       subTests = test['subTests']
 
       subTestList = []
@@ -228,16 +228,12 @@ def ParseJson(jsonContent):
          hashVal = int(subTest['hashVal']) if 'hashVal' in subTest else None
          args = subTest['args'] if "args" in subTest else None
          stage = Stage[subTest['stage']] if 'stage' in subTest else Stage.NOT_WORKING
-         tempDisabledStage = Stage[subTest['tempDisabledStage']] if 'tempDisabledStage' in subTest else None
 
          accelData = ParseAccelData(subTest['accelData']) if 'accelData' in subTest else None
 
-         subTestList.append(SubTestInfo(args,tokens,hashVal,stage,tempDisabledStage,accelData))
+         subTestList.append(SubTestInfo(args,tokens,hashVal,stage,accelData))
 
-      if(finalStage != Stage.TEMP_DISABLED):
-         tempDisabledStage = None
-
-      info = TestInfo(name,finalStage,comment,subTestList)
+      info = TestInfo(name,finalStage,tempDisabledStage,comment,subTestList)
       testList.append(info)
 
    return TestData(defaultArgs,sameArgs,testList)

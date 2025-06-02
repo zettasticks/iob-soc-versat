@@ -116,7 +116,7 @@ begin
    end else if(run) begin
       delay <= delay0;
       working <= 0;
-   end else if(!working) begin
+   end else if(!working && running) begin
       if(delay == 0) begin
          a <= T1_init + T2_init;
          b <= in0;
@@ -130,7 +130,7 @@ begin
       end else begin
          delay <= delay - 1;
       end
-   end else begin
+   end else if(running) begin
       a <= T1 + T2;
       b <= a;
       c <= b;

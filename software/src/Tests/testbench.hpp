@@ -132,7 +132,7 @@ Array<T> ArrayJoin(Array<T> f,Array<T> s,Arena* out){
       s = temp;
    }
 
-   // Arrays are continouos, concatenate them together
+   // Arrays are continuous, concatenate them together
    if(f.data + f.size == s.data){
       Array<T> result = {};
       result.data = f.data;
@@ -285,11 +285,6 @@ static float Abs(float in){
 
 static bool MyFloatEqual(float f0,float f1,float epsilon = 0.00001f){
   if(f0 == f1){
-    return true;
-  }
-
-  // Values so close to zero that 
-  if(Abs(f0) <= epsilon && Abs(f1) <= epsilon){
     return true;
   }
 
@@ -447,35 +442,6 @@ String PushFile(Arena* arena,const char* filepath){
   return (String){.str = testFile.data,.size = (int) file_size};
 }
 
-#if 0
-String PushFileFromEthernet(Arena* arena,const char* file_name){
-  uart_puts(UART_PROGNAME);
-  uart_puts(": requesting to receive file by ethernet\n");
-
-  // send file receive by ethernet request
-  uart_putc(0x13);
-
-  // send file name (including end of string)
-  uart_puts(file_name);
-  uart_putc(0);
-
-  // receive file size
-  uint32_t file_size = uart_getc();
-  file_size |= ((uint32_t)uart_getc()) << 8;
-  file_size |= ((uint32_t)uart_getc()) << 16;
-  file_size |= ((uint32_t)uart_getc()) << 24;
-
-  // send ACK before receiving file
-  uart_putc(ACK);
-
-  char* testFile = PushArray<char>(arena,file_size + 1);
-  eth_rcv_file(testFile,file_size);
-  testFile[file_size] = '\0';
-
-  return (String){.str=testFile,.size=file_size};
-}
-#endif
-
 void SingleTest(Arena* arena);
 
 #include "iob_soc_versat_conf.h"
@@ -503,6 +469,7 @@ extern "C" int RunTest(int versatBase){
   gotArena      = SubArena(arena,Kilobyte(16));
 
   SingleTest(arena);
+  printf("Test fully ran\n");
 
   bool differentSizes = (expectedArena.used != gotArena.used);
 

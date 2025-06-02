@@ -7,6 +7,12 @@ AddressGen Read VDouble(xWidth,yWidth,shift)
    for x 0..xWidth
    addr = x + shift * y;
 
+AddressGen Read VTriple(xWidth,yWidth,zWidth,shift,shift2)
+   for z 0..zWidth
+   for y 0..yWidth
+   for x 0..xWidth
+   addr = x + shift * y + shift2 * z;
+
 module EXAMPLE_Simple(){
   Const a;
   Const b;
@@ -308,8 +314,8 @@ module DATABUS_SimpleTransfer(){
 }
 
 module DATABUS_MultipleTransfers(){
-   using(VLinear,VReadMultipleLoad,VReadMultipleLoad2,VReadMultipleOutput) VRead read;
-   using(VWriteStoreLinear,VWriteInputLinear,VWriteMultipleStore,VWriteMultipleInput) VWriteMultiple write;
+   using(VLinear,VDouble,VTriple) VRead read;
+   using(VLinear,VDouble,VTriple) VWrite write;
 #
    read -> write;
 }
