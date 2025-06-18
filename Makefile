@@ -53,7 +53,7 @@ endif
 
 TEST_FOLDER := $(abspath $(TEST_FOLDER_TEMP))
 
-VERSAT_ARGUMENTS:=$(CUR_DIR)/$(VERSAT_SPEC) -s -b$(AXI_DATA_W) -d -t $(TEST) -u $(CUR_DIR)/submodules/VERSAT/hardware/src/units 
+VERSAT_ARGUMENTS:=$(CUR_DIR)/$(VERSAT_SPEC) -s -b$(AXI_DATA_W) -d -t $(TEST) 
 VERSAT_ARGUMENTS+=-I $(CUR_DIR)/submodules/VERSAT/hardware/src -O $(TEST_FOLDER)/software
 VERSAT_ARGUMENTS+=-o $(TEST_FOLDER)/hardware/src -g $(CUR_DIR)/../debug -u $(CUR_DIR)/hardware/src/units -x64
 

@@ -56,6 +56,7 @@ import time
 import traceback
 import shutil
 import os
+import random
 from dataclasses import dataclass
 from enum import Enum,auto
 
@@ -124,10 +125,10 @@ class WorkState(Enum):
 
 @dataclass
 class VersatAcceleratorData:
-   configBits: str = None
-   stateBits: str = None
-   memUsed: str = None
-   unitsUsed: str = None
+   configBits: str | None = None
+   stateBits: str | None = None
+   memUsed: str | None = None
+   unitsUsed: str | None = None
 
 def ParseAccelData(jsonContent):
    # TODO: Find a way of automatizing this if we end up storing more data
@@ -144,7 +145,7 @@ class SubTestInfo:
    tokens: int
    hashVal: int
    stage: Stage
-   accelData: VersatAcceleratorData
+   accelData: VersatAcceleratorData | None
 
 @dataclass
 class TestInfo:
@@ -156,11 +157,6 @@ class TestInfo:
 
    def __hash__(self):
       return hash(self.name)
-   #tokens: int
-   #hashVal: int
-   #stage: Stage
-   #tempDisabledStage: Stage
-   #accelData: VersatAcceleratorData
 
 @dataclass
 class TestData:
@@ -178,7 +174,7 @@ class ThreadWork:
    cached: bool = False
    didTokenize: bool = False
    error: Error = Error()
-   accelData: VersatAcceleratorData = None
+   accelData: VersatAcceleratorData | None = None
    tokens: int = 0
    hashVal: int = 0
    workStage: WorkState = WorkState.INITIAL
@@ -405,8 +401,6 @@ def PerformTest(test,testTrueName,makefileArg,stage):
    # Regardless. If we eventually start making pc-emul and sim-run different, we need to start calculating the hash for each type (pc-emul vs sim-run)
    # Only handle this case when we need it.
 
-   #print("Reached perform Test")
-
    if stage == Stage.PC_EMUL:
       error,output = RunMakefile("clean pc-emul-run",test,makefileArg)
       SaveOutput(testTrueName,"pc-emul",output)
@@ -431,8 +425,6 @@ def PerformTest(test,testTrueName,makefileArg,stage):
       if(IsError(error)):
          return error
 
-      #print("reaching here2")
-
       testPassed = CheckTestPassed(output)
       if(testPassed):
          return Error()
@@ -444,7 +436,7 @@ def PerformTest(test,testTrueName,makefileArg,stage):
 
    print(f"Error, PerformTest called with: {stage}. Fix this")
 
-def GetTestTrueName(test,subTest):
+def GetTestTrueName(test : TestInfo,subTest : SubTestInfo):
    name = test.name
 
    if(subTest.args and len(subTest.args) > 0):
@@ -751,9 +743,10 @@ if __name__ == "__main__":
    testInfoJson = None
    jsonfilePath = "testInfo.json"
 
+   # Recompile versat first, otherwise we could have multiple jobs compiling the same exe for no reason
    try:
       args = ["make fast-compile-versat"]
-      result = sp.run(args,capture_output=False,shell=True,timeout=10)
+      sp.run(args,capture_output=False,shell=True,timeout=10)
    except sp.TimeoutExpired as t:
       print("Timeout on versat compilation")
       sys.exit(0)
@@ -764,19 +757,15 @@ if __name__ == "__main__":
 
    parser = argparse.ArgumentParser(prog="Tester",description="Test Versat, using cache to prevent rerunning unnecessary tests")
 
-   allCommands = ["run","run-only","reset","enable","disable-failed","disable-temp"]
+   allCommands = ["run","run-only","reset","enable","disable-failed","disable-temp","list"]
 
    parser.add_argument("command",choices=allCommands)
    parser.add_argument("testFilter",nargs='*')
 
-   args = parser.parse_args()
+   arguments = parser.parse_args()
 
-   command = args.command
-   testFilter = args.testFilter if args.testFilter else [""]
-
-   if(len(testFilter) == 0):
-      print("No tests passed the filter")
-      sys.exit(0)
+   command = arguments.command
+   testFilter = arguments.testFilter if arguments.testFilter else [""]
 
    with open(jsonfilePath,"r") as file:
       try:
@@ -796,6 +785,9 @@ if __name__ == "__main__":
 
    allTests = list(PairTestsAndSubtests(testInfo.tests))
 
+   if False:
+      allTests = random.choices(allTests,k=16)
+
    testAndSubTestList = [(test,subTest) for test,subTest in allTests if Filter(GetTestTrueName(test,subTest),testFilter)]
 
    testList = list(set([test for test,subTest in testAndSubTestList]))
@@ -812,7 +804,7 @@ if __name__ == "__main__":
 
    allTestNames = [x.name for x in testList]
 
-   nameCount = {}
+   nameCount : dict[str,int] = {}
    for name in allTestNames:
       nameCount[name] = nameCount.get(name,0) + 1
 
@@ -824,14 +816,16 @@ if __name__ == "__main__":
 
    # Put any check to the data above this line. 
    # From this point assume data is correct
-
-   def SaveResultAsLastGood(result):
-      test = result.test
-      subTest = result.subTest
+   
+   def SaveResultAsLastGood(result : ThreadWork):
+      test: TestInfo = result.test
+      subTest: SubTestInfo = result.subTest
 
       trueName = GetTestTrueName(test,subTest)
       lastGoodLoc = LastGoodTempDir(trueName)
-      pathLoc = TempDir(name)
+      pathLoc = TempDir(trueName)
+
+      print(f"Saving {pathLoc} to {lastGoodLoc}")
 
       shutil.rmtree(lastGoodLoc,ignore_errors=True)
       shutil.copytree(pathLoc,lastGoodLoc,dirs_exist_ok=True)
@@ -845,17 +839,17 @@ if __name__ == "__main__":
             subTest.accelData = None
 
    elif(command == "run" or command == "run-only" or command == "disable-failed"):
-      resultList = RunTests(testAndSubTestList,testInfo.sameArgs,testInfo.defaultArgs)
-
+      resultList : list[ThreadWork] = RunTests(testAndSubTestList,testInfo.sameArgs,testInfo.defaultArgs)
+      
       if(command == 'run'):
          for result in resultList:
             if(result.didTokenize and result.lastStageReached.value >= Stage.VERSAT.value):
                result.subTest.tokens = result.tokens
                result.subTest.hashVal = result.hashVal
-               result.subTest.stage = result.lastStageReached.name
+               result.subTest.stage = Stage[result.lastStageReached.name]
                result.subTest.accelData = result.accelData
 
-               if(not result.cached):
+               if(not result.cached and result.lastStageReached == result.test.finalStage):
                   SaveResultAsLastGood(result)
 
       if(command == "disable-failed"):
@@ -877,10 +871,12 @@ if __name__ == "__main__":
       for index,test in enumerate(testList):
          TempDisableTest(test)
 
+   elif(command == "list"):
+      testList = list(sorted(testList,key=lambda x : x.name))
+      for index,test in enumerate(testList):
+         print(test.name)
+
    print("\n\n\n") # A few new lines to make easier to see results
 
    with open(jsonfilePath,"w") as file:
       json.dump(testInfo,file,cls=MyJsonEncoder,indent=2)
-
-# MAYBE- Parse Versat and generate makefile args.
-# MAYBE- Parse Makefile and generate versat.

@@ -13,6 +13,10 @@ AddressGen Read VTriple(xWidth,yWidth,zWidth,shift,shift2)
    for x 0..xWidth
    addr = x + shift * y + shift2 * z;
 
+module EXAMPLE_Empty(){
+#
+}
+
 module EXAMPLE_Simple(){
   Const a;
   Const b;
