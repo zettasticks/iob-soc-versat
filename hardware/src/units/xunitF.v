@@ -1,8 +1,7 @@
 `timescale 1ns / 1ps
 
 module xunitF #(
-         parameter DELAY_W = 7,
-         parameter DATA_W = 32
+         parameter DELAY_W = 7
               )
     (
     //control
@@ -14,26 +13,26 @@ module xunitF #(
     output              done,
 
     //input / output data
-    input [DATA_W-1:0]  in0,
-    input [DATA_W-1:0]  in1,
-    input [DATA_W-1:0]  in2,
-    input [DATA_W-1:0]  in3,
-    input [DATA_W-1:0]  in4,
-    input [DATA_W-1:0]  in5,
-    input [DATA_W-1:0]  in6,
-    input [DATA_W-1:0]  in7,
+    input [31:0]  in0,
+    input [31:0]  in1,
+    input [31:0]  in2,
+    input [31:0]  in3,
+    input [31:0]  in4,
+    input [31:0]  in5,
+    input [31:0]  in6,
+    input [31:0]  in7,
 
-    input [DATA_W-1:0]  in8,
-    input [DATA_W-1:0]  in9,
+    input [31:0]  in8,
+    input [31:0]  in9,
 
-    (* versat_latency = 16 *) output [DATA_W-1:0] out0,
-    (* versat_latency = 16 *) output [DATA_W-1:0] out1,
-    (* versat_latency = 16 *) output [DATA_W-1:0] out2,
-    (* versat_latency = 16 *) output [DATA_W-1:0] out3,
-    (* versat_latency = 16 *) output [DATA_W-1:0] out4,
-    (* versat_latency = 16 *) output [DATA_W-1:0] out5,
-    (* versat_latency = 16 *) output [DATA_W-1:0] out6,
-    (* versat_latency = 16 *) output [DATA_W-1:0] out7,
+    (* versat_latency = 16 *) output [31:0] out0,
+    (* versat_latency = 16 *) output [31:0] out1,
+    (* versat_latency = 16 *) output [31:0] out2,
+    (* versat_latency = 16 *) output [31:0] out3,
+    (* versat_latency = 16 *) output [31:0] out4,
+    (* versat_latency = 16 *) output [31:0] out5,
+    (* versat_latency = 16 *) output [31:0] out6,
+    (* versat_latency = 16 *) output [31:0] out7,
 
     //configurations
     input [DELAY_W-1:0]         delay0 // Encodes delay

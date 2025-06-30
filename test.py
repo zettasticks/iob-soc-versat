@@ -302,6 +302,7 @@ def RunVersat(testName,testFolder,versatExtra):
 
    decoder = codecs.getdecoder("utf-8")
    output = decoder(result.stdout)[0]
+   error = decoder(result.stderr)[0]
 
    filePathList = FindAndParseFilepathList(output)
 
@@ -416,9 +417,13 @@ def PerformTest(test,testTrueName,makefileArg,stage):
    if stage == Stage.SIM_RUN: 
       # Something weird happens if we clean and sim-run in same makefile call
       # Since this test already takes a well, adding a few sleeps does not change much
-      time.sleep(1)
-      error,output = RunMakefile("clean",test,makefileArg,10)
-      time.sleep(1)
+
+      # TODO
+
+      #time.sleep(1)
+      #error,output = RunMakefile("clean",test,makefileArg,10)
+      #time.sleep(1)
+
       error,output = RunMakefile("sim-run",test,makefileArg,300)
       SaveOutput(testTrueName,"sim-run",output)
 

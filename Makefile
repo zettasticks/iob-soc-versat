@@ -15,7 +15,7 @@ include $(LIB_DIR)/setup.mk
 VERSAT_SPEC:=versatSpec.txt
 
 VCD ?= 0
-INIT_MEM ?= 0
+INIT_MEM ?= 1
 USE_EXTMEM ?= 1
 
 ifeq ($(INIT_MEM),1)
@@ -53,9 +53,9 @@ endif
 
 TEST_FOLDER := $(abspath $(TEST_FOLDER_TEMP))
 
-VERSAT_ARGUMENTS:=$(CUR_DIR)/$(VERSAT_SPEC) -s -b$(AXI_DATA_W) -d -t $(TEST) 
+VERSAT_ARGUMENTS:=$(CUR_DIR)/$(VERSAT_SPEC) -s -b$(AXI_DATA_W) -d -t $(TEST)
 VERSAT_ARGUMENTS+=-I $(CUR_DIR)/submodules/VERSAT/hardware/src -O $(TEST_FOLDER)/software
-VERSAT_ARGUMENTS+=-o $(TEST_FOLDER)/hardware/src -g $(CUR_DIR)/../debug -u $(CUR_DIR)/hardware/src/units -x64
+VERSAT_ARGUMENTS+=-o $(TEST_FOLDER)/hardware/src -g $(CUR_DIR)/../debug -u $(CUR_DIR)/hardware/src/units
 
 get-versat-arguments:
 	@echo $(VERSAT_ARGUMENTS)
@@ -66,7 +66,7 @@ setup:
 	+nix-shell --run 'make build-setup SETUP_ARGS="$(SETUP_ARGS) TEST=$(TEST)"'
 
 setup_pc:
-	+nix-shell --run 'make build-setup SETUP_ARGS="$(SETUP_ARGS) PC_EMUL TEST=$(TEST)"'
+	+nix-shell --run 'make build-setup SETUP_ARGS="$(SETUP_ARGS) TEST=$(TEST)"'
 
 pc-emul-run:
 	+nix-shell --run 'make setup_pc && make -C $(TEST_FOLDER)/ pc-emul-run'
@@ -76,10 +76,10 @@ fpga-run:
 	make -C $(TEST_FOLDER)/ fpga-run BOARD=$(BOARD)
 
 sim-build:
-	+nix-shell --run 'make setup INIT_MEM=1 USE_EXTMEM=$(USE_EXTMEM) TEST=$(TEST) && make -C $(TEST_FOLDER)/ sim-build SIMULATOR=$(SIMULATOR) VCD=$(VCD)'
+	+nix-shell --run 'make setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM) TEST=$(TEST) && make -C $(TEST_FOLDER)/ sim-build SIMULATOR=$(SIMULATOR) VCD=$(VCD)'
 
 sim-run:
-	+nix-shell --run 'make setup INIT_MEM=1 USE_EXTMEM=$(USE_EXTMEM) TEST=$(TEST) && make -C $(TEST_FOLDER)/ sim-run SIMULATOR=$(SIMULATOR) VCD=$(VCD)'
+	+nix-shell --run 'make setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM) TEST=$(TEST) && make -C $(TEST_FOLDER)/ sim-run SIMULATOR=$(SIMULATOR) VCD=$(VCD)'
 
 fpga-run-only:
 	cp ./software/src/Tests/$(TEST).cpp $(TEST_FOLDER)/software/src/test.cpp

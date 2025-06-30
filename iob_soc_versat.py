@@ -28,18 +28,15 @@ def GetTestParameter():
     # Check for test type
     axiDataW = 32
     testName = "M_Stage"  # Default test
-    pcEmul = False
     for arg in sys.argv[1:]:
         if arg[:5] == "TEST=":
             testName = arg[5:]
         if arg[:11] == "AXI_DATA_W=":
             axiDataW = int(arg[11:])
-        if arg == "PC_EMUL":
-            pcEmul = True
-    return testName,axiDataW,pcEmul
+    return testName,axiDataW
 
 def GetBuildDir(name):
-    testName,axiDataW,pcEmul = GetTestParameter()
+    testName,axiDataW = GetTestParameter()
 
     sanitized = f"b{axiDataW}"
 
@@ -66,10 +63,9 @@ class iob_soc_versat(iob_soc):
     @classmethod
     def _create_submodules_list(cls, extra_submodules=[]):
         """Create submodules list with dependencies of this module"""
-        testName,axiDataW,pcEmul = GetTestParameter()
+        testName,axiDataW = GetTestParameter()
 
         cls.versat_type = CreateVersatClass(
-            pcEmul,
             VERSAT_SPEC,
             testName,
             VERSAT_EXTRA_UNITS,
@@ -110,7 +106,7 @@ class iob_soc_versat(iob_soc):
     def _post_setup(cls):
         super()._post_setup()
         
-        testName,axiDataW,pcEmul = GetTestParameter()
+        testName,axiDataW = GetTestParameter()
 
         shutil.copy(
             f"{cls.build_dir}/software/src/Tests/{testName}.cpp",
@@ -158,7 +154,7 @@ test.hex: iob_soc_versat_firmware.bin
     def _setup_confs(cls, extra_confs=[]):
         # Append confs or override them if they exist
 
-        testName,axiDataW,pcEmul = GetTestParameter()
+        testName,axiDataW = GetTestParameter()
 
         confs = [
             {

@@ -1,8 +1,7 @@
 `timescale 1ns / 1ps
 
 module xunitM #(
-         parameter DELAY_W = 7,
-         parameter DATA_W = 32
+         parameter DELAY_W = 7
               )
     (
     //control
@@ -14,9 +13,9 @@ module xunitM #(
     output              done,
 
     //input / output data
-    input [DATA_W-1:0]  in0,
+    input [31:0]  in0,
 
-    (* versat_latency = 17 *) output reg [DATA_W-1:0] out0,
+    (* versat_latency = 17 *) output reg [31:0] out0,
 
     //configurations
     input [DELAY_W-1:0]         delay0 // Encodes delay

@@ -1,6 +1,6 @@
 #include "testbench.hpp"
 
-void Configure(volatile Generator3Config* config,int x){
+void Configure(volatile GeneratorConfig* config,int x){
    config->duty = ~0;
 
    config->start = 0;

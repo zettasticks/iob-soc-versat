@@ -1149,7 +1149,7 @@ module UNIT_LookupTable(){
 }
 
 module UNIT_Generator(){
-   Generator3 gen;
+   Generator gen;
    Mem mem;
 #
    gen -> mem;
@@ -2545,7 +2545,7 @@ AddressGen Mem TestAddressGen(xMax,yMax,zMax,wMax,aMax)
    addr = y * yMax + x;
 
 module ADDRESSGEN_Simple(){
-   using(TestAddressGen) Generator3 gen;
+   using(TestAddressGen) Generator gen;
    Mem output;
 #
    gen -> output;
