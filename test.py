@@ -21,6 +21,8 @@
 # Test code is kinda of a mess after addition of subtests. 
 # Also need lock the fact that makefile and this test need to agree on names for things. It might be helpful to put everything that depends on this kinda of stuff in functions that make it easy to change if needed, especially as we add more parameters
 #
+# The fact that we wait until everything ends before we save the result of the tests is bad. Sometimes we want to terminate the tests early and still save the results of the tests that passed.
+#
 # Sometimes I make a change and that causes some tests to run that I did not expect to.
 #   If they pass, they overwrite the testCacheGood and so I cannot see immediatly what changed. I could just revert the change and rerun the tests to see, but I kinda want another cache to save the trouble.
 #     Something like a testCacheGoodPrevious where we saved the previous testCacheGood if it existed. That way I can compare the new run with the old good and see if the change was intended or not.
@@ -415,15 +417,7 @@ def PerformTest(test,testTrueName,makefileArg,stage):
       else:
          return Error(ErrorType.TEST_FAILED,ErrorSource.PC_EMUL)
    if stage == Stage.SIM_RUN: 
-      # Something weird happens if we clean and sim-run in same makefile call
-      # Since this test already takes a well, adding a few sleeps does not change much
-
-      # TODO
-
-      #time.sleep(1)
-      #error,output = RunMakefile("clean",test,makefileArg,10)
-      #time.sleep(1)
-
+      # TODO: The sim-run makefile calls setup again. We want to be able to skip this and to call sim-run directly without a second setup.
       error,output = RunMakefile("sim-run",test,makefileArg,300)
       SaveOutput(testTrueName,"sim-run",output)
 

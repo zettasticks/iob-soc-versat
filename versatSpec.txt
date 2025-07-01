@@ -2712,6 +2712,29 @@ module ADDRESSGEN_ComplexLoopExpression(){
    read -> output;
 }
 
+/*
+AddressGen Read AddressGenZeroValues(xWidth,yWidth,zWidth,aWidth,bWidth,cWidth)
+   for c 0..cWidth
+   for b 0..bWidth
+   for a 0..aWidth
+   for z 0..zWidth
+   for y 0..yWidth
+   for x 0..xWidth
+   addr = ((((c * bWidth + b) * aWidth + a) * zWidth + z) * yWidth + y) * xWidth + x;
+*/
+
+AddressGen Read AddressGenZeroValues(xWidth,yWidth,zWidth)
+   for z 0..zWidth
+   for y 0..yWidth
+   for x 0..xWidth
+   addr = (z * yWidth + y) * xWidth + x;
+
+module ADDRESSGEN_ZeroValues(){
+   using(AddressGenZeroValues) VRead read;
+   Mem output;
+#
+   read -> output;
+}
 
 AddressGen Read TooManyLoops()
    for h 0..2
