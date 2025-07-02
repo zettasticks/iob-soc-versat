@@ -63,7 +63,7 @@ from dataclasses import dataclass
 from enum import Enum,auto
 
 amountOfThreads = 8
-jsonfilePath = None
+jsonTestInfoPath = None
 
 COLOR_BASE   = '\33[0m'
 COLOR_RED    = '\33[31m'
@@ -132,17 +132,18 @@ class VersatAcceleratorData:
    memUsed: str | None = None
    unitsUsed: str | None = None
 
-def ParseAccelData(jsonContent):
+def ParseAccelData(jsonInfo):
    # TODO: Find a way of automatizing this if we end up storing more data
-   configBits = jsonContent['configBits'] if 'configBits' in jsonContent else None
-   stateBits = jsonContent['stateBits'] if 'stateBits' in jsonContent else None
-   memUsed = jsonContent['memUsed'] if 'memUsed' in jsonContent else None
-   unitsUsed = jsonContent['unitsUsed'] if 'unitsUsed' in jsonContent else None
+   configBits = jsonInfo['configBits'] if 'configBits' in jsonInfo else None
+   stateBits = jsonInfo['stateBits'] if 'stateBits' in jsonInfo else None
+   memUsed = jsonInfo['memUsed'] if 'memUsed' in jsonInfo else None
+   unitsUsed = jsonInfo['unitsUsed'] if 'unitsUsed' in jsonInfo else None
 
    return VersatAcceleratorData(configBits,stateBits,memUsed,unitsUsed)
 
 @dataclass
 class SubTestInfo:
+   parent: 'TestInfo'
    args: str
    tokens: int
    hashVal: int
@@ -200,14 +201,27 @@ class MyJsonEncoder(json.JSONEncoder):
       else:
          return super().default(o)
 
-def ParseJson(jsonContent):
-   defaultArgs = jsonContent['defaultArgs']
-   sameArgs = jsonContent['sameArgs']
+def GetTestTrueNameFromArgs(test : TestInfo,args : str):
+   name = test.name
+
+   if(args and len(args) > 0):
+      sanitizedName = args.replace("-","_")
+      name = test.name + sanitizedName
+
+   return name
+
+def GetTestTrueName(test : TestInfo,subTest : SubTestInfo):
+   return GetTestTrueNameFromArgs(test,subTest.args)
+
+def ParseJson(jsonInfo,jsonData):
+   defaultArgs = jsonInfo['defaultArgs']
+   sameArgs = jsonInfo['sameArgs']
 
    testList = []
-   for test in jsonContent['tests']:
+   for test in jsonInfo['tests']:
 
       # Check if all the contents inside a test are valid
+      # TODO: There is probably a better way of doing this.
       for member in test:
          if not member in ["name","finalStage","comment","tokens","hashVal","stage","tempDisabledStage","accelData","subTests"]:
             print(f"Member '{member}' was not found in the test:")
@@ -218,21 +232,48 @@ def ParseJson(jsonContent):
       finalStage = Stage[test['finalStage']]
       comment = test['comment'] if 'comment' in test else None
       tempDisabledStage = Stage[test['tempDisabledStage']] if 'tempDisabledStage' in test else None
-      subTests = test['subTests']
+      subTests = test['subTests'] if 'subTests' in test else None
 
       subTestList = []
-      for subTest in subTests:
-         tokens = int(subTest['tokens']) if 'tokens' in subTest else None
-         hashVal = int(subTest['hashVal']) if 'hashVal' in subTest else None
-         args = subTest['args'] if "args" in subTest else None
-         stage = Stage[subTest['stage']] if 'stage' in subTest else Stage.NOT_WORKING
-
-         accelData = ParseAccelData(subTest['accelData']) if 'accelData' in subTest else None
-
-         subTestList.append(SubTestInfo(args,tokens,hashVal,stage,accelData))
-
       info = TestInfo(name,finalStage,tempDisabledStage,comment,subTestList)
       testList.append(info)
+
+      if(subTests == None):
+         trueName = name
+         testData = jsonData[trueName] if jsonData and trueName in jsonData else None
+         if(testData):
+            tokens = int(testData['tokens']) if 'tokens' in testData else None
+            hashVal = int(testData['hashVal']) if 'hashVal' in testData else None
+            stage = Stage[testData['stage']] if 'stage' in testData else Stage.NOT_WORKING
+            accelData = ParseAccelData(testData['accelData']) if 'accelData' in testData else None
+         else:
+            tokens = 0
+            hashVal = 0
+            stage = Stage.NOT_WORKING
+            accelData = None
+
+         subTestList.append(SubTestInfo(info,"",tokens,hashVal,stage,accelData))
+      else :
+            for subTest in subTests:
+               args = subTest['args'] if "args" in subTest else None
+               if(args):
+                  trueName = GetTestTrueNameFromArgs(info,args)
+               else:
+                  trueName = name
+
+               testData = jsonData[trueName] if jsonData and trueName in jsonData else None
+               if(testData):
+                  tokens = int(testData['tokens']) if 'tokens' in testData else None
+                  hashVal = int(testData['hashVal']) if 'hashVal' in testData else None
+                  stage = Stage[testData['stage']] if 'stage' in testData else Stage.NOT_WORKING
+                  accelData = ParseAccelData(testData['accelData']) if 'accelData' in testData else None
+               else:
+                  tokens = 0
+                  hashVal = 0
+                  stage = Stage.NOT_WORKING
+                  accelData = None
+
+               subTestList.append(SubTestInfo(info,args,tokens,hashVal,stage,accelData))
 
    return TestData(defaultArgs,sameArgs,testList)
 
@@ -364,8 +405,6 @@ def RunMakefile(target,testName,extraArgs,timeout=60):
    try:
       command = " ".join(["make",target,f"TEST={testName}",extraArgs if extraArgs else ""])
 
-      #print(command)
-
       result = sp.run(command,capture_output=True,shell=True,timeout=timeout) # 60
    except sp.TimeoutExpired as t:
       return Error(ErrorType.TIMEOUT,ErrorSource.MAKEFILE),GenerateProgramOutput(command,t)
@@ -434,15 +473,6 @@ def PerformTest(test,testTrueName,makefileArg,stage):
       return Error()
 
    print(f"Error, PerformTest called with: {stage}. Fix this")
-
-def GetTestTrueName(test : TestInfo,subTest : SubTestInfo):
-   name = test.name
-
-   if(subTest.args and len(subTest.args) > 0):
-      sanitizedName = subTest.args.replace("-","_")
-      name = test.name + sanitizedName
-
-   return name
 
 def PrintResult(result,firstColumnSize):
    def GeneratePad(word,amount,padding = '.'):
@@ -740,7 +770,8 @@ def ReprintButOrganized(testResultList,maxNameLength):
 
 if __name__ == "__main__":
    testInfoJson = None
-   jsonfilePath = "testInfo.json"
+   jsonTestInfoPath = "testInfo.json"
+   jsonTestDataPath = "testData.json"
 
    # Recompile versat first, otherwise we could have multiple jobs compiling the same exe for no reason
    try:
@@ -766,15 +797,23 @@ if __name__ == "__main__":
    command = arguments.command
    testFilter = arguments.testFilter if arguments.testFilter else [""]
 
-   with open(jsonfilePath,"r") as file:
-      try:
+   try:
+      with open(jsonTestInfoPath,"r") as file:
          testInfoJson = json.load(file)
+   except Exception as e:
+      print(f"Failed to open/parse testInfo file: {e}")
+      sys.exit(0)
 
-      except Exception as e:
-         print(f"Failed to parse testInfo file: {e}")
-         sys.exit(0)
+   try:
+      with open(jsonTestDataPath,"r") as file:
+         testDataJson = json.load(file)
+   except OSError as e:
+      testDataJson = None
+   except Exception as e:
+      print(f"Failed to open/parse testData file: {e}")
+      sys.exit(0)
 
-   testInfo = ParseJson(testInfoJson)
+   testInfo = ParseJson(testInfoJson,testDataJson)
 
    def Filter(name,filters):
       for fil in filters:
@@ -877,5 +916,27 @@ if __name__ == "__main__":
 
    print("\n\n\n") # A few new lines to make easier to see results
 
-   with open(jsonfilePath,"w") as file:
-      json.dump(testInfo,file,cls=MyJsonEncoder,indent=2)
+   testData = {}
+   for test in testInfo.tests:
+      for subTest in test.subTests:
+         trueName = GetTestTrueName(test,subTest)
+
+         asDict = {}
+         if(subTest.args):
+            asDict["args"] = subTest.args
+         if(subTest.tokens):
+            asDict["tokens"] = subTest.tokens
+         if(subTest.hashVal):
+            asDict["hashVal"] = subTest.hashVal
+         if(subTest.stage):
+            asDict["stage"] = subTest.stage
+         if(subTest.accelData):
+            asDict["accelData"] = subTest.accelData
+
+         testData[trueName] = asDict
+
+   with open(jsonTestDataPath,"w") as file:
+      json.dump(testData,file,cls=MyJsonEncoder,indent=2)
+
+   #with open(jsonTestInfoPath,"w") as file:
+   #   json.dump(testInfo,file,cls=MyJsonEncoder,indent=2)
