@@ -453,6 +453,7 @@ static int printResults = false;
 
 extern "C" int RunTest(int versatBase){   
   versat_init(versatBase);
+  SetVersatDebugPrintfFunction(printf);
 
   int memoryReserved = Megabyte(128);
 

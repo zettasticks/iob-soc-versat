@@ -63,7 +63,6 @@ from dataclasses import dataclass
 from enum import Enum,auto
 
 amountOfThreads = 8
-jsonTestInfoPath = None
 
 COLOR_BASE   = '\33[0m'
 COLOR_RED    = '\33[31m'
@@ -79,6 +78,7 @@ class Stage(Enum):
    DISABLED = auto()
    TEMP_DISABLED = auto()
    NOT_WORKING = auto()
+   SHOULD_FAIL = auto()
    VERSAT = auto()
    PC_EMUL = auto()
    SIM_RUN = auto()
@@ -157,6 +157,7 @@ class TestInfo:
    tempDisabledStage: Stage
    comment: str
    subTests: list[SubTestInfo]
+   expectedError: str = ""
 
    def __hash__(self):
       return hash(self.name)
@@ -223,7 +224,7 @@ def ParseJson(jsonInfo,jsonData):
       # Check if all the contents inside a test are valid
       # TODO: There is probably a better way of doing this.
       for member in test:
-         if not member in ["name","finalStage","comment","tokens","hashVal","stage","tempDisabledStage","accelData","subTests"]:
+         if not member in ["name","finalStage","comment","tokens","hashVal","stage","tempDisabledStage","accelData","subTests","expectedError"]:
             print(f"Member '{member}' was not found in the test:")
             print(test)
             sys.exit(0)
@@ -233,9 +234,10 @@ def ParseJson(jsonInfo,jsonData):
       comment = test['comment'] if 'comment' in test else None
       tempDisabledStage = Stage[test['tempDisabledStage']] if 'tempDisabledStage' in test else None
       subTests = test['subTests'] if 'subTests' in test else None
+      expectedError = test['expectedError'] if "expectedError" in test else None
 
       subTestList = []
-      info = TestInfo(name,finalStage,tempDisabledStage,comment,subTestList)
+      info = TestInfo(name,finalStage,tempDisabledStage,comment,subTestList,expectedError)
       testList.append(info)
 
       if(subTests == None):
@@ -553,6 +555,21 @@ def ProcessWork(work):
       testTempDir = TempDir(name)
 
       versatError,filepaths,versatData,output = RunVersat(test.name,testTempDir,work.args)
+
+      if(finalStage == Stage.SHOULD_FAIL):
+         errorsMatch = True
+         for errorType in test.expectedError.split(";"):
+            errorType = errorType.strip()
+
+            if(not errorType in output):
+               errorsMatch = False
+
+         if(errorsMatch):
+            work.lastStageReached = Stage.SHOULD_FAIL
+
+         work.workStage = WorkState.FINISH
+         return work
+
       SaveOutput(name,"versat",output)
 
       work.accelData = versatData
@@ -900,6 +917,7 @@ if __name__ == "__main__":
    elif(command == "enable"):
       for index,test in enumerate(testList):
          if(test.finalStage == Stage.TEMP_DISABLED):
+            print("Here:",test.tempDisabledStage)
             test.finalStage = test.tempDisabledStage
             test.tempDisabledStage = None
          elif(test.finalStage == Stage.DISABLED):
@@ -937,6 +955,3 @@ if __name__ == "__main__":
 
    with open(jsonTestDataPath,"w") as file:
       json.dump(testData,file,cls=MyJsonEncoder,indent=2)
-
-   #with open(jsonTestInfoPath,"w") as file:
-   #   json.dump(testInfo,file,cls=MyJsonEncoder,indent=2)

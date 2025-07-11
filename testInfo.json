@@ -52,8 +52,7 @@
     },
     {
       "name": "DATABUS_MultipleTransfers",
-      "finalStage": "TEMP_DISABLED",
-      "tempDisabledStage": "SIM_RUN",
+      "finalStage": "SIM_RUN",
       "subTests": [
         {},
         {"args": "-b64"},
@@ -156,7 +155,7 @@
     },
     {
       "name": "ADDRESSGEN_Simple",
-      "finalStage": "TEMP_DISABLED"
+      "finalStage": "SIM_RUN"
     },
     {
       "name": "ADDRESSGEN_SimulateLoop",
@@ -189,12 +188,12 @@
     },
     {
       "name": "ADDRESSGEN_TooManyLoops",
-      "finalStage": "TEMP_DISABLED"
+      "finalStage": "SHOULD_FAIL",
+      "expectedError": "[ERROR] Address gen contains more loops;"
     },
     {
       "name": "ADDRESSGEN_ZeroValues",
-      "finalStage": "TEMP_DISABLED",
-      "tempDisabledStage": "SIM_RUN",
+      "finalStage": "SIM_RUN",
       "subTests": [
         {},
         {"args": "-b64"},
@@ -211,6 +210,11 @@
         {"args": "-b128"},
         {"args": "-b256"}
       ]
+    },
+    {
+      "name": "ADDRESSGEN_BadSyntax",
+      "finalStage": "SHOULD_FAIL",
+      "expectedError": "[Error];"
     },
     {
       "name": "MERGE_TwoLevels",
