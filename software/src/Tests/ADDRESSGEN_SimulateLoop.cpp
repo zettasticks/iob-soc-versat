@@ -41,9 +41,6 @@ void SingleTest(Arena* arena){
    }
 
    if(0){
-      SIMULATE_FullUsage(input,4,4,4,1,1,1,1,1);
-      return;
-
       auto args = CompileVUnit_FullUsage(input,4,4,4,1,1,1,1,1);
       int totalSamples = SimulateAddressGen(pointers,100,args);
       Assert_Eq(totalSamples,16);
@@ -52,10 +49,5 @@ void SingleTest(Arena* arena){
          int* val = (int*) pointers[i];
          printf("%p\n",val);
       }
-   }
-
-   if(1){
-      SIMULATE_Full(input);
-      return;
    }
 }

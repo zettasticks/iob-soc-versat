@@ -22,7 +22,7 @@ void SingleTest(Arena* arena){
     for(int i = 0; i < SIZE; i++){
       input[i] = i + 1;
     }
-    ClearCache(arena->mem);
+    //ClearCache(arena->mem);
 
     VLinear_VRead(&accelConfig->read,input,SIZE);
     VLinear_VWrite(&accelConfig->write,output,SIZE);

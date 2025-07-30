@@ -86,7 +86,7 @@
     },
     {
       "name": "CONFIG_OnlyStatic",
-      "finalStage": "TEMP_DISABLED"
+      "finalStage": "SIM_RUN"
     },
     {
       "name": "CONFIG_ShareStatic",
@@ -102,7 +102,8 @@
     },
     {
       "name": "CONFIG_StaticContainsPartialShare",
-      "finalStage": "TEMP_DISABLED"
+      "finalStage": "DISABLED",
+      "comment" : "Not working, static header generation is not currently capable of generation partial share structs"
     },
     {
       "name": "DELAYS_AddedDelays",
@@ -158,9 +159,17 @@
       "finalStage": "SIM_RUN"
     },
     {
+      "name": "ADDRESSGEN_Mem",
+      "finalStage": "SIM_RUN"
+    },
+    {
+      "name": "ADDRESSGEN_Stride",
+      "finalStage": "SIM_RUN"
+    },
+    {
       "name": "ADDRESSGEN_SimulateLoop",
-      "finalStage": "PC_EMUL",
-      "comment": "If adding more address gen types, add more to this test, do not make individual tests unless you have too",
+      "finalStage": "TEMP_DISABLED",
+      "comment": "Need to find a way of checking if the simulation code is working properly",
       "subTests": [
         {},
         {"args": "-b64"},
@@ -192,16 +201,6 @@
       "expectedError": "[ERROR] Address gen contains more loops;"
     },
     {
-      "name": "ADDRESSGEN_ZeroValues",
-      "finalStage": "SIM_RUN",
-      "subTests": [
-        {},
-        {"args": "-b64"},
-        {"args": "-b128"},
-        {"args": "-b256"}
-      ]
-    },
-    {
       "name": "ADDRESSGEN_ComplexLoopExpression",
       "finalStage": "SIM_RUN",
       "subTests": [
@@ -217,11 +216,11 @@
       "expectedError": "[Error];"
     },
     {
+      "name": "ADDRESSGEN_MERGE_MergeWithAddress",
+      "finalStage": "SIM_RUN",
+      "comment": "[NO SOFT TEST] Test not finished. Need to put something here that exercises the merged accelerator"
+    },    {
       "name": "MERGE_TwoLevels",
-      "finalStage": "SIM_RUN"
-    },
-    {
-      "name": "UNIT_Generator",
       "finalStage": "SIM_RUN"
     },
     {

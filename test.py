@@ -803,8 +803,7 @@ if __name__ == "__main__":
       sys.exit(0)
 
    parser = argparse.ArgumentParser(prog="Tester",description="Test Versat, using cache to prevent rerunning unnecessary tests")
-
-   allCommands = ["run","run-only","reset","enable","disable-failed","disable-temp","list"]
+   allCommands = ["run","run-only","reset","enable","list"]
 
    parser.add_argument("command",choices=allCommands)
    parser.add_argument("testFilter",nargs='*')
@@ -907,10 +906,11 @@ if __name__ == "__main__":
                if(not result.cached and result.lastStageReached == result.test.finalStage):
                   SaveResultAsLastGood(result)
 
-      if(command == "disable-failed"):
-         for result in resultList:
-            if(IsError(result.error)):
-               TempDisableTest(result.test)
+      #Not currently working from previous changes
+      #if(command == "disable-failed"):
+      #   for result in resultList:
+      #      if(IsError(result.error)):
+      #         TempDisableTest(result.test)
 
       ReprintButOrganized(resultList,maxNameLength)
 
@@ -923,9 +923,9 @@ if __name__ == "__main__":
          elif(test.finalStage == Stage.DISABLED):
             print(f"Test {test.name} was not temp disabled, so cannot enable again")
 
-   elif(command == "disable-temp"):
-      for index,test in enumerate(testList):
-         TempDisableTest(test)
+   #elif(command == "disable-temp"):
+   #   for index,test in enumerate(testList):
+   #      TempDisableTest(test)
 
    elif(command == "list"):
       testList = list(sorted(testList,key=lambda x : x.name))

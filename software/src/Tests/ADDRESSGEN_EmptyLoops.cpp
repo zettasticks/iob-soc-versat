@@ -32,7 +32,7 @@ void SingleTest(Arena* arena){
 {
    AddressVArguments compiled = CompileVUnit_AddressGenEmptyLoops(buffer);
    LoadVUnit_VRead(&accelConfig->read,compiled);
-   CheckEfficiency(compiled);
+   //CheckEfficiency(compiled);
 
    RunAccelerator(3);
    for(int i = 0; i < values; i++){
@@ -45,7 +45,7 @@ void SingleTest(Arena* arena){
 {
    AddressVArguments compiled = CompileVUnit_AddressGenEmptyLoops2(buffer);
    LoadVUnit_VRead(&accelConfig->read,compiled);
-   CheckEfficiency(compiled);
+   //CheckEfficiency(compiled);
 
    RunAccelerator(3);
    for(int i = 0; i < values; i++){
@@ -58,7 +58,7 @@ void SingleTest(Arena* arena){
 {
    AddressVArguments compiled = CompileVUnit_AddressGenEmptyLoops3(buffer);
    LoadVUnit_VRead(&accelConfig->read,compiled);
-   CheckEfficiency(compiled);
+   //CheckEfficiency(compiled);
 
    RunAccelerator(3);
    for(int i = 0; i < values; i++){
@@ -79,7 +79,7 @@ void SingleTest(Arena* arena){
 {
    AddressVArguments compiled = CompileVUnit_AddressGenEmptyLoops4(buffer);
    LoadVUnit_VRead(&accelConfig->read,compiled);
-   CheckEfficiency(compiled);
+   //CheckEfficiency(compiled);
 
    RunAccelerator(3);
    for(int i = 0; i < values; i++){

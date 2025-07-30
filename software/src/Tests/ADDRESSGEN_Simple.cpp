@@ -7,14 +7,16 @@ void SingleTest(Arena* arena){
    int wMax = 2;
    int aMax = 2;
 
-   Configure_TestAddressGen_Generator3(&accelConfig->gen,xMax,yMax,zMax,wMax,aMax);
-   int loopSize = LoopSize_TestAddressGen_Generator3(0,xMax,yMax,zMax,wMax,aMax);
+   int total = xMax * yMax * zMax * wMax * aMax;
 
-   ConfigureMemoryReceive(&accelConfig->output,loopSize);
+   int expected[] = {0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3};
+
+   TestAddressGen_Generator(&accelConfig->gen,xMax,yMax,zMax,wMax,aMax);
+   VLinear_Mem_Input_0(&accelConfig->output,total);
 
    RunAccelerator(3);
 
-   for(int i = 0; i < loopSize; i++){
-      printf("%d ",VersatUnitRead(TOP_output_addr,i));
+   for(int i = 0; i < total; i++){
+      Assert_Eq(expected[i],VersatUnitRead(TOP_output_addr,i));
    }
 }

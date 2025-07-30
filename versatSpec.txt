@@ -1,13 +1,13 @@
-addressGen Read VLinear(xWidth)
+addressGen VLinear(xWidth)
    for x 0..xWidth
    addr = x;
 
-addressGen Read VDouble(xWidth,yWidth,shift)
+addressGen VDouble(xWidth,yWidth,shift)
    for y 0..yWidth
    for x 0..xWidth
    addr = x + shift * y;
 
-addressGen Read VTriple(xWidth,yWidth,zWidth,shift,shift2)
+addressGen VTriple(xWidth,yWidth,zWidth,shift,shift2)
    for z 0..zWidth
    for y 0..yWidth
    for x 0..xWidth
@@ -1146,13 +1146,6 @@ module UNIT_LookupTable(){
 #
    input[0..1] -> table:0..1;
    table:0..1 -> output[0..1];
-}
-
-module UNIT_Generator(){
-   Generator gen;
-   Mem mem;
-#
-   gen -> mem;
 }
 
 module F2(a,b,c,d,e,f,g,h,k,w){
@@ -2535,14 +2528,14 @@ module CryptoAlgos(){
 #
 }
 
-addressGen Read BadType()
+addressGen BadType()
    addr = 1;
 
-addressGen Mem MissingVarDecl()
+addressGen MissingVarDecl()
    for x 0..missingVar
    addr = missingVar + y;
 
-addressGen Mem OvershadowVariable(x)
+addressGen OvershadowVariable(x)
    for x 0..2
    addr = x;
 
@@ -2551,9 +2544,8 @@ module ADDRESSGEN_BadSyntax(){
 #
 }
 
-addressGen Gen TestAddressGen(xMax,yMax,zMax,wMax,aMax)
-   //for a 0..aMax
-   for b 0..aMax
+addressGen TestAddressGen(xMax,yMax,zMax,wMax,bMax)
+   for b 0..bMax
    for w 0..wMax
    for z 0..zMax
    for y 0..yMax
@@ -2562,12 +2554,32 @@ addressGen Gen TestAddressGen(xMax,yMax,zMax,wMax,aMax)
 
 module ADDRESSGEN_Simple(){
    using(TestAddressGen) Generator gen;
-   Mem output;
+   using(VLinear) Mem output;
 #
    gen -> output;
 }
 
-addressGen Mem SimpleMem(length)
+module ADDRESSGEN_Mem(){
+   using(VLinear) Mem start;
+   using(VLinear) Mem end;
+#
+   start:0 -> end:0;
+}
+
+addressGen StridedLinear(size,stride)
+   for x 0..size * stride
+   addr = x / stride;
+
+module ADDRESSGEN_Stride(){
+   using(StridedLinear) Mem mem;
+   using(StridedLinear) VWrite write;
+   using(TestAddressGen) Generator gen;
+#
+   gen -> mem;
+   gen -> write;
+}
+
+addressGen SimpleMem(length)
    for x 0..length
    addr = x;
 
@@ -2576,76 +2588,76 @@ addressGen Mem SimpleMem(length)
 // Maybe it's for the best if we just make it so versat always tests the address generated as part of the compilation process, at least for now anyway and fails if it detects a problem.
 
 // Not having a constant for the first term
-addressGen Read AddressGenAdvanced2()
+addressGen AddressGenAdvanced2()
    for z 0..2
    for y 0..2
    for x 0..2
    addr = x + 5 * y + 11 * z;
 
 // Same memory can be accessed multiple times 
-addressGen Read AddressGenAdvanced3() 
+addressGen AddressGenAdvanced3() 
    for y 0..2 
    for x 0..2 
    addr = 2 * x + y;
 
 // Same memory can be accessed multiple times 
-addressGen Read AddressGenAdvanced31() 
+addressGen AddressGenAdvanced31() 
    for y 0..2 
    for x 0..3 
    addr = 2 * x + y;
 
 // What happens if we add a free term? 
-addressGen Read AddressGenAdvanced32() 
+addressGen AddressGenAdvanced32() 
    for y 0..2 
    for x 0..3 
    addr = 2 * x + y + 20;
 
 // A single loop but the innermost variable is not a constant
-addressGen Read AddressGenAdvanced33() 
+addressGen AddressGenAdvanced33() 
    for x 0..4 
    addr = 2 * x;
 
 // A single loop with a constant
-addressGen Read AddressGenAdvanced34(a) 
+addressGen AddressGenAdvanced34(a) 
    for x 0..a
    addr = 2 * x;
 
 // Two loops with a constant
-addressGen Read AddressGenAdvanced4(a)
+addressGen AddressGenAdvanced4(a)
    for y 0..2
    for x 0..a
    addr = 2 * x + 5 * y;
 
 // Two loops but the constant is replaced by a literal.
-addressGen Read AddressGenAdvanced41(a)
+addressGen AddressGenAdvanced41(a)
    for y 0..2
    for x 0..5
    addr = 2 * x + 5 * y;
 
 // If the constant of the first loop is large enough, what happens?
-addressGen Read AddressGenAdvanced42(a)
+addressGen AddressGenAdvanced42(a)
    for y 0..2
    for x 0..5
    addr = 1000 * x + 5 * y;
 
-addressGen Read AddressGenAdvanced5(a,b,c,d)
+addressGen AddressGenAdvanced5(a,b,c,d)
    for y 0..2
    for x 0..a
    addr = 2 * a * b * x + 5 * (c + 1) * y + d + 2 * (3 + d * x);
 
-addressGen Read AddressGenAdvancedTest(var1,var2,var3,var4)
+addressGen AddressGenAdvancedTest(var1,var2,var3,var4)
    for y 0..var1
    for x 0..var2
    addr = var3 * x + var4 * y;
 
-addressGen Read AddressGenAdvancedTestSimple()
+addressGen AddressGenAdvancedTestSimple()
    for y 0..2
    for x 0..4
    addr = 2 * x + 5 * y;
 
 
 // A simple multiloop address gen where the constants of each term "guarantee" that incremental memory is being accessed.
-addressGen Read AddressGenAdvanced()
+addressGen AddressGenAdvanced()
    for a 0..2
    for w 0..2
    for z 0..2
@@ -2653,7 +2665,7 @@ addressGen Read AddressGenAdvanced()
    for x 0..2
    addr = 2 * x + 5 * y + 11 * z + 20 * w + 3 * a;
 
-addressGen Read AddressGenAdvancedAllVariables(var1,var2,var3,var4,var5)
+addressGen AddressGenAdvancedAllVariables(var1,var2,var3,var4,var5)
    for a 0..2
    for w 0..2
    for z 0..2
@@ -2661,7 +2673,7 @@ addressGen Read AddressGenAdvancedAllVariables(var1,var2,var3,var4,var5)
    for x 0..2
    addr = var1 * x + var2 * y + var3 * z + var4 * w + var5 * a;
 
-addressGen Read AddressGenAdvancedAllVariablesAndLoops(var1,var2,var3,var4,var5)
+addressGen AddressGenAdvancedAllVariablesAndLoops(var1,var2,var3,var4,var5)
    for a 0..var5
    for w 0..var4
    for z 0..var3
@@ -2676,7 +2688,7 @@ module ADDRESSGEN_Advanced(){
    read -> output;
 }
 
-addressGen Read AddressGenConstant(var1)
+addressGen AddressGenConstant(var1)
    for x 0..5
    addr = x + var1 + 5;
 
@@ -2687,25 +2699,25 @@ module ADDRESSGEN_Constants(){
    read -> output;
 }
 
-addressGen Read AddressGenEmptyLoops()
+addressGen AddressGenEmptyLoops()
    for y 0..2
    for x 0..2
    for empty 0..2
    addr = 2 * x + 5 * y;
 
-addressGen Read AddressGenEmptyLoops2()
+addressGen AddressGenEmptyLoops2()
    for y 0..2
    for empty 0..2
    for x 0..2
    addr = 2 * x + 5 * y;
 
-addressGen Read AddressGenEmptyLoops3()
+addressGen AddressGenEmptyLoops3()
    for empty 0..2
    for y 0..2
    for x 0..2
    addr = 2 * x + 5 * y;
 
-addressGen Read AddressGenEmptyLoops4()
+addressGen AddressGenEmptyLoops4()
    for t 0..4
    for x 0..5
    addr = t;
@@ -2717,7 +2729,7 @@ module ADDRESSGEN_EmptyLoops(){
    read -> output;
 }
 
-addressGen Read AddressGenComplexLoopExpression(var1,var2)
+addressGen AddressGenComplexLoopExpression(var1,var2)
    for x 0..(var1 / var2)
    addr = x;
 
@@ -2728,20 +2740,7 @@ module ADDRESSGEN_ComplexLoopExpression(){
    read -> output;
 }
 
-addressGen Read AddressGenZeroValues(xWidth,yWidth,zWidth)
-   for z 0..zWidth
-   for y 0..yWidth
-   for x 0..xWidth
-   addr = (z * yWidth + y) * xWidth + x;
-
-module ADDRESSGEN_ZeroValues(){
-   using(AddressGenZeroValues) VRead read;
-   Mem output;
-#
-   read -> output;
-}
-
-addressGen Read TooManyLoops()
+addressGen TooManyLoops()
    for h 0..2
    for g 0..2
    for f 0..2
@@ -2762,7 +2761,7 @@ module ADDRESSGEN_TooManyLoops(){
    read -> output;
 }
 
-addressGen Read FullUsage(extraLoops,xWidth,xLoop,yWidth,yLoop,zWidth,aWidth,bWidth)
+addressGen FullUsage(extraLoops,xWidth,xLoop,yWidth,yLoop,zWidth,aWidth,bWidth)
    for e 0..extraLoops
    for b 0..bWidth
    for a 0..aWidth
@@ -2771,7 +2770,7 @@ addressGen Read FullUsage(extraLoops,xWidth,xLoop,yWidth,yLoop,zWidth,aWidth,bWi
    for x 0..xLoop
    addr = (((b * aWidth + a) * zWidth + z) * yWidth + y) * xWidth + x;
 
-addressGen Read Full()
+addressGen Full()
    for e 0..4
    for b 0..1
    for a 0..1
@@ -2811,6 +2810,8 @@ module NoShare(){
 #
    unitsZ[0..2] -> output[0..2];
 }
+
+merge ADDRESSGEN_MERGE_MergeWithAddress = ADDRESSGEN_Advanced | ADDRESSGEN_ComplexLoopExpression;
 
 merge MERGE_CONFIG_Share = FullShare | SomeShare | NoShare;
 

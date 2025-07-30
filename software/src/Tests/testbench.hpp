@@ -511,6 +511,10 @@ extern "C" int RunTest(int versatBase){
   bool differentValues = (differentValuesCount != 0);
   bool error = differentIndexes || differentSizes || differentValues;
 
+  if(gotIndex == 0){
+    error = true;
+  }
+
   if(!error){
     printf("TEST_RESULT:TEST_PASSED\n");
     printf("OK (%d samples)\n",gotIndex);
@@ -533,7 +537,9 @@ extern "C" int RunTest(int versatBase){
 
   printf("TEST_RESULT:TEST_FAILED\n");
   printf("Error ");
-  if(expectedArena.used == 0 || gotArena.used == 0){
+  if(gotIndex == 0){
+    printf("0 samples are test failure. Put an Assert_Eq(0,0) if no software side test.");
+  } else if(expectedArena.used == 0 || gotArena.used == 0){
     printf("(0 samples)\n");
   } else if(differentIndexes && !differentValues){
     printf("(%d Got/%d Expected)\n",gotIndex,expectedIndex);
