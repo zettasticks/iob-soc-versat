@@ -70,15 +70,9 @@ static void ConfigureSimpleVWrite(volatile VWriteConfig* inst, int numberItems,i
 
 #endif
 
-static void IntSet(volatile void* buffer,int value,int byteSize){
-   volatile int* asInt = (int*) buffer;
+// CHANGE HERE
+# if 0
 
-   int nInts = byteSize / 4;
-
-   for(int i = 0; i < nInts; i++){
-      asInt[i] = value;
-   }
-}
 
 #ifdef VERSAT_DEFINED_Mem
 static void ConfigureSimpleMemory(volatile MemConfig* inst, int amountOfData, int start){
@@ -114,6 +108,8 @@ static void ConfigureMemoryReceive(volatile MemConfig* inst, int amountOfData){
    inst->incrA = 1;
    inst->in0_wr = 1;
 }
+#endif
+
 #endif
 
 #endif // INCLUDED_UNIT_CONFIGURATION

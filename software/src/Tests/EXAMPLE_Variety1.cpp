@@ -3,7 +3,7 @@
 void ConfigureVariety1(volatile EXAMPLE_Variety1Config* config,int* memory){
    VLinear_VRead(&config->read,memory,1);
 
-   ConfigureSimpleMemory(&config->mem,1,0);
+   VLinear_Mem_Output_0(&config->mem,1);
    VersatUnitWrite(TOP_simple_mem_addr,0,2);
 
    config->constant.constant = 1;

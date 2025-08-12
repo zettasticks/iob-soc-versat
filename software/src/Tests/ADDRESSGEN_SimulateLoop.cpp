@@ -8,6 +8,10 @@ void SingleTest(Arena* arena){
 
    printResults = true;
 
+   Assert_Eq(1,0);
+   return;
+
+#if 0
    if(0){
       // VRead Multiple Load + Linear
       auto args = CompileVUnit_VDouble(input,4,4,8);
@@ -50,4 +54,5 @@ void SingleTest(Arena* arena){
          printf("%p\n",val);
       }
    }
+#endif
 }

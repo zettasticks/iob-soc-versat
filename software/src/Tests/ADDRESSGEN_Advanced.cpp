@@ -1,115 +1,114 @@
 #include "testbench.hpp"
 
 #define MAX_SIZE 1000
-void ClearBuffer(int* buffer){
-   for(int i = 0; i < MAX_SIZE; i++){
-      buffer[i] = 0;
-   }
-}
-
-void CheckEfficiency(AddressVArguments args){
-   SimulateVReadResult sim = SimulateVRead(args);
-   float percent = ((float) sim.amountOfInternalValuesUsed) / ((float) sim.amountOfExternalValuesRead);
-   printf("Efficiency: %2f\n",percent);
-}
+#define VALUES 8
 
 void SingleTest(Arena* arena){
    int expectedValues[] = {10,20,30,40,50,60,70,80};
-   int buffer[1000] = {};
+   int* buffer = (int*) PushBytes(arena,sizeof(int) * MAX_SIZE);
 
-   int values = 8;
-   ConfigureMemoryReceive(&accelConfig->output,values);
+   if(1){
+      //ResetAccelerator();
+      ClearBuffer(buffer,MAX_SIZE);
 
-{
-   ClearBuffer(buffer);
-   buffer[0]  = 10;
-   buffer[2]  = 20;
-   buffer[4]  = 30;
-   buffer[6]  = 40;
-   buffer[5]  = 50;
-   buffer[7]  = 60;
-   buffer[9]  = 70;
-   buffer[11] = 80;
+      buffer[0]  = 10;
+      buffer[2]  = 20;
+      buffer[4]  = 30;
+      buffer[6]  = 40;
+      buffer[5]  = 50;
+      buffer[7]  = 60;
+      buffer[9]  = 70;
+      buffer[11] = 80;
 
-   AddressVArguments compiled = CompileVUnit_AddressGenAdvancedTest(buffer,2,4,2,5);
-   LoadVUnit_VRead(&accelConfig->read,compiled);
-   CheckEfficiency(compiled);
+      AddressGenAdvancedTest_VRead(&accelConfig->read,buffer,2,4,2,5);
+      VLinear_Mem_Input_0(&accelConfig->output,VALUES);
 
-   RunAccelerator(3);
-   for(int i = 0; i < values; i++){
-      printf("%d\n",VersatUnitRead(TOP_output_addr,i));
-      Assert_Eq(VersatUnitRead(TOP_output_addr,i),expectedValues[i]);
+      ClearCache(buffer);
+      RunAccelerator(3);
+      
+      int result[VALUES];
+      for(int i = 0; i < VALUES; i++){
+         result[i] = VersatUnitRead(TOP_output_addr,i);
+      }
+
+      Assert_Eq(result,expectedValues,VALUES,"1");
    }
-   printf("\n");
-}
 
-{
-   ClearBuffer(buffer);
-   buffer[0]   = 10;
-   buffer[2]   = 20;
-   buffer[4]   = 30;
-   buffer[6]   = 40;
-   buffer[100] = 50;
-   buffer[102] = 60;
-   buffer[104] = 70;
-   buffer[106] = 80;
+   if(1){
+      ResetAccelerator();
+      ClearBuffer(buffer,MAX_SIZE);
+      buffer[0]   = 10;
+      buffer[2]   = 20;
+      buffer[4]   = 30;
+      buffer[6]   = 40;
+      buffer[100] = 50;
+      buffer[102] = 60;
+      buffer[104] = 70;
+      buffer[106] = 80;
 
-   AddressVArguments compiled = CompileVUnit_AddressGenAdvancedTest(buffer,2,4,2,100);
-   LoadVUnit_VRead(&accelConfig->read,compiled);
-   CheckEfficiency(compiled);
+      AddressGenAdvancedTest_VRead(&accelConfig->read,buffer,2,4,2,100);
+      VLinear_Mem_Input_0(&accelConfig->output,VALUES);
 
-   RunAccelerator(3);
-   for(int i = 0; i < values; i++){
-      printf("%d\n",VersatUnitRead(TOP_output_addr,i));
-      Assert_Eq(VersatUnitRead(TOP_output_addr,i),expectedValues[i]);
+      ClearCache(buffer);
+      RunAccelerator(3);
+
+      int result[VALUES];
+      for(int i = 0; i < VALUES; i++){
+         result[i] = VersatUnitRead(TOP_output_addr,i);
+      }
+
+      Assert_Eq(result,expectedValues,VALUES,"2");
    }
-   printf("\n");
-}
 
-{
-   ClearBuffer(buffer);
-   buffer[0]  = 10;
-   buffer[5]  = 20;
-   buffer[4]  = 30;
-   buffer[9]  = 40;
-   buffer[8]  = 50;
-   buffer[13] = 60;
-   buffer[12] = 70;
-   buffer[17] = 80;
+   if(1){
+      ResetAccelerator();
+      ClearBuffer(buffer,MAX_SIZE);
+      buffer[0]  = 10;
+      buffer[5]  = 20;
+      buffer[4]  = 30;
+      buffer[9]  = 40;
+      buffer[8]  = 50;
+      buffer[13] = 60;
+      buffer[12] = 70;
+      buffer[17] = 80;
 
-   AddressVArguments compiled = CompileVUnit_AddressGenAdvancedTest(buffer,4,2,5,4);
-   LoadVUnit_VRead(&accelConfig->read,compiled);
-   CheckEfficiency(compiled);
+      AddressGenAdvancedTest_VRead(&accelConfig->read,buffer,4,2,5,4);
+      VLinear_Mem_Input_0(&accelConfig->output,VALUES);
 
-   RunAccelerator(3);
-   for(int i = 0; i < values; i++){
-      printf("%d\n",VersatUnitRead(TOP_output_addr,i));
-      Assert_Eq(VersatUnitRead(TOP_output_addr,i),expectedValues[i]);
+      ClearCache(buffer);
+      RunAccelerator(3);
+
+      int result[VALUES];
+      for(int i = 0; i < VALUES; i++){
+         result[i] = VersatUnitRead(TOP_output_addr,i);
+      }
+
+      Assert_Eq(result,expectedValues,VALUES,"3");
    }
-   printf("\n");
-}
 
-{
-   ClearBuffer(buffer);
-   buffer[0]  = 10;
-   buffer[5]  = 20;
-   buffer[10] = 30;
-   buffer[15] = 40;
-   buffer[2]  = 50;
-   buffer[7]  = 60;
-   buffer[12] = 70;
-   buffer[17] = 80;
+   if(1){
+      ResetAccelerator();
+      ClearBuffer(buffer,MAX_SIZE);
+      buffer[0]  = 10;
+      buffer[5]  = 20;
+      buffer[10] = 30;
+      buffer[15] = 40;
+      buffer[2]  = 50;
+      buffer[7]  = 60;
+      buffer[12] = 70;
+      buffer[17] = 80;
 
-   AddressVArguments compiled = CompileVUnit_AddressGenAdvancedTest(buffer,2,4,5,2);
-   LoadVUnit_VRead(&accelConfig->read,compiled);
-   CheckEfficiency(compiled);
+      AddressGenAdvancedTest_VRead(&accelConfig->read,buffer,2,4,5,2);
+      VLinear_Mem_Input_0(&accelConfig->output,VALUES);
 
-   RunAccelerator(3);
-   for(int i = 0; i < values; i++){
-      printf("%d\n",VersatUnitRead(TOP_output_addr,i));
-      Assert_Eq(VersatUnitRead(TOP_output_addr,i),expectedValues[i]);
+      ClearCache(buffer);
+      RunAccelerator(3);
+
+      int result[VALUES];
+      for(int i = 0; i < VALUES; i++){
+         result[i] = VersatUnitRead(TOP_output_addr,i);
+      }
+
+      Assert_Eq(result,expectedValues,VALUES,"4");
    }
-   printf("\n");
-}
-
 }

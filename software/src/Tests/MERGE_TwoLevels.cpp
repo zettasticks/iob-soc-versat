@@ -15,39 +15,45 @@ void SingleTest(Arena* arena){
 
       RunAccelerator(3);
 
-      Assert_Eq(accelState->output_0.currentValue,15);
+      Assert_Eq(accelState->output_0.currentValue,15,"1");
    }
 
    {
       ActivateMergedAccelerator(MergeType_TestDoubleMerge0_TestDoubleMerge01);
 
-      ConfigureSimpleMemory(&config->simple.TestDoubleMerge0_TestDoubleMerge01.x01,1,0,addr.simple.x01_x10_y11,x);
-      ConfigureSimpleMemory(&config->simple.TestDoubleMerge0_TestDoubleMerge01.y01,1,0,addr.simple.y01,y);
+      VersatUnitWrite(addr.simple.x01_x10_y11.addr,0,x[0]);
+      VersatUnitWrite(addr.simple.y01.addr,0,y[0]);
+
+      VLinear_Mem_Output_0(&config->simple.TestDoubleMerge0_TestDoubleMerge01.x01,1);
+      VLinear_Mem_Output_0(&config->simple.TestDoubleMerge0_TestDoubleMerge01.y01,1);
 
       RunAccelerator(3);
 
-      Assert_Eq(accelState->output_0.currentValue,27);
+      Assert_Eq(accelState->output_0.currentValue,27,"2");
    }
 
    {
       ActivateMergedAccelerator(MergeType_TestDoubleMerge1_TestDoubleMerge10);
 
       config->simple.TestDoubleMerge1_TestDoubleMerge10.y10.constant = 5;
-      ConfigureSimpleMemory(&config->simple.TestDoubleMerge1_TestDoubleMerge10.x10,1,0,addr.simple.x01_x10_y11,x);
+
+      VersatUnitWrite(addr.simple.x01_x10_y11.addr,0,x[0]);
+      VLinear_Mem_Output_0(&config->simple.TestDoubleMerge1_TestDoubleMerge10.x10,1);
 
       RunAccelerator(3);
 
-      Assert_Eq(accelState->output_0.currentValue,-2);
+      Assert_Eq(accelState->output_0.currentValue,-2,"3");
    }
 
    {
       ActivateMergedAccelerator(MergeType_TestDoubleMerge1_TestDoubleMerge11);
-      
-      ConfigureSimpleMemory(&config->simple.TestDoubleMerge1_TestDoubleMerge11.y11,1,0,addr.simple.x01_x10_y11,y);
+
+      VersatUnitWrite(addr.simple.x01_x10_y11.addr,0,y[0]);
+      VLinear_Mem_Output_0(&config->simple.TestDoubleMerge1_TestDoubleMerge11.y11,1);
       config->simple.TestDoubleMerge1_TestDoubleMerge11.x11.constant = 2;
 
       RunAccelerator(3);
 
-      Assert_Eq(accelState->output_0.currentValue,18);
+      Assert_Eq(accelState->output_0.currentValue,18,"4");
    }
 }

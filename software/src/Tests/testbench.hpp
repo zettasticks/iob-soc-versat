@@ -28,9 +28,22 @@ extern "C" {
 
 #define ALIGN_4(val) ((val + 3) & (~0x3))
 
+#define MIN(A,B) ((A) < (B) ? (A) : (B))
+#define MAX(A,B) ((A) > (B) ? (A) : (B))
+
 typedef unsigned char Byte;
 
 static bool error = false; // Global keep track if a error occurred. Do not want to print error messages more than once
+
+static void IntSet(volatile void* buffer,int value,int byteSize){
+   volatile int* asInt = (int*) buffer;
+
+   int nInts = byteSize / 4;
+
+   for(int i = 0; i < nInts; i++){
+      asInt[i] = value;
+   }
+}
 
 typedef struct{
   char* str;
@@ -160,7 +173,8 @@ Array<T> ArrayJoin(Array<T> f,Array<T> s,Arena* out){
 enum TestValueType {TestValueType_INTEGER,
                     TestValueType_UNSIGNED,
                     TestValueType_FLOAT,
-                    TestValueType_STRING};
+                    TestValueType_STRING,
+                    TestValueType_ARRAY};
 
 struct TestValue{
   int size;
@@ -178,6 +192,11 @@ struct TestValueSimples : public TestValue{
 
 struct TestValueString : public TestValue{
   char string[];
+};
+
+struct TestValueArray : public TestValue{
+  int elemCount;
+  int data[];
 };
 
 static const int TEST_BUFFER_AMOUNT = Kilobyte(64);
@@ -341,15 +360,62 @@ static bool TestValueEqual(TestValue* v1,TestValue* v2){
 
     return true;
   } break;
+  case TestValueType_ARRAY:{
+    TestValueArray* s1 = (TestValueArray*) v1;
+    TestValueArray* s2 = (TestValueArray*) v2;
+
+    if(s1->size != s2->size){
+      return false;
+    }
+    if(s1->elemCount != s2->elemCount){
+      return false;
+    }
+
+    for(int i = 0; i < s1->elemCount; i++){
+      if(s1->data[i] != s2->data[i]){
+        return false;
+      }
+    }
+
+    return true;
+  } break;
   }
 
   return res;
 }
 
-static void PrintTestValue(TestValue* value){
-  TestValueSimples* val = (TestValueSimples*) value;
+static void PrintArraySizedToMatch(TestValueArray* toPrint,TestValueArray* toCompare){
+  int size = toPrint->elemCount;
 
-  switch(value->type){
+    printf("(");
+  for(int i = 0; i < size; i++){
+    char buffer[64],buffer2[64];
+
+    if(i != 0){
+      printf(",");
+    }
+
+    int leftSize = sprintf(buffer,"%d",toPrint->data[i]);
+    int rightSize = 0;
+    if(i < toCompare->elemCount){
+      rightSize = sprintf(buffer,"%d",toCompare->data[i]);
+    }
+
+    int toPrintSize = MAX(leftSize,rightSize);
+
+    //printf("(%d/%d)",leftSize,rightSize);
+    printf("%*d",toPrintSize,toPrint->data[i]);
+  }
+  printf(")");
+}
+
+static void PrintTestValue(TestValue* toPrint,TestValue* toCompare){
+  TestValueSimples* val = (TestValueSimples*) toPrint;
+
+  if(val->marker){
+    printf("%s\n",val->marker);
+  }
+  switch(toPrint->type){
   case TestValueType_INTEGER:{
     printf("%d ",val->i);
   }break;
@@ -360,11 +426,15 @@ static void PrintTestValue(TestValue* value){
     printf("%f ",val->f);
   }break;
   case TestValueType_STRING:{
-    TestValueString* str = (TestValueString*) value;
+    TestValueString* str = (TestValueString*) toPrint;
     printf("%s",str->string);
   }break;
+  case TestValueType_ARRAY:{
+    TestValueArray* s1 = (TestValueArray*) toPrint;
+
+    PrintArraySizedToMatch(s1,(TestValueArray*) toCompare);
+  } break;
   }
-  printf("%s",val->marker);
 }
 
 TestValue* PushTestValue(Arena* arena,int val,const char* marker){
@@ -396,6 +466,20 @@ TestValue* PushTestValue(Arena* arena,const char* val,const char* marker){
   return s;
 }
 
+TestValue* PushTestValue(Arena* arena,const int* val,int size,const char* marker){
+  int bytes = ALIGN_4(sizeof(TestValue) + sizeof(int) + sizeof(int) * size);
+
+  TestValueArray* s = (TestValueArray*) PushBytes(arena,bytes);
+  s->size = bytes; s->marker = marker; s->type = TestValueType_ARRAY;
+  s->elemCount = size;
+
+  for(int i = 0; i < size; i++){
+    s->data[i] = val[i];
+  }
+
+  return s;
+}
+
 static void Assert_Eq(int got,int expected,const char* marker = ""){
   PushTestValue(&expectedArena,expected,marker);
   PushTestValue(&gotArena     ,got,marker);
@@ -414,6 +498,11 @@ static void Assert_Eq(float got,float expected,const char* marker = ""){
 static void Assert_Eq(const char* got,const char* expected,const char* marker = ""){
   PushTestValue(&expectedArena,expected,marker);
   PushTestValue(&gotArena     ,got,marker);
+}
+
+static void Assert_Eq(int* got,int* expected,int size,const char* marker = ""){
+  PushTestValue(&expectedArena,expected,size,marker);
+  PushTestValue(&gotArena     ,got,size,marker);
 }
 
 // ClearCache is very important otherwise sim-run might read past values
@@ -440,6 +529,12 @@ String PushFile(Arena* arena,const char* filepath){
   testFile[file_size] = '\0';
 
   return (String){.str = testFile.data,.size = (int) file_size};
+}
+
+void ClearBuffer(int* buffer,int size){
+   for(int i = 0; i < size; i++){
+      buffer[i] = 0;
+   }
 }
 
 void SingleTest(Arena* arena);
@@ -526,7 +621,7 @@ extern "C" int RunTest(int versatBase){
       while(gotPtr < gotEnd){
         TestValue* testGot = (TestValue*) gotPtr;
         printf("===== Index: %d\n",index++);
-        PrintTestValue(testGot);
+        PrintTestValue(testGot,testGot);
         printf("\n");
 
         gotPtr += testGot->size;
@@ -561,10 +656,10 @@ extern "C" int RunTest(int versatBase){
       if(!TestValueEqual(testExpected,testGot)){
         printf("===== Index: %d\n",i);
         printf("Expected: ");
-        PrintTestValue(testExpected);
+        PrintTestValue(testExpected,testGot);
         printf("\n");
         printf("Got:      ");
-        PrintTestValue(testGot);
+        PrintTestValue(testGot,testExpected);
         printf("\n");
         valuesToShow -= 1;
       }

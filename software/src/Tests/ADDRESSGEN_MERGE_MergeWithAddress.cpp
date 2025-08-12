@@ -1,21 +1,16 @@
 #include "testbench.hpp"
 
-#define MAX_SIZE 1000
-void ClearBuffer(int* buffer){
-   for(int i = 0; i < MAX_SIZE; i++){
-      buffer[i] = 0;
-   }
-}
+#define MAX_SIZE 20
+#define VALUES 8
 
 void SingleTest(Arena* arena){
    int expectedValues[] = {10,20,30,40,50,60,70,80};
-   int buffer[MAX_SIZE] = {};
-   int values = 8;
+   int* buffer = (int*) PushBytes(arena,sizeof(int) * MAX_SIZE);
 
-   ConfigureMemoryReceive(&accelConfig->ADDRESSGEN_Advanced.output,values);
+   if(1){
+      ResetAccelerator();
 
-   {
-      ClearBuffer(buffer);
+      ClearBuffer(buffer,MAX_SIZE);
       buffer[0]  = 10;
       buffer[2]  = 20;
       buffer[4]  = 30;
@@ -25,13 +20,16 @@ void SingleTest(Arena* arena){
       buffer[9]  = 70;
       buffer[11] = 80;
 
+      VLinear_Mem_Input_0(&accelConfig->ADDRESSGEN_Advanced.output,VALUES);
       AddressGenAdvancedTest_VRead(&accelConfig->ADDRESSGEN_Advanced.read,buffer,2,4,2,5);  
 
       RunAccelerator(3);
-      for(int i = 0; i < values; i++){
-         printf("%d\n",VersatUnitRead(TOP_output_output_addr,i));
-         Assert_Eq(VersatUnitRead(TOP_output_output_addr,i),expectedValues[i]);
+
+      int result[MAX_SIZE];
+      for(int i = 0; i < VALUES; i++){
+         result[i] = VersatUnitRead(TOP_output_output_addr,i);
       }
-      printf("\n");      
+
+      Assert_Eq(result,expectedValues,VALUES,"1");
    }
 }

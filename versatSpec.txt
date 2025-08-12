@@ -248,14 +248,14 @@ module MERGE_ModuleWithMultipleMerged(){
 }
 
 module TestMergeDelay1(){
-   Mem mem;
+   using(VLinear) Mem mem;
    Reg output;
 #
    mem{3} -> output;
 }
 
 module TestMergeDelay2(){
-   Mem mem;
+   using(VLinear) Mem mem;
    Reg output;
 #
    mem{5} -> output;
@@ -272,15 +272,15 @@ module TestDoubleMerge00(){
 }
 
 module TestDoubleMerge01(){
-   Mem x01;
-   Mem y01;
+   using(VLinear) Mem x01;
+   using(VLinear) Mem y01;
 #
    a = x01 + y01;
    a -> out;
 }
 
 module TestDoubleMerge10(){
-   Mem x10;
+   using(VLinear) Mem x10;
    Const y10;
 #
    a = y10 - x10;
@@ -289,7 +289,7 @@ module TestDoubleMerge10(){
 
 module TestDoubleMerge11(){
    Const x11;
-   Mem y11;
+   using(VLinear) Mem y11;
 #
    a = y11 - x11;
    a -> out;
@@ -2278,7 +2278,7 @@ module SimpleCGRA(){
 
 module EXAMPLE_Variety1(x,y){
    using(VLinear) VRead read;
-   Mem mem;
+   using(VLinear) Mem mem;
    Const constant;
    Reg reg;
 #
@@ -2290,7 +2290,7 @@ module EXAMPLE_Variety1(x,y){
 
 module EXAMPLE_Variety2(x,y,z){
    using(VLinear) VRead read;
-   Mem mem;
+   using(VLinear) Mem mem;
    using(VLinear) VWrite write;
 #
    total = x + y + z + read + mem;
@@ -2566,13 +2566,23 @@ module ADDRESSGEN_Mem(){
    start:0 -> end:0;
 }
 
+addressGen Strided2(sizeX,sizeY,width,stride)
+   for y 0..sizeY
+   for x 0..sizeX * stride
+   addr = (y * width * stride + x) / stride;
+
 addressGen StridedLinear(size,stride)
    for x 0..size * stride
    addr = x / stride;
 
+addressGen Compared(sizeX,sizeY,width)
+   for y 0..sizeY
+   for x 0..sizeX
+   addr = y * width + x;
+
 module ADDRESSGEN_Stride(){
    using(StridedLinear) Mem mem;
-   using(StridedLinear) VWrite write;
+   using(StridedLinear,Strided2,Compared) VWrite write;
    using(TestAddressGen) Generator gen;
 #
    gen -> mem;
@@ -2582,10 +2592,6 @@ module ADDRESSGEN_Stride(){
 addressGen SimpleMem(length)
    for x 0..length
    addr = x;
-
-// Best way of testing multiple address gens and rules?
-// Also would like to test everything, including the parsing process.
-// Maybe it's for the best if we just make it so versat always tests the address generated as part of the compilation process, at least for now anyway and fails if it detects a problem.
 
 // Not having a constant for the first term
 addressGen AddressGenAdvanced2()
@@ -2683,7 +2689,7 @@ addressGen AddressGenAdvancedAllVariablesAndLoops(var1,var2,var3,var4,var5)
 
 module ADDRESSGEN_Advanced(){
    using(AddressGenAdvancedTest) VRead read;
-   Mem output;
+   using(VLinear) Mem output;
 #
    read -> output;
 }
@@ -2694,7 +2700,7 @@ addressGen AddressGenConstant(var1)
 
 module ADDRESSGEN_Constants(){
    using(AddressGenConstant) VRead read;
-   Mem output;
+   using(VLinear) Mem output;
 #
    read -> output;
 }
@@ -2724,7 +2730,7 @@ addressGen AddressGenEmptyLoops4()
 
 module ADDRESSGEN_EmptyLoops(){
    using(AddressGenEmptyLoops,AddressGenEmptyLoops2,AddressGenEmptyLoops3,AddressGenEmptyLoops4) VRead read;
-   Mem output;
+   using(VLinear) Mem output;
 #
    read -> output;
 }
@@ -2735,7 +2741,7 @@ addressGen AddressGenComplexLoopExpression(var1,var2)
 
 module ADDRESSGEN_ComplexLoopExpression(){
    using(AddressGenComplexLoopExpression) VRead read;
-   Mem output;
+   using(VLinear) Mem output;
 #
    read -> output;
 }

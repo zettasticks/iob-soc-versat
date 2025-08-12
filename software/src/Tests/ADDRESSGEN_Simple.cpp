@@ -1,5 +1,7 @@
 #include "testbench.hpp"
 
+#define MAX_SIZE 1000
+
 void SingleTest(Arena* arena){
    int xMax = 2;
    int yMax = 2;
@@ -16,7 +18,10 @@ void SingleTest(Arena* arena){
 
    RunAccelerator(3);
 
+   int result[MAX_SIZE];
    for(int i = 0; i < total; i++){
-      Assert_Eq(expected[i],VersatUnitRead(TOP_output_addr,i));
-   }
+      result[i] = VersatUnitRead(TOP_output_addr,i);
+   }   
+
+   Assert_Eq(result,expected,total);
 }

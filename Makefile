@@ -90,6 +90,12 @@ fpga-run-only:
 fast-compile-versat:
 	cd ./submodules/VERSAT ; $(MAKE) -j 8 versat
 
+# Need to run these inside nix
+fast-pc-emul:
+	cp ./software/src/Tests/testbench.hpp $(TEST_FOLDER)/software/src/testbench.hpp
+	cp ./software/src/Tests/$(TEST).cpp $(TEST_FOLDER)/software/src/test.cpp
+	make -C $(TEST_FOLDER) pc-emul-run
+
 versat-only:
 	mkdir -p $(TEST_FOLDER)/
 	cd ./submodules/VERSAT ; $(MAKE) -j 8 versat

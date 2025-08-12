@@ -5,15 +5,17 @@ void SingleTest(Arena* arena){
 
    int data[] = {0,1,2,3,4,5,6,7,8,9};
 
-   ConfigureSimpleMemory(&accelConfig->TestMergeDelay1.mem,ARRAY_SIZE(data),0,addr.mem_mem,data);
+   VLinear_Mem_Output_0(&accelConfig->TestMergeDelay1.mem,ARRAY_SIZE(data));
    
+   for(int i = 0; i < ARRAY_SIZE(data); i++){
+      VersatUnitWrite(addr.mem_mem.addr,i,data[i]);
+   }
+
    // Because the unit is shared, no need to do this, although it would be best in a real usage of the accelerator
-   //ConfigureSimpleMemory(&accelConfig->TestMergeDelay2.mem,ARRAY_SIZE(data),0,TOP_mem_mem_addr,data);
 
    ActivateMergedAccelerator(MergeType_TestMergeDelay1);
    RunAccelerator(3);
    Assert_Eq(accelState->TestMergeDelay1.output.currentValue,3);   
-
 
    ActivateMergedAccelerator(MergeType_TestMergeDelay2);
    RunAccelerator(3);

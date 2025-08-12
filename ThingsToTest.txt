@@ -1,8 +1,0 @@
-First of all, I should have a single test for any thing.
-Any small thing should be one test.
-Any combination possible should be another.
-Need merge tests for 2,3,4 types.
-Need complex merge tests for 2,3,4 types.
-
-It is probably a good idea to add tests for the flatten algorithm.
-If we make it so a flattened graph contains the same interface as the normal type, then we can reuse the same tests wether the unit is flattened or not. Just pass a different flag to test 

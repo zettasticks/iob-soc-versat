@@ -1,5 +1,7 @@
 #include "testbench.hpp"
 
+#define MAX_SIZE 4
+
 void SingleTest(Arena* arena){
    int data[] = {1,2,3,4};
 
@@ -10,7 +12,10 @@ void SingleTest(Arena* arena){
    
    RunAccelerator(3);
 
-   for(int i = 0; i < 4; i++){
-      Assert_Eq(data[i],VersatUnitRead(TOP_end_addr,i));
-   }
+   int result[MAX_SIZE];
+   for(int i = 0; i < MAX_SIZE; i++){
+      result[i] = VersatUnitRead(TOP_end_addr,i);
+   }   
+
+   Assert_Eq(result,data,MAX_SIZE);
 }

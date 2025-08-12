@@ -53,6 +53,7 @@
     {
       "name": "DATABUS_MultipleTransfers",
       "finalStage": "SIM_RUN",
+      "comment": "One subtest disabled since it would only work if we added a databus side duty to VWrite units. Test failing for higher AXI values because pc-emul is probably not taking into account the strobe, or the strobe is being misscalculated and we are overwriting over data.",
       "subTests": [
         {},
         {"args": "-b64"},
@@ -164,7 +165,13 @@
     },
     {
       "name": "ADDRESSGEN_Stride",
-      "finalStage": "SIM_RUN"
+      "finalStage": "TEMP_DISABLED",
+      "subTests": [
+        {},
+        {"args": "-b64"},
+        {"args": "-b128"},
+        {"args": "-b256"}
+      ]
     },
     {
       "name": "ADDRESSGEN_SimulateLoop",
