@@ -8,7 +8,7 @@ VFLAGS+=-CFLAGS "-march=native -O2 -I../../../software/src -I../../../software"
 
 ifeq ($(VCD),1)
 VFLAGS+=--trace --trace-fst
-VFLAGS+=-DVCD -CFLAGS "-DVCD"
+VFLAGS+=-DNO_X_SIM -DVCD -CFLAGS "-DVCD"
 endif
 
 SIM_SERVER=$(VSIM_SERVER)

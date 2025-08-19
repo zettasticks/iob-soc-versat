@@ -19,6 +19,10 @@ extern "C" {
 #define TEST_PASSED 0
 #define TEST_FAILED 1
 
+// Garbage marker needs to be byte sized, so cannot use something like 0xDEADBEEF. Using BA as short for BAD.
+#define GARBAGE_MARKER ((int) 0xBABABABA)
+#define GM GARBAGE_MARKER
+
 #undef  ARRAY_SIZE
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
@@ -401,10 +405,23 @@ static void PrintArraySizedToMatch(TestValueArray* toPrint,TestValueArray* toCom
       rightSize = sprintf(buffer,"%d",toCompare->data[i]);
     }
 
+    if(toPrint->data[i] == GM){
+      leftSize = 2;
+    }
+    if(toCompare->data[i] == GM){
+      rightSize = 2;
+    }
+
     int toPrintSize = MAX(leftSize,rightSize);
 
-    //printf("(%d/%d)",leftSize,rightSize);
-    printf("%*d",toPrintSize,toPrint->data[i]);
+    if(toPrint->data[i] == GM){
+      for(int i = 0; i < (toPrintSize - 2); i++){
+        printf(" ");
+      }
+      printf("GM");
+    } else {
+      printf("%*d",toPrintSize,toPrint->data[i]);
+    }
   }
   printf(")");
 }
@@ -533,8 +550,9 @@ String PushFile(Arena* arena,const char* filepath){
 
 void ClearBuffer(int* buffer,int size){
    for(int i = 0; i < size; i++){
-      buffer[i] = 0;
+      buffer[i] = GARBAGE_MARKER;
    }
+   ClearCache(buffer);
 }
 
 void SingleTest(Arena* arena);
@@ -633,7 +651,7 @@ extern "C" int RunTest(int versatBase){
   printf("TEST_RESULT:TEST_FAILED\n");
   printf("Error ");
   if(gotIndex == 0){
-    printf("0 samples are test failure. Put an Assert_Eq(0,0) if no software side test.");
+    printf("0 samples are test failure. Put an Assert_Eq(0,0) if no software side test.\n");
   } else if(expectedArena.used == 0 || gotArena.used == 0){
     printf("(0 samples)\n");
   } else if(differentIndexes && !differentValues){

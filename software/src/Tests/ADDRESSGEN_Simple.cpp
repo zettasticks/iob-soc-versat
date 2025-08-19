@@ -1,27 +1,170 @@
 #include "testbench.hpp"
 
-#define MAX_SIZE 1000
+#define MAX_SIZE 10
+#define SIZE 2
 
 void SingleTest(Arena* arena){
-   int xMax = 2;
-   int yMax = 2;
-   int zMax = 2;
-   int wMax = 2;
-   int aMax = 2;
+   int* buffer = (int*) PushBytes(arena,sizeof(int) * MAX_SIZE);   
+   int* expected = (int*) PushBytes(arena,sizeof(int) * MAX_SIZE);
+   //            876543210
+   int tests = 0b111111111;
 
-   int total = xMax * yMax * zMax * wMax * aMax;
+   if(tests & (1 << 0)){
+      int size = 2;
 
-   int expected[] = {0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3};
+      ResetAccelerator();
+      ClearBuffer(buffer,MAX_SIZE);
 
-   TestAddressGen_Generator(&accelConfig->gen,xMax,yMax,zMax,wMax,aMax);
-   VLinear_Mem_Input_0(&accelConfig->output,total);
+      VLinear_Generator(&accelConfig->gen,size);
+      VLinear_VWrite(&accelConfig->output,buffer,size);
 
-   RunAccelerator(3);
+      RunAccelerator(3);
+      ClearCache(buffer);
 
-   int result[MAX_SIZE];
-   for(int i = 0; i < total; i++){
-      result[i] = VersatUnitRead(TOP_output_addr,i);
-   }   
+      ClearBuffer(expected,MAX_SIZE);
+      expected[0] = 0;
+      expected[1] = 1;
+      Assert_Eq(buffer,expected,MAX_SIZE,"Linear-Linear Size = 2");
+   }
 
-   Assert_Eq(result,expected,total);
+   if(tests & (1 << 1)){
+      int size = 1;
+
+      ResetAccelerator();
+      ClearBuffer(buffer,MAX_SIZE);
+
+      VLinear_Generator(&accelConfig->gen,size);
+      VLinear_VWrite(&accelConfig->output,buffer,size);
+
+      RunAccelerator(3);
+      ClearCache(buffer);
+
+      ClearBuffer(expected,MAX_SIZE);
+      expected[0] = 0;
+      Assert_Eq(buffer,expected,MAX_SIZE,"Linear-Linear Size = 1");
+   }
+
+   if(tests & (1 << 2)){
+      int size = 0;
+
+      ResetAccelerator();
+      ClearBuffer(buffer,MAX_SIZE);
+
+      VLinear_Generator(&accelConfig->gen,size);
+      VLinear_VWrite(&accelConfig->output,buffer,size);
+
+      RunAccelerator(3);
+      ClearCache(buffer);
+
+      ClearBuffer(expected,MAX_SIZE);
+      Assert_Eq(buffer,expected,MAX_SIZE,"Linear-Linear Size = 0");
+   }
+
+   if(tests & (1 << 3)){
+      int size = 2;
+
+      ResetAccelerator();
+      ClearBuffer(buffer,MAX_SIZE);
+
+      VDouble_Generator(&accelConfig->gen,size,size,size);
+      VLinear_VWrite(&accelConfig->output,buffer,size * size);
+
+      RunAccelerator(3);
+      ClearCache(buffer);
+
+      ClearBuffer(expected,MAX_SIZE);
+      expected[0] = 0;
+      expected[1] = 1;
+      expected[2] = 2;
+      expected[3] = 3;
+      Assert_Eq(buffer,expected,MAX_SIZE,"Double-Linear Size = 2");
+   }
+
+   if(tests & (1 << 4)){
+      int size = 1;
+
+      ResetAccelerator();
+      ClearBuffer(buffer,MAX_SIZE);
+
+      VDouble_Generator(&accelConfig->gen,size,size,size);
+      VLinear_VWrite(&accelConfig->output,buffer,size * size);
+
+      RunAccelerator(3);
+      ClearCache(buffer);
+
+      ClearBuffer(expected,MAX_SIZE);
+      expected[0] = 0;
+      Assert_Eq(buffer,expected,MAX_SIZE,"Double-Linear Size = 1");
+   }
+
+   if(tests & (1 << 5)){
+      int size = 0;
+
+      ResetAccelerator();
+      ClearBuffer(buffer,MAX_SIZE);
+
+      VDouble_Generator(&accelConfig->gen,size,size,size);
+      VLinear_VWrite(&accelConfig->output,buffer,size * size);
+
+      RunAccelerator(3);
+      ClearCache(buffer);
+
+      ClearBuffer(expected,MAX_SIZE);
+      Assert_Eq(buffer,expected,MAX_SIZE,"Double-Linear Size = 1");
+   }
+
+   // MARK
+
+   if(tests & (1 << 6)){
+      int size = 2;
+
+      ResetAccelerator();
+      ClearBuffer(buffer,MAX_SIZE);
+
+      VLinear_Generator(&accelConfig->gen,size * size);
+      VDouble_VWrite(&accelConfig->output,buffer,size,size,size);
+
+      RunAccelerator(3);
+      ClearCache(buffer);
+
+      ClearBuffer(expected,MAX_SIZE);
+      expected[0] = 0;
+      expected[1] = 1;
+      expected[2] = 2;
+      expected[3] = 3;
+      Assert_Eq(buffer,expected,MAX_SIZE,"Linear-Double Size = 2");
+   }
+
+   if(tests & (1 << 7)){
+      int size = 1;
+
+      ResetAccelerator();
+      ClearBuffer(buffer,MAX_SIZE);
+
+      VLinear_Generator(&accelConfig->gen,size * size);
+      VDouble_VWrite(&accelConfig->output,buffer,size,size,size);
+
+      RunAccelerator(3);
+      ClearCache(buffer);
+
+      ClearBuffer(expected,MAX_SIZE);
+      expected[0] = 0;
+      Assert_Eq(buffer,expected,MAX_SIZE,"Linear-Double Size = 1");
+   }
+
+   if(tests & (1 << 8)){
+      int size = 0;
+
+      ResetAccelerator();
+      ClearBuffer(buffer,MAX_SIZE);
+
+      VLinear_Generator(&accelConfig->gen,size * size);
+      VDouble_VWrite(&accelConfig->output,buffer,size,size,size);
+
+      RunAccelerator(3);
+      ClearCache(buffer);
+
+      ClearBuffer(expected,MAX_SIZE);
+      Assert_Eq(buffer,expected,MAX_SIZE,"Linear-Double Size = 0");
+   }
 }

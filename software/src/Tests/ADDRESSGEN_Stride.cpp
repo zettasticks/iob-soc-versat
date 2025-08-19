@@ -2,10 +2,11 @@
 
 void SingleTest(Arena* arena){
    int* buffer = (int*) PushBytes(arena,sizeof(int) * 100); 
+   //            543210
+   int tests = 0b111111;
 
    // Generator and memory units
-   // 0
-   if(0){
+   if(tests & (1 << 0)){
       ResetAccelerator();
       
       forceSingleLoop = false;
@@ -13,17 +14,18 @@ void SingleTest(Arena* arena){
       TestAddressGen_Generator(&accelConfig->gen,2,2,2,2,2);
       StridedLinear_Mem_Input_0(&accelConfig->mem,4,4);
 
+      RunAccelerator(3);
+
       int results[4] = {};
       for(int i = 0; i < 4; i++){
          results[i] = VersatUnitRead(TOP_mem_addr,i);
       }
 
       int expected[4] = {3,3,3,3};
-      Assert_Eq(results,expected,4);
+      Assert_Eq(results,expected,4,"0");
    }
 
-   // 1
-   if(0){
+   if(tests & (1 << 1)){
       ResetAccelerator();
 
       forceSingleLoop = true;
@@ -39,12 +41,11 @@ void SingleTest(Arena* arena){
       }
 
       int expected[4] = {3,3,3,3};
-      Assert_Eq(results,expected,4);
+      Assert_Eq(results,expected,4,"1");
    }
 
    // Test VWrite
-   // 2
-   if(0){
+   if(tests & (1 << 2)){
       ResetAccelerator();
       ClearBuffer(buffer,100);
 
@@ -58,11 +59,10 @@ void SingleTest(Arena* arena){
       ClearCache(buffer);
 
       int expected[4] = {3,3,3,3};
-      Assert_Eq(buffer,expected,4);
+      Assert_Eq(buffer,expected,4,"2");
    }
 
-   // 3
-   if(0){
+   if(tests & (1 << 3)){
       ResetAccelerator();
       ClearBuffer(buffer,100);
 
@@ -76,11 +76,10 @@ void SingleTest(Arena* arena){
       ClearCache(buffer);
 
       int expected[4] = {3,3,3,3};
-      Assert_Eq(buffer,expected,4);
+      Assert_Eq(buffer,expected,4,"3");
    }
 
-   // 4
-   if(1){
+   if(tests & (1 << 4)){
       ResetAccelerator();
       ClearBuffer(buffer,100);
 
@@ -92,16 +91,14 @@ void SingleTest(Arena* arena){
 
       TestAddressGen_Generator(&accelConfig->gen,2,2,2,2,2);
       Strided2_VWrite(&accelConfig->write,buffer,2,2,4,4);
-      //Compared_VWrite(&accelConfig->write,buffer,2,2,4);
 
       RunAccelerator(3);
       ClearCache(buffer);
 
-      Assert_Eq(buffer,expected,8);
+      Assert_Eq(buffer,expected,8,"DoubleStride - SingleLoop");
    }
 
-   // 5
-   if(0){
+   if(tests & (1 << 5)){
       ResetAccelerator();
       ClearBuffer(buffer,100);
 
@@ -111,11 +108,12 @@ void SingleTest(Arena* arena){
       forceSingleLoop = false;
       forceDoubleLoop = true;
 
+      TestAddressGen_Generator(&accelConfig->gen,2,2,2,2,2);
       Strided2_VWrite(&accelConfig->write,buffer,2,2,4,4);
 
       RunAccelerator(3);
       ClearCache(buffer);
 
-      Assert_Eq(buffer,expected,8);
+      Assert_Eq(buffer,expected,8,"DoubleStride - DoubleLoop");
    }
 }

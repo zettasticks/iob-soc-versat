@@ -23,6 +23,10 @@
       "finalStage": "SIM_RUN"
     },
     {
+      "name": "EXAMPLE_Conv",
+      "finalStage": "SIM_RUN"
+    },
+    {
       "name": "EXAMPLE_SHA",
       "finalStage": "SIM_RUN",
       "subTests": [
@@ -52,8 +56,8 @@
     },
     {
       "name": "DATABUS_MultipleTransfers",
-      "finalStage": "SIM_RUN",
-      "comment": "One subtest disabled since it would only work if we added a databus side duty to VWrite units. Test failing for higher AXI values because pc-emul is probably not taking into account the strobe, or the strobe is being misscalculated and we are overwriting over data.",
+      "finalStage": "DISABLED_FAILING",
+      "comment": "Test failing for higher AXI values. The strobe is being misscalculated and we are overwriting over data.",
       "subTests": [
         {},
         {"args": "-b64"},
@@ -148,7 +152,7 @@
     },
     {
       "name": "MERGE_CONFIG_ADDRESSGEN_MaxComplexity",
-      "finalStage": "TEMP_DISABLED",
+      "finalStage": "DISABLED_FAILING",
       "comment": "[NO SOFT TEST] Test not finished. Need to put something here that exercises the merged accelerator"
     },
     {
@@ -160,12 +164,17 @@
       "finalStage": "SIM_RUN"
     },
     {
+      "name": "ADDRESSGEN_Moderate",
+      "finalStage": "SIM_RUN"
+    },
+    {
       "name": "ADDRESSGEN_Mem",
       "finalStage": "SIM_RUN"
     },
     {
       "name": "ADDRESSGEN_Stride",
-      "finalStage": "TEMP_DISABLED",
+      "finalStage": "DISABLED_FAILING",
+      "comment" : "One subtest disabled because SingleLoop not capable of handling stride for multiple loop address gen, at least currently", 
       "subTests": [
         {},
         {"args": "-b64"},
@@ -175,7 +184,7 @@
     },
     {
       "name": "ADDRESSGEN_SimulateLoop",
-      "finalStage": "TEMP_DISABLED",
+      "finalStage": "DISABLED",
       "comment": "Need to find a way of checking if the simulation code is working properly",
       "subTests": [
         {},

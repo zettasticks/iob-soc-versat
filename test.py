@@ -76,7 +76,7 @@ COLOR_WHITE  = '\33[37m'
 # Order of these are important. Assuming that failing sim-run means that it passed pc-emul 
 class Stage(Enum):
    DISABLED = auto()
-   TEMP_DISABLED = auto()
+   DISABLED_FAILING = auto()
    NOT_WORKING = auto()
    SHOULD_FAIL = auto()
    VERSAT = auto()
@@ -86,7 +86,7 @@ class Stage(Enum):
 
 def IsStageDisabled(stage):
    assert(type(stage) == Stage) 
-   res = (stage == Stage.DISABLED or stage == Stage.TEMP_DISABLED)
+   res = (stage == Stage.DISABLED or stage == Stage.DISABLED_FAILING)
    return res
 
 class ErrorType(Enum):
@@ -511,9 +511,9 @@ def PrintResult(result,firstColumnSize):
       partialVal = f"[{stage.name}/{finalStage.name}]"
 
    if(IsStageDisabled(finalStage)):
-      condition = "DISABLED" if finalStage == Stage.DISABLED else "TEMP_DISABLED"
+      condition = "DISABLED" if finalStage == Stage.DISABLED else "DISABLED_FAILING"
       partialVal = ""
-      color = COLOR_YELLOW
+      color = COLOR_CYAN if finalStage == Stage.DISABLED else COLOR_YELLOW
    elif(stage == Stage.NOT_WORKING):
       condition = failing + " " + str(result.error)
       partialVal = ""
@@ -740,7 +740,7 @@ def RunTests(testAndSubTestList,sameArgs,defaultArgs):
 
 def TempDisableTest(test):
    test.tempDisabledStage = test.finalStage
-   test.finalStage = Stage.TEMP_DISABLED
+   test.finalStage = Stage.DISABLED_FAILING
 
 def ReprintButOrganized(testResultList,maxNameLength):
    def AllCaps(name):
@@ -916,7 +916,7 @@ if __name__ == "__main__":
 
    elif(command == "enable"):
       for index,test in enumerate(testList):
-         if(test.finalStage == Stage.TEMP_DISABLED):
+         if(test.finalStage == Stage.DISABLED_FAILING):
             print("Here:",test.tempDisabledStage)
             test.finalStage = test.tempDisabledStage
             test.tempDisabledStage = None
