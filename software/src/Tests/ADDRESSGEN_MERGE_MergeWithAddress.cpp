@@ -27,7 +27,7 @@ void SingleTest(Arena* arena){
 
       int result[MAX_SIZE];
       for(int i = 0; i < VALUES; i++){
-         result[i] = VersatUnitRead(TOP_output_output_addr,i);
+         result[i] = VersatUnitRead(TOP_output_addr,i);
       }
 
       Assert_Eq(result,expectedValues,VALUES,"1");

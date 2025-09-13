@@ -147,6 +147,11 @@
       "comment": "Nothing in software. See if Versat produces valid Verilog. Eventually make proper test"
     },
     {
+      "name": "MERGE_GraphLoop",
+      "finalStage": "DISABLED_FAILING",
+      "comment": "Nothing in software. See if Versat produces valid Verilog. Eventually make proper test"
+    },
+    {
       "name": "MERGE_CONFIG_Share",
       "finalStage": "SIM_RUN"
     },

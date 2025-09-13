@@ -8,7 +8,7 @@ void SingleTest(Arena* arena){
    VLinear_Mem_Output_0(&accelConfig->TestMergeDelay1.mem,ARRAY_SIZE(data));
    
    for(int i = 0; i < ARRAY_SIZE(data); i++){
-      VersatUnitWrite(addr.mem_mem.addr,i,data[i]);
+      VersatUnitWrite(addr.mem.addr,i,data[i]);
    }
 
    // Because the unit is shared, no need to do this, although it would be best in a real usage of the accelerator

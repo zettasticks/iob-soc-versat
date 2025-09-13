@@ -3,20 +3,12 @@
 void SingleTest(Arena* arena){
   int numberItems = 4;
 
-  accelConfig->start.iterA = 1;
-  accelConfig->start.incrA = 1;
-  accelConfig->start.dutyA = ~0;
-  accelConfig->start.perA = numberItems;
+  VLinear_Mem_Output_0(&accelConfig->start,numberItems);
+  VLinear_Mem_Input_0(&accelConfig->end,numberItems);
 
   for(int i = 0; i < numberItems; i++){
     VersatUnitWrite(TOP_start_addr,i,i + 1);
   }
-
-  accelConfig->end.iterA = 1;
-  accelConfig->end.incrA = 1;
-  accelConfig->end.dutyA = ~0;
-  accelConfig->end.in0_wr = 1;
-  accelConfig->end.perA = numberItems;
 
   RunAccelerator(3);
   

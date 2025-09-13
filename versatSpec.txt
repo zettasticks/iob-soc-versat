@@ -235,6 +235,15 @@ module TestMergeChild2(){
    x -> output;
 }
 
+module TestMergeChild3(){
+   Const a;
+   Const b;
+   Reg output;
+#
+   x = a - b;
+   x -> output;
+}
+
 merge MERGE_Simple = TestMergeChild1:w | TestMergeChild2:z{
    w.x - z.a;
    w.y - z.b;
@@ -254,6 +263,24 @@ module TestMergeInputs2(a,b){
 }
 
 merge MERGE_Inputs = TestMergeInputs1 | TestMergeInputs2;
+
+module ModuleWithExtra(){
+   Const a;
+   Const b;
+   MERGE_Inputs simple;
+   Const c;
+   Const d;
+   Const e;
+   Reg output;
+#
+   {a,b} -> simple:0..1;
+   add = simple + c;
+   add2 = d + e;
+   add3 = add + add2;
+   add3 -> output;
+}
+
+merge MergeTest = ModuleWithExtra | TestMergeInputs1;
 
 module TestMergeNames1(){
    Const unit[2];
@@ -278,6 +305,8 @@ module MERGE_ModuleWithMultipleMerged(){
    MERGE_SameTypeChildren child2;
 #
 }
+
+merge MERGE_HighComplexity = MERGE_ModuleWithMultipleMerged | MERGE_SameTypeChildren;
 
 module TestMergeDelay1(){
    using(VLinear) Mem mem;
@@ -336,11 +365,35 @@ module TestMergeStruct(){
    TestDoubleMerge0 d0;
    Const c;
 #
-   a = d0 + c;
-   a -> out;
+   adder = d0 + c;
+   adder -> out;
 }
 
 merge MERGE_MergeWithStructMerge = TestMergeStruct | TestDoubleMerge1;
+
+module GraphLoop1(){
+   Const const[3];
+   Mul muller;
+   Reg output;   
+#
+   {const[0],const[1]} -> muller:0..1;
+   add = const[2] + muller;
+   add -> output;
+}
+
+module GraphLoop2(){
+   Mul muller;
+   Const const[3];
+   Reg output;   
+#
+   add = const[0] + const[1];
+   {const[2],add} -> muller:0..1;
+   muller -> output;
+}
+
+// Try to make the merged graph contain a loop.
+// The loop should be muller -> adder -> muller
+merge MERGE_GraphLoop = GraphLoop1 | GraphLoop2;
 
 module DATABUS_SimpleTransfer(){
    using(VLinear) VRead read;
@@ -357,8 +410,8 @@ module DATABUS_MultipleTransfers(){
 }
 
 module MEM_SimpleTransfer(){
-   Mem start;
-   Mem end;
+   using(VLinear) Mem start;
+   using(VLinear) Mem end;
 #
    start -> end;
 }
