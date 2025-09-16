@@ -87,14 +87,23 @@ fpga-run-only:
 	cp ./software/src/Tests/unitConfiguration.hpp $(TEST_FOLDER)/software/src/
 	+nix-shell --run "make -C $(TEST_FOLDER)/ fpga-fw-build fpga-run BOARD=$(BOARD)"
 
+# Fast rules need to run inside nix-shell otherwise we have linker problems from different compiler versions
 fast-compile-versat:
 	cd ./submodules/VERSAT ; $(MAKE) -j 8 versat
 
-# Need to run these inside nix
-fast-pc-emul:
+fast-setup: fast-compile-versat
 	cp ./software/src/Tests/testbench.hpp $(TEST_FOLDER)/software/src/testbench.hpp
 	cp ./software/src/Tests/$(TEST).cpp $(TEST_FOLDER)/software/src/test.cpp
+	./submodules/VERSAT/versat ./versatSpec.txt -s -b32 -d -t $(TEST) -o $(TEST_FOLDER)/hardware/src -O $(TEST_FOLDER)/software -g ../debug -u ./hardware/src/units 
+
+fast-pc-emul: fast-setup
 	make -C $(TEST_FOLDER) pc-emul-run
+
+fast-sim-run: fast-setup
+	make -C $(TEST_FOLDER) sim-run SIMULATOR=$(SIMULATOR) VCD=$(VCD)
+
+test-folder:
+	@echo $(TEST_FOLDER)
 
 versat-only:
 	mkdir -p $(TEST_FOLDER)/
