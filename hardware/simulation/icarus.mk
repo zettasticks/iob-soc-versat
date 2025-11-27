@@ -1,4 +1,4 @@
-VFLAGS+=-W all -g2005-sv -I. -I../src -Isrc -Ihardware/src
+VFLAGS+=-W all -g2005-sv -I. -I../src -Isrc -Ihardware/src -DSIM
 
 ifeq ($(VCD),1)
 VFLAGS+=-DVCD

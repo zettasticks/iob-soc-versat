@@ -13,8 +13,7 @@
 # Basically, just a big warning for future maintainers to not touch certain parts of the test stage unless they know what they are doing
 ##############
 
-#LEFT HERE - What is left?
-#Simplify and remove any leftover code from the previous impl
+#LEFT HERE 
 #Need to reimplement the commands like run-only and stuff like that which is currently broken 
 
 # TODO:
@@ -53,6 +52,7 @@ import traceback
 import shutil
 import os
 import random
+import signal
 from dataclasses import dataclass
 from enum import Enum,auto
 from pprint import pprint
@@ -147,6 +147,17 @@ class SubTestInfo:
    hashVal: int
    stage: Stage
    accelData: VersatAcceleratorData | None
+
+   def __eq__(self,other):
+      # Need to override eq so that we do not enter a loop because of the parent variable
+
+      res = self.args == other.args
+      res |= self.tokens == other.tokens
+      res |= self.hashVal == other.hashVal
+      res |= self.stage == other.stage
+      res |= self.accelData == other.accelData
+
+      return res
 
 @dataclass
 class TestInfo:
@@ -274,9 +285,9 @@ def ParseJson(jsonInfo,jsonData):
 # Global data output management. We want to save data as fast as possible
 # so that we can still save some progress even if we exit early
 
-MAX_NAME_LENGTH = -1
 printMutex = Lock()
 testMutex = Lock()
+outputMutex = Lock()
 testData = {}
 def SaveTest(test,subTest):
    trueName = GetTestTrueName(test,subTest)
@@ -298,6 +309,14 @@ def SaveTest(test,subTest):
 
       with open(jsonTestDataPath,"w") as file:
          json.dump(testData,file,cls=MyJsonEncoder,indent=2)
+
+def signal_handler(sig, frame):
+   print("Inside signal handler")
+
+   # Do not want to terminate if we are in the middle of writing to a file, otherwise corrupted data
+   testMutex.acquire()
+   outputMutex.acquire()
+   sys.exit(0)
 
 # Used to find values in the form "NAME:VAL"
 def FindAndParseValue(content,valueToFind):
@@ -467,8 +486,9 @@ def CheckTestPassed(testOutput):
 
 def SaveOutput(testName,fileName,output):
    testTempDir = TempDir(testName)
-   with open(testTempDir + f"/{fileName}.txt","w") as file:
-      file.write(output)
+   with outputMutex:
+      with open(testTempDir + f"/{fileName}.txt","w") as file:
+         file.write(output)
 
 def PerformTest(test,testTrueName,makefileArg,stage):
    # This function was previously taking the output from the makefile and checking the files using the hasher.
@@ -519,6 +539,7 @@ def PerformTest(test,testTrueName,makefileArg,stage):
 
    print(f"Error, PerformTest called with: {stage}. Fix this")
 
+MAX_NAME_LENGTH = -1
 def PrintResult(result):
    def GeneratePad(word,amount,padding = '.'):
       return padding * (amount - len(word))
@@ -621,6 +642,8 @@ def ParseVersatArgsIntoMakefile(versatArgs):
    if(versatArgs == None or versatArgs == ''):
       return ""
 
+   if(versatArgs == '--profile'):
+      return "DO_PROFILE=T"
    if(versatArgs == '-b32'):
       return "AXI_DATA_W=32"
    elif(versatArgs == '-b64'):
@@ -751,7 +774,8 @@ def DoWorkDirectly(work):
             ThreadedPrintResult(work)
       else:
          work.error = error
-         work.subTest.stage = Stage.NOT_WORKING
+         #work.error.err == ErrorType.TEST_FAILED
+         #work.subTest.stage = Stage.NOT_WORKING
          break
 
    # Only save tokens at the very end otherwise an early break might cause bad data to be saved
@@ -805,6 +829,8 @@ def RunTests2(testAndSubTestList,sameArgs,defaultArgs):
    return resultList
 
 if __name__ == "__main__":
+   signal.signal(signal.SIGINT, signal_handler)
+
    testInfoJson = None
    jsonTestInfoPath = "testInfo.json"
    jsonTestDataPath = "testData.json"
@@ -858,8 +884,16 @@ if __name__ == "__main__":
 
    allTests = list(PairTestsAndSubtests(testInfo.tests))
 
-   testAndSubTestList = [(test,subTest) for test,subTest in allTests if Filter(GetTestTrueName(test,subTest),testFilter)]
+   testCount = {}
+   for test in testInfo.tests:
+      testCount[test.name] = testCount.get(test.name,0) + 1
 
+   for name,count in testCount.items():
+      if count > 1:
+         print(f"\n\nTest {name} is repeated on the testData.json, remove it\n")
+         sys.exit(0)
+
+   testAndSubTestList = [(test,subTest) for test,subTest in allTests if Filter(GetTestTrueName(test,subTest),testFilter)]
    testList = list(set([test for test,subTest in testAndSubTestList]))
    subTestList = [subTest for test,subTest in testAndSubTestList]
 
@@ -913,12 +947,12 @@ if __name__ == "__main__":
 
       ReprintButOrganized(resultList)
 
+      # Run test already updates testData.json
       sys.exit(0)
 
    elif(command == "enable"):
       for test in testList:
          if(test.finalStage == Stage.DISABLED_FAILING):
-            print("Here:",test.tempDisabledStage)
             test.finalStage = test.tempDisabledStage
             test.tempDisabledStage = None
          elif(test.finalStage == Stage.DISABLED):
@@ -952,3 +986,4 @@ if __name__ == "__main__":
 
    with open(jsonTestDataPath,"w") as file:
       json.dump(testData,file,cls=MyJsonEncoder,indent=2)
+   sys.exit(0)

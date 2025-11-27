@@ -1,6 +1,6 @@
 VTOP?=$(NAME)
 
-VFLAGS+=--cc --exe -I. -I../src -Isrc --top-module $(VTOP)
+VFLAGS+=--cc --exe -I. -I../src -Isrc --top-module $(VTOP) -DSIM
 VFLAGS+=-Wno-lint --Wno-UNOPTFLAT
 VFLAGS+=--no-timing
 # Include embedded headers

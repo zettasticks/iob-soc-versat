@@ -1,5 +1,10 @@
 CUR_DIR=$(shell pwd)
 
+# Remember that some tests depend on flags which are set inside the testInfo.json.
+# That means that using Makefile directly might cause some tests to fail.
+# Example: Doing sim-run for the test EXAMPLE_DEBUG without setting the DO_PROFILE flag
+#          is going to cause an error even though it is normal, since the test requires the flag to work.
+
 CORE := iob_soc_versat
 
 SIMULATOR ?= verilator
@@ -37,6 +42,10 @@ endif
 AXI_DATA_W?=32
 SETUP_ARGS+=AXI_DATA_W=$(AXI_DATA_W)
 
+#
+# TODO: This approach to testing stuff is becoming really clubersome. The Python -> Makefile -> Python flow is not very good and 
+#
+
 TEST_FOLDER_TEMP :=../$(CORE)_V0.70_$(TEST)
 ifeq ($(AXI_DATA_W),32)
 TEST_FOLDER_TEMP := $(TEST_FOLDER_TEMP)_b32
@@ -51,9 +60,16 @@ ifeq ($(AXI_DATA_W),256)
 TEST_FOLDER_TEMP := $(TEST_FOLDER_TEMP)_b256
 endif
 
+EXTRA_VERSAT_ARGS:=--debug
+
+ifneq ($(DO_PROFILE),)
+EXTRA_VERSAT_ARGS+=--profile
+SETUP_ARGS+=PROFILE
+endif
+
 TEST_FOLDER := $(abspath $(TEST_FOLDER_TEMP))
 
-VERSAT_ARGUMENTS:=$(CUR_DIR)/$(VERSAT_SPEC) -s -b$(AXI_DATA_W) -d -t $(TEST)
+VERSAT_ARGUMENTS:=$(CUR_DIR)/$(VERSAT_SPEC) $(EXTRA_VERSAT_ARGS) -s -b$(AXI_DATA_W) -d -t $(TEST)
 VERSAT_ARGUMENTS+=-I $(CUR_DIR)/submodules/VERSAT/hardware/src -O $(TEST_FOLDER)/software
 VERSAT_ARGUMENTS+=-o $(TEST_FOLDER)/hardware/src -g $(CUR_DIR)/../debug -u $(CUR_DIR)/hardware/src/units
 

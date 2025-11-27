@@ -35,6 +35,12 @@ def GetTestParameter():
             axiDataW = int(arg[11:])
     return testName,axiDataW
 
+def Profile():
+    for arg in sys.argv[1:]:
+        if "PROFILE" in arg:
+            return True
+    return False
+
 def GetBuildDir(name):
     testName,axiDataW = GetTestParameter()
 
@@ -72,6 +78,7 @@ class iob_soc_versat(iob_soc):
             GetBuildDir("iob_soc_versat"),
             axiDataW,
             os.path.realpath(os.path.join(cls.setup_dir,"../debug/")),
+            Profile()
         )
 
         super()._create_submodules_list(

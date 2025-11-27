@@ -1,13 +1,33 @@
 {
   "defaultArgs": "-b32",
-  "sameArgs": "-s -d -I /home/z/AA/Versat/iob-soc-versat/submodules/VERSAT/hardware/src -u /home/z/AA/Versat/iob-soc-versat/hardware/src/units",
+  "sameArgs": "--debug -s -d -I /home/z/AA/Versat/iob-soc-versat/submodules/VERSAT/hardware/src -u /home/z/AA/Versat/iob-soc-versat/hardware/src/units",
   "tests": [
+    {
+      "name": "API_Config",
+      "finalStage": "PC_EMUL"
+    },
+    {
+      "name": "API_Composite",
+      "finalStage": "PC_EMUL"
+    },
+    {
+      "name": "MERGE_API_Config",
+      "finalStage": "PC_EMUL"
+    },
     {
       "name": "EXAMPLE_M_Stage",
       "finalStage": "SIM_RUN"
     },
     {
       "name": "EXAMPLE_Empty",
+      "finalStage": "SIM_RUN"
+    },
+    {
+      "name": "EXAMPLE_UnconnectedUnit",
+      "finalStage": "SIM_RUN"
+    },
+    {
+      "name": "EXAMPLE_UnconnectedUnit2",
       "finalStage": "SIM_RUN"
     },
     {
@@ -21,6 +41,15 @@
     {
       "name": "EXAMPLE_Simple",
       "finalStage": "SIM_RUN"
+    },
+    {
+      "name": "EXAMPLE_DEBUG",
+      "finalStage": "SIM_RUN"
+    },
+    {
+      "name": "EXAMPLE_PROFILE",
+      "finalStage": "SIM_RUN",
+      "subTests": [{"args" : "--profile"}]
     },
     {
       "name": "EXAMPLE_Conv",
@@ -120,6 +149,10 @@
     },
     {
       "name": "MERGE_Simple",
+      "finalStage": "SIM_RUN"
+    },
+    {
+      "name": "MERGE_UnconnectedUnits",
       "finalStage": "SIM_RUN"
     },
     {
