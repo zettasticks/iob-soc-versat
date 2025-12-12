@@ -1,9 +1,0 @@
-graph GraphName {
-	node [fontcolor=white,style=filled,color="160,60,176"];
-	"read:0 -- output:0 // read:0 -- output:0";
-	"read -- read";
-	"output -- output";
-	"read:0 -- output:0 // read:0 -- output:0" -- "read -- read";
-	"read:0 -- output:0 // read:0 -- output:0" -- "output -- output";
-	"read -- read" -- "output -- output";
-}

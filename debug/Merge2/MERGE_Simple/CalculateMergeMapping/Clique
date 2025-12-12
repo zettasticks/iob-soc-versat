@@ -1,9 +1,0 @@
-graph GraphName {
-	node [fontcolor=white,style=filled,color="160,60,176"];
-	"x -- b";
-	"y -- a";
-	"output -- output";
-	"x -- b" -- "y -- a";
-	"x -- b" -- "output -- output";
-	"y -- a" -- "output -- output";
-}

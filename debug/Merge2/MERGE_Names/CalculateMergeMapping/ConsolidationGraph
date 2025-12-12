@@ -1,5 +1,0 @@
-graph GraphName {
-	node [fontcolor=white,style=filled,color="160,60,176"];
-	"unit_0 -- unit";
-	"unit_1 -- unit";
-}
