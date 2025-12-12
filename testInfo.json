@@ -3,11 +3,27 @@
   "sameArgs": "--debug -s -d -I /home/z/AA/Versat/iob-soc-versat/submodules/VERSAT/hardware/src -u /home/z/AA/Versat/iob-soc-versat/hardware/src/units",
   "tests": [
     {
+      "name": "PARAM_Simple",
+      "finalStage": "SIM_RUN"
+    },
+    {
+      "name": "PARAM_MERGE_NoMergeBecauseParam",
+      "finalStage": "PC_EMUL"
+    },
+    {
+      "name": "API_Simple",
+      "finalStage": "PC_EMUL"
+    },
+    {
       "name": "API_Config",
       "finalStage": "PC_EMUL"
     },
     {
       "name": "API_Composite",
+      "finalStage": "PC_EMUL"
+    },
+    {
+      "name": "API_TransferSize",
       "finalStage": "PC_EMUL"
     },
     {

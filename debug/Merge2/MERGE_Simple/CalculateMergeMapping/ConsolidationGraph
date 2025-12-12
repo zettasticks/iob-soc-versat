@@ -1,0 +1,14 @@
+graph GraphName {
+	node [fontcolor=white,style=filled,color="160,60,176"];
+	"x -- a";
+	"x -- b";
+	"y -- a";
+	"y -- b";
+	"output -- output";
+	"x -- a" -- "y -- b";
+	"x -- a" -- "output -- output";
+	"x -- b" -- "y -- a";
+	"x -- b" -- "output -- output";
+	"y -- a" -- "output -- output";
+	"y -- b" -- "output -- output";
+}

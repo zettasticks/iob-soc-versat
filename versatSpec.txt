@@ -1,15 +1,11 @@
 
-// TODO: Change name since this is not config. It is mostly the most basic stuff that we can do.
-module API_Config(){
+module API_Simple(){
    Const c;
-   Mem m;
-   VRead  v;
-   Reg r;  
+   Reg r;
 #
    c -> r;
-##
-
-   config Simple(x){
+## 
+   config Init(x){
       c.constant = x;
    }
 
@@ -19,18 +15,156 @@ module API_Config(){
 }
 
 module API_Composite(){
-   API_Config a;
-   API_Config b;
+   API_Simple a;
+   API_Simple b;
 #
 ##
    config Simple(x,y){
-      a = API_Config_Simple(x);
-      b = API_Config_Simple(y);
+      a = API_Simple_Init(x);
+      b = API_Simple_Init(y);
    }
 
    state Result{
       resA = a.Result;
       resB = b.Result;
+   }
+}
+
+module API_TransferSize(){
+   VRead #(.ADDR_W(15)) v;
+   VWrite w;
+#
+   v -> w;
+##
+
+/*
+   config Simple(addr: Address,addr2: Address,width){
+      for x 0..width {
+         v = addr[x];
+         w = addr2[x];
+      }
+   }
+*/
+
+   config Simple2(addr: Address,addr2: Address,height: Fixed,width: Dyn){
+      for y 0..height {
+         for x 0..width {
+            v = addr[ y * width + x];
+         }
+         w = addr2[y * width];
+      }
+   }
+}
+
+// TODO: Change name since this is not config. It is mostly the most basic stuff that we can do.
+module API_Config(){
+   Const c;
+   Mem m;
+   Mem m2;
+   VRead v;
+   Reg r1;  
+   Reg r2;
+   VWrite w;
+   Generator g;
+#
+   c -> r1;
+   m -> r2;
+   v -> w;
+##
+   config Test(addr: Address,width){
+      for y 0..width {
+         for x 0..width {
+            w = addr[x];
+         }
+         v = addr[y];
+      }
+   }
+
+   config Simple(x){
+      c.constant = x;
+   }
+
+   mem Mem(addr: Address){
+      m[0] = addr[0];
+   }
+
+   config All(addr: Address,addr2: Address,y,width){
+      c.constant = y;
+      for x 0..width {
+         v = addr[x];
+      }
+      for x 0..width {
+         w = addr2[x];
+      }
+   }
+
+   config VRead(addr: Address,width){
+      for x 0..width {
+         v = addr[x];
+      }
+      for x 0..width {
+         w = addr[x];
+      }
+   }
+
+   config VWrite(addr: Address,width){
+      for x 0..width {
+         w = addr[x];
+      }
+   }
+
+/*
+   config VWrite(width,addr: Address){
+      for x 0..width {
+         addr[x] = w;
+      }
+   }
+
+   mem Mem(addr: Address,width){
+      for x 0..width {
+         m[x] = addr[x];
+      }
+   }
+
+   What is the end result?
+   Config is a bunch of statements but if it is an address gen we cannot just put a bunch of statements.
+      Address gen contains its own code generation function. We want to preserve address gen stuff.
+
+   State is a bunch of statements (mandatory) but also generates one struct per State function.
+
+   Mem is similar to config.
+
+   The thing about mem is that we need to generate a VersatCopy function call or potentially multiple calls.
+
+   mem Mem(addr: Address,width){
+      for x 0..width {
+         for y 0..width {
+            m[y*width+x] = addr[y*width+x];
+            m2[x] = addr[x];
+         }
+      }
+   }
+
+   should be converted into:
+
+   mem Mem(addr: Address,width){
+      for x 0..width {
+         for y 0..width {
+            m[y*width+x] = addr[y*width+x];
+         }
+      }
+
+      for x 0..width {
+         m2[x] = addr[x];
+      }
+   }
+
+   all I need to do is see if the given expression depends on the inner loop and if not, we just bring it out.
+*/
+
+   state Result{
+      res = r1.currentValue;
+      res2 = r2.currentValue;
    }
 }
 
@@ -52,6 +186,30 @@ module API_Config2(){
 }
 
 merge MERGE_API_Config = API_Config | API_Config2;
+
+module PARAM_Simple(){
+   ParamConst #(.VALUE(123)) c;
+   Reg r;
+#
+   c -> r;
+##
+   state Result{
+      res = r.currentValue;
+   }
+}
+
+module PARAM_Temp1(){
+   ParamConst #(.VALUE(321)) c;
+   Reg r;
+#
+   c -> r;
+##
+   state Result{
+      res = r.currentValue;
+   }
+}
+
+merge PARAM_MERGE_NoMergeBecauseParam = PARAM_Simple | PARAM_Temp1;
 
 addressGen VLinear(xWidth){
    for x 0..xWidth:

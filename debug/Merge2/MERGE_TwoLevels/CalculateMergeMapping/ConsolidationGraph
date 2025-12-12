@@ -1,0 +1,15 @@
+graph GraphName {
+	node [fontcolor=white,style=filled,color="160,60,176"];
+	"x00 -- y10_x11";
+	"y00 -- y10_x11";
+	"x01 -- x10_y11";
+	"y01 -- x10_y11";
+	"versat_merge_mux_0 -- versat_merge_mux_0";
+	"versat_merge_mux_0 -- versat_merge_mux_1";
+	"versat_merge_mux_1 -- versat_merge_mux_0";
+	"versat_merge_mux_1 -- versat_merge_mux_1";
+	"x00 -- y10_x11" -- "x01 -- x10_y11";
+	"x00 -- y10_x11" -- "y01 -- x10_y11";
+	"y00 -- y10_x11" -- "x01 -- x10_y11";
+	"y00 -- y10_x11" -- "y01 -- x10_y11";
+}

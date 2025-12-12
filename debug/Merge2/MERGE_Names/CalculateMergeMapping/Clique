@@ -1,0 +1,4 @@
+graph GraphName {
+	node [fontcolor=white,style=filled,color="160,60,176"];
+	"unit_1 -- unit";
+}

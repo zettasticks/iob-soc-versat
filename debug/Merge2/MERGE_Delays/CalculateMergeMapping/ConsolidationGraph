@@ -1,0 +1,6 @@
+graph GraphName {
+	node [fontcolor=white,style=filled,color="160,60,176"];
+	"mem -- mem";
+	"output -- output";
+	"mem -- mem" -- "output -- output";
+}

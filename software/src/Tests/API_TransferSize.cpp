@@ -19,29 +19,18 @@
 
    We also want to be able to make it so it can scale with a different amount of units.
    Meaning that the functions must support either 1 or N values depending on the amount of units that we want to instantiate.
-
 */
 
 void SingleTest(Arena* arena){
-   int buffer = 5;
+   int data[8] = {0,1,2,3,4,5,6,7};
+   int buffer[8] = {};
 
-   int output = 123;
+   VersatVarSpec width = {};
+   width.min = 1;
+   width.max = 8;
+   width.order = 1;
 
-   API_Config_Simple(1);
-   API_Config_VRead(&buffer,1);
-   API_Config_VWrite(&output,1);
+   int size = API_TransferSize_Simple2_Size(data,buffer,1<<15,&width);
 
-   API_Config_Mem(&buffer);
-
-   RunAccelerator(3);
-
-   API_Config_Result_Struct r = API_Config_Result();
-
-   printf("%d\n",r.res);
-   printf("%d\n",r.res2);
-   printf("%d\n",output);
-
-   Assert_Eq(r.res,1);
-   Assert_Eq(r.res2,5);
-   Assert_Eq(output,5);
+   printf("%d %d\n",size,width.value);
 }
