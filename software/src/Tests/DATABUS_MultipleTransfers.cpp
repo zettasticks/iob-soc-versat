@@ -16,8 +16,14 @@ void SingleTest(Arena* arena){
     // Output writes 4 in 4 with a stride of 2;
     forceDoubleLoop = false;
     forceSingleLoop = true;
+
+    DATABUS_MultipleTransfers_DoubleRead(input,4,4,8);
+    DATABUS_MultipleTransfers_DoubleWrite(outputBuffer,4,4,6);
+
+#if 0
     VDouble_VRead(&accelConfig->read,input,4,4,8);
     VDouble_VWrite(&accelConfig->write,outputBuffer,4,4,6);
+#endif
 
     ClearCache(outputBuffer);
     RunAccelerator(3);
@@ -38,8 +44,12 @@ void SingleTest(Arena* arena){
     // Output writes 4 in 4 with a stride of 2;
     forceDoubleLoop = true;
     forceSingleLoop = false;
-    VDouble_VRead(&accelConfig->read,input,4,4,8);
-    VDouble_VWrite(&accelConfig->write,outputBuffer,4,4,6);
+
+    DATABUS_MultipleTransfers_DoubleRead(input,4,4,8);
+    DATABUS_MultipleTransfers_DoubleWrite(outputBuffer,4,4,6);
+
+    //VDouble_VRead(&accelConfig->read,input,4,4,8);
+    //VDouble_VWrite(&accelConfig->write,outputBuffer,4,4,6);
 
     ClearCache(outputBuffer);
     RunAccelerator(3);
@@ -61,8 +71,12 @@ void SingleTest(Arena* arena){
     // Output writes 4 in 4 with a stride of 2;
     forceDoubleLoop = false;
     forceSingleLoop = true;
-    VDouble_VRead(&accelConfig->read,input,4,4,8);
-    VDouble_VWrite(&accelConfig->write,outputBuffer,4,4,6);
+
+    DATABUS_MultipleTransfers_DoubleRead(input,4,4,8);
+    DATABUS_MultipleTransfers_DoubleWrite(outputBuffer,4,4,6);
+
+    //VDouble_VRead(&accelConfig->read,input,4,4,8);
+    //VDouble_VWrite(&accelConfig->write,outputBuffer,4,4,6);
 
     ClearCache(outputBuffer);
     RunAccelerator(3);
@@ -84,8 +98,12 @@ void SingleTest(Arena* arena){
     // Output writes 4 in 4 with a stride of 2;
     forceDoubleLoop = true;
     forceSingleLoop = false;
-    VDouble_VRead(&accelConfig->read,input,4,4,8);
-    VDouble_VWrite(&accelConfig->write,outputBuffer,4,4,6);
+
+    DATABUS_MultipleTransfers_DoubleRead(input,4,4,8);
+    DATABUS_MultipleTransfers_DoubleWrite(outputBuffer,4,4,6);
+
+    //VDouble_VRead(&accelConfig->read,input,4,4,8);
+    //VDouble_VWrite(&accelConfig->write,outputBuffer,4,4,6);
 
     ClearCache(outputBuffer);
     RunAccelerator(3);
@@ -110,8 +128,12 @@ void SingleTest(Arena* arena){
 
     forceDoubleLoop = false;
     forceSingleLoop = true;
-    VTriple_VRead(&accelConfig->read,input,2,2,2,4,16);
-    VLinear_VWrite(&accelConfig->write,outputBuffer,8);
+
+    DATABUS_MultipleTransfers_TripleRead(input,2,2,2,4,16);
+    DATABUS_MultipleTransfers_LinearWrite(outputBuffer,8);
+
+    //VTriple_VRead(&accelConfig->read,input,2,2,2,4,16);
+    //VLinear_VWrite(&accelConfig->write,outputBuffer,8);
 
     ClearCache(outputBuffer);
     RunAccelerator(3);
@@ -136,8 +158,12 @@ void SingleTest(Arena* arena){
 
     forceDoubleLoop = true;
     forceSingleLoop = false;
-    VTriple_VRead(&accelConfig->read,input,2,2,2,4,16);
-    VLinear_VWrite(&accelConfig->write,outputBuffer,8);
+
+    DATABUS_MultipleTransfers_TripleRead(input,2,2,2,4,16);
+    DATABUS_MultipleTransfers_LinearWrite(outputBuffer,8);
+
+    //VTriple_VRead(&accelConfig->read,input,2,2,2,4,16);
+    //VLinear_VWrite(&accelConfig->write,outputBuffer,8);
 
     ClearCache(outputBuffer);
     RunAccelerator(3);

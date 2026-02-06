@@ -221,13 +221,6 @@ addressGen VDouble(xWidth,yWidth,shift){
    addr = y * shift + x;
 }
 
-addressGen VTriple(xWidth,yWidth,zWidth,shift,shift2){
-   for z 0..zWidth:
-   for y 0..yWidth:
-   for x 0..xWidth:
-   addr = x + shift * y + shift2 * z;
-}
-
 module EXAMPLE_Empty(){
 #
 }
@@ -684,10 +677,59 @@ module DATABUS_SimpleTransfer(){
 }
 
 module DATABUS_MultipleTransfers(){
-   using(VLinear,VDouble,VTriple) VRead read;
-   using(VLinear,VDouble,VTriple) VWrite write;
+   VRead read;
+   VWrite write;
 #
    read -> write;
+##
+   config LinearRead(inAddr: Address,xWidth){
+      for x 0..xWidth {
+         read = inAddr[x];
+      }
+   }
+
+   config LinearWrite(outAddr: Address,xWidth){
+      for x 0..xWidth {
+         write = outAddr[x];
+      }
+   }
+
+   config DoubleRead(inAddr: Address,xWidth,yWidth,shift){
+      for y 0..yWidth {
+         for x 0..xWidth {
+            read = inAddr[y * shift + x];
+         }
+      }
+   }
+
+  config DoubleWrite(outAddr: Address,xWidth,yWidth,shift){
+      for y 0..yWidth {
+         for x 0..xWidth {
+            write = outAddr[y * shift + x];
+         }
+      }
+   }
+
+   config TripleRead(inAddr: Address,xWidth,yWidth,zWidth,shift,shift2){
+      for z 0..zWidth {
+         for y 0..yWidth {
+            for x 0..xWidth {
+               read = inAddr[x + shift * y + shift2 * z];
+            }
+         }
+      }
+   }
+
+   config TripleWrite(outAddr: Address,xWidth,yWidth,zWidth,shift,shift2){
+      for z 0..zWidth {
+         for y 0..yWidth {
+            for x 0..xWidth {
+               write = outAddr[x + shift * y + shift2 * z];
+            }
+         }
+      }
+   }
+
 }
 
 module EXAMPLE_PROFILE(){
