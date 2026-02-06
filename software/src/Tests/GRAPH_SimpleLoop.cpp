@@ -1,13 +1,16 @@
 #include "testbench.hpp"
 
 void SingleTest(Arena* arena){
-   accelConfig->input_0.constant = 5;
+   GRAPH_SimpleLoop_Simple(5);
+
+   //accelConfig->input_0.constant = 5;
    RunAccelerator(3);
-   Assert_Eq(accelState->output_0.currentValue,5);
+
+   Assert_Eq(GRAPH_SimpleLoop_Result().res,5);
  
    RunAccelerator(1);
-   Assert_Eq(accelState->output_0.currentValue,10);
+   Assert_Eq(GRAPH_SimpleLoop_Result().res,10);
  
    RunAccelerator(1);
-   Assert_Eq(accelState->output_0.currentValue,15);
+   Assert_Eq(GRAPH_SimpleLoop_Result().res,15);
 }

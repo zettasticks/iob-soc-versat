@@ -14,8 +14,7 @@ void SingleTest(Arena* arena){
 
   VersatProfileReset();
 
-  VLinear_VRead(&accelConfig->read,input,SIZE);
-  VLinear_VWrite(&accelConfig->write,output,SIZE);
+  EXAMPLE_PROFILE_Simple(input,output,SIZE);
 
   RunAccelerator(1);
 

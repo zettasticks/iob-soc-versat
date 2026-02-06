@@ -13,8 +13,12 @@ bool DoARun(int size,int offset,int* inputBuffer,int* outputBuffer,Arena* arena)
     input[i] = i + 1;
   }
 
+  DATABUS_SimpleTransfer_Simple(input,output,size);
+
+#if 0
   VLinear_VRead(&accelConfig->read,input,size);
   VLinear_VWrite(&accelConfig->write,output,size);
+#endif
   
   RunAccelerator(1);
 

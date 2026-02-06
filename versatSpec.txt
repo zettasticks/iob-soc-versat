@@ -1,3 +1,37 @@
+// TODO: Finish API_Mem
+module API_Mem(){
+   Mem output;
+   VRead v;
+
+   Mem input;
+   VWrite w;
+#
+   v -> output:0;
+   input -> w;
+##
+   config MemLinear(width: Fixed){
+      for x 0..width {
+         output.in0 = x;
+         output.in1 = x;
+         input.out0 = x;
+         input.out1 = x;
+      }
+   }
+   
+   mem MemLoad(addr: Address,width: Fixed){
+      for x 0..width {
+         output[x] = addr[x];
+         input[x] = addr[x];
+      }
+   }
+
+   mem MemDump(addr: Address,addr2: Address,width: Fixed){
+      for x 0..width {
+         addr[x] = output[x];
+         addr2[x] = input[x];
+      }
+   }
+}
 
 module API_Simple(){
    Const c;
@@ -5,7 +39,7 @@ module API_Simple(){
 #
    c -> r;
 ## 
-   config Init(x){
+   config debug Init(x){
       c.constant = x;
    }
 
@@ -113,55 +147,6 @@ module API_Config(){
       }
    }
 
-/*
-   config VWrite(width,addr: Address){
-      for x 0..width {
-         addr[x] = w;
-      }
-   }
-
-   mem Mem(addr: Address,width){
-      for x 0..width {
-         m[x] = addr[x];
-      }
-   }
-
-   What is the end result?
-   Config is a bunch of statements but if it is an address gen we cannot just put a bunch of statements.
-      Address gen contains its own code generation function. We want to preserve address gen stuff.
-
-   State is a bunch of statements (mandatory) but also generates one struct per State function.
-
-   Mem is similar to config.
-
-   The thing about mem is that we need to generate a VersatCopy function call or potentially multiple calls.
-
-   mem Mem(addr: Address,width){
-      for x 0..width {
-         for y 0..width {
-            m[y*width+x] = addr[y*width+x];
-            m2[x] = addr[x];
-         }
-      }
-   }
-
-   should be converted into:
-
-   mem Mem(addr: Address,width){
-      for x 0..width {
-         for y 0..width {
-            m[y*width+x] = addr[y*width+x];
-         }
-      }
-
-      for x 0..width {
-         m2[x] = addr[x];
-      }
-   }
-
-   all I need to do is see if the given expression depends on the inner loop and if not, we just bring it out.
-*/
-
    state Result{
       res = r1.currentValue;
       res2 = r2.currentValue;
@@ -210,6 +195,20 @@ module PARAM_Temp1(){
 }
 
 merge PARAM_MERGE_NoMergeBecauseParam = PARAM_Simple | PARAM_Temp1;
+
+module PARAM_VUnits(){
+   VRead #(.ADDR_W(6)) v;
+   VWrite #(.ADDR_W(6)) w;
+#
+   v -> w;
+## 
+   config Init(addr: Address,addr2: Address,width: Dyn){
+      for x 0..width {
+         v = addr[x];
+         w = addr2[x];
+      }
+   }
+}
 
 addressGen VLinear(xWidth){
    for x 0..xWidth:
@@ -546,17 +545,29 @@ module MERGE_ModuleWithMultipleMerged(){
 merge MERGE_HighComplexity = MERGE_ModuleWithMultipleMerged | MERGE_SameTypeChildren;
 
 module TestMergeDelay1(){
-   using(VLinear) Mem mem;
+   Mem m;
    Reg output;
 #
-   mem{3} -> output;
+   m{3} -> output;
+##
+   config Linear(xWidth){
+      for x 0..xWidth {
+         m.out0 = x;
+      }
+   }
 }
 
 module TestMergeDelay2(){
-   using(VLinear) Mem mem;
+   Mem m;
    Reg output;
 #
-   mem{5} -> output;
+   m{5} -> output;
+##
+   config Linear(xWidth){
+      for x 0..xWidth {
+         m.out0 = x;
+      }
+   }
 }
 
 merge MERGE_Delays = TestMergeDelay1 | TestMergeDelay2;
@@ -567,30 +578,56 @@ module TestDoubleMerge00(){
 #
    a = x00 + y00;
    a -> out;
+##
+   config Simple(xVal,yVal){
+      x00.constant = xVal;
+      y00.constant = yVal;
+   }
 }
 
 module TestDoubleMerge01(){
-   using(VLinear) Mem x01;
-   using(VLinear) Mem y01;
+   Mem x01;
+   Mem y01;
 #
    a = x01 + y01;
    a -> out;
-}
+##
+   config Simple(xWidth){
+      for x 0..xWidth {
+         x01.out0 = x;
+         y01.out0 = x;
+      }
+   }
+} 
 
 module TestDoubleMerge10(){
-   using(VLinear) Mem x10;
+   Mem x10;
    Const y10;
 #
    a = y10 - x10;
    a -> out;
+##
+   config Simple(xWidth,val){
+      y10.constant = val;
+      for x 0..xWidth {
+         x10.out0 = x;
+      }
+   }
 }
 
 module TestDoubleMerge11(){
    Const x11;
-   using(VLinear) Mem y11;
+   Mem y11;
 #
    a = y11 - x11;
    a -> out;
+##
+   config Simple(xWidth,val){
+      x11.constant = val;
+      for x 0..xWidth {
+         y11.out0 = x;
+      }
+   }
 }
 
 merge TestDoubleMerge0 = TestDoubleMerge00 | TestDoubleMerge01;
@@ -633,10 +670,17 @@ module GraphLoop2(){
 merge MERGE_GraphLoop = GraphLoop1 | GraphLoop2;
 
 module DATABUS_SimpleTransfer(){
-   using(VLinear) VRead read;
-   using(VLinear) VWrite write;
+   VRead read;
+   VWrite write;
 #
    read -> write;
+##
+   config Simple(inAddr : Address,outAddr : Address,width){
+      for x 0..width {
+         read = inAddr[x];
+         write = outAddr[x];
+      }
+   }
 }
 
 module DATABUS_MultipleTransfers(){
@@ -647,10 +691,17 @@ module DATABUS_MultipleTransfers(){
 }
 
 module EXAMPLE_PROFILE(){
-   using(VLinear) VRead read;
-   using(VLinear) VWrite write;
+   VRead read;
+   VWrite write;
 #
    read -> write;
+##
+   config Simple(inAddr : Address,outAddr : Address,width){
+      for x 0..width {
+         read = inAddr[x];
+         write = outAddr[x];
+      }
+   }
 }
 
 module MEM_SimpleTransfer(){
@@ -658,6 +709,13 @@ module MEM_SimpleTransfer(){
    using(VLinear) Mem end;
 #
    start -> end;
+##
+   config Simple(width){
+      for x 0..width {
+         start.out0 = x;
+         end.in0 = x;
+      }
+   }
 }
 
 module StaticMuladd(x,y){
@@ -986,13 +1044,13 @@ module Comb_F_Stage (a,b,c,d,e,f,g,h,k,w){
 
 module EXAMPLE_F_Stage(a,b,c,d,e,f,g,h,k,w){
    Comb_F_Stage f_stage;
-   PipelineRegister d[8];
+   PipelineRegister data[8];
 #
    {a,b,c,d,e,f,g,h,k,w} -> f_stage:0..9;
 
-   f_stage:0..7 -> d[0..7];
+   f_stage:0..7 -> data[0..7];
 
-   d[0..7] -> out:0..7;
+   data[0..7] -> out:0..7;
 }
 
 module F_Stage(a,b,c,d,e,f,g,h,k,w){
@@ -1106,12 +1164,28 @@ module ShaSingleState(in){
    reg -> out;
 }
 
-module GRAPH_SimpleLoop(in){
+module GraphLoop(in){
    Reg reg;
 #
    a = reg + in;
    a -> reg;
    reg -> out;
+}
+
+module GRAPH_SimpleLoop(){
+   TestConst c;
+   Reg output;
+   GraphLoop loop;
+#
+   c -> loop;
+   loop -> output;
+##
+   config Simple(x){
+      c.constant = x;
+   }
+   state Result{
+      res = output.currentValue;
+   }
 }
 
 // Simple grouping of state so it appears better on the graphs
@@ -1123,13 +1197,13 @@ module ShaState(x[8]){
 }
 
 module Constants(){
-   static OnlyOutputMem mem;
+   static OnlyOutputMem m;
 #
-   mem -> out:0;
+   m -> out:0;
 }
 
 module EXAMPLE_SHA(){
-   using(VLinear) VRead MemRead;
+   VRead MemRead;
    SwapEndian Swap;
    xunitF F0;
    xunitF F1;
@@ -1156,6 +1230,12 @@ module EXAMPLE_SHA(){
    M1 -> M2;
    
    F3:0..7 -> State:0..7;
+##
+   config Simple(addr: Address,width: Fixed){
+      for x 0..width {
+         MemRead = addr[x];
+      }
+   }
 }
 
 module SBoxGroup(x[16]){
@@ -1459,10 +1539,10 @@ module HierUseExample(){
 }
 
 module FixedAverage(){
-   Mem mem;
+   Mem m;
    Store output;
 #
-   sum = mem{0} + mem{1} + mem{2} + mem{3};
+   sum = m{0} + m{1} + m{2} + m{3};
    average = sum >> 2;
 
    average -> output;
@@ -1475,6 +1555,31 @@ module UNIT_LookupTable(){
 #
    input[0..1] -> table:0..1;
    table:0..1 -> output[0..1];
+}
+
+module UNIT_VRead(){
+   VRead t;
+   Mem m;
+#
+   t -> m;
+##
+   config Simple(addr : Address,width: Fixed){
+      for x 0..width {
+         t = addr[x];
+      }
+   }
+
+   mem MemLoad(addr: Address,width: Fixed){
+      for x 0..width {
+         m[x] = addr[x];
+      }
+   }
+
+   mem MemDump(addr: Address,width: Fixed){
+      for x 0..width {
+         addr[x] = m[x];
+      }
+   }
 }
 
 module F2(a,b,c,d,e,f,g,h,k,w){
@@ -2317,9 +2422,9 @@ module Blake(v0,v1,v2,v3,v4,v5,v6,v7,v8,v9,va,vb,vc,vd,ve,vf){
 }
 
 module TestMemory(){
-   Mem mem;
+   Mem m;
 #
-   mem -> out;
+   m -> out;
 }
 
 module TestVRead(){
@@ -2514,16 +2619,16 @@ module SimpleFU(in0,in1){
 module IOFU(in0){
    VRead vread;
    VWrite vwrite;
-   Mem mem;
+   Mem m;
    Mux2 mux;
 #
    // Circuit output
    in0 -> vwrite;
-   in0 -> mem:0;
+   in0 -> m:0;
 
    // Circuit input
    vread -> mux:0;
-   mem:0 -> mux:1;
+   m:0 -> mux:1;
 
    mux -> out;
 }
@@ -2605,29 +2710,58 @@ module SimpleCGRA(){
    l3:0..3 -> loop:0..3;
 }
 
-module EXAMPLE_Variety1(x,y){
-   using(VLinear) VRead read;
-   using(VLinear) Mem mem;
+module EXAMPLE_Variety1(){
+   TestConst x;
+   TestConst y;
+   VRead read;
+   Mem m;
    Const constant;
    Reg reg;
 #
-   c = x + y + read + mem + constant;
+   c = x + y + read + m + constant;
 
    c -> reg;
-   c -> out;
+##
+   config Simple(addr: Address,width: Fixed,val,xVal,yVal){
+      x.constant = xVal;
+      y.constant = yVal;
+      constant.constant = val;
+      for x 0..width {
+         read = addr[x];
+         m.out0 = x;
+      }
+   }
+
+   state Result{
+      res = reg.currentValue;
+   }
 }
 
-module EXAMPLE_Variety2(x,y,z){
-   using(VLinear) VRead read;
-   using(VLinear) Mem mem;
-   using(VLinear) VWrite write;
+module EXAMPLE_Variety2(){
+   TestConst x;
+   TestConst y;
+   TestConst z;
+   VRead read;
+   Mem m;
+   VWrite write;
 #
-   total = x + y + z + read + mem;
+   total = x + y + z + read + m;
    total -> write;
+##
+   config Simple(inAddr: Address,outAddr: Address,width: Fixed,xVal,yVal,zVal){
+      x.constant = xVal;
+      y.constant = yVal;
+      z.constant = zVal;
+      for x 0..width {
+         read = inAddr[x];
+         write = outAddr[x];
+         m.out0 = x;
+      }
+   }
 }
 
 module DMATest(){
-   Mem mem;   
+   Mem m;   
 #
 }
 
@@ -2938,11 +3072,11 @@ addressGen Compared(sizeX,sizeY,width){
 }
 
 module ADDRESSGEN_Stride(){
-   using(StridedLinear) Mem mem;
+   using(StridedLinear) Mem m;
    using(StridedLinear,Strided2,Compared) VWrite write;
    using(TestAddressGen) Generator gen;
 #
-   gen -> mem;
+   gen -> m;
    gen -> write;
 }
 

@@ -53,11 +53,14 @@ import shutil
 import os
 import random
 import signal
+import concurrent.futures
 from dataclasses import dataclass
 from enum import Enum,auto
 from pprint import pprint
+from difflib import context_diff
 
 SIM = False
+saveEnabled = True
 
 amountOfThreads = 8
 
@@ -209,7 +212,8 @@ def GetTestTrueNameFromArgs(test : TestInfo,args : str):
    name = test.name
 
    if(args and len(args) > 0):
-      sanitizedName = args.replace("-","_")
+      sanitizedName = args.replace("--","_")
+      sanitizedName = sanitizedName.replace("-","_")
       name = test.name + sanitizedName
 
    return name
@@ -307,15 +311,21 @@ def SaveTest(test,subTest):
    with testMutex:
       testData[trueName] = asDict
 
-      with open(jsonTestDataPath,"w") as file:
-         json.dump(testData,file,cls=MyJsonEncoder,indent=2)
+      if(saveEnabled):
+         with open(jsonTestDataPath,"w") as file:
+            json.dump(testData,file,cls=MyJsonEncoder,indent=2)
 
 def signal_handler(sig, frame):
    print("Inside signal handler")
 
    # Do not want to terminate if we are in the middle of writing to a file, otherwise corrupted data
+   # TODO: Need to check if we are inside the 'run' command instead of the 'diff' command.
+
    testMutex.acquire()
    outputMutex.acquire()
+   sys.exit(0)
+
+def signal_handler_terminate_immediatly(sig,frame):
    sys.exit(0)
 
 # Used to find values in the form "NAME:VAL"
@@ -397,13 +407,22 @@ def RunVersat(testName,testFolder,versatExtra):
    # Parse result.
    return Error(),filePathList,data,GenerateProgramOutput(" ".join(args),result)
 
+DIFF_CACHE_FOLDER_NAME = "diffCache"
+TEST_CACHE_FOLDER_NAME = "testCache"
+TEST_CACHE_GOOD_FOLDER_NAME = "testCacheGood"
+
 def TempDir(testName):
-   path = f"./testCache/{testName}"
+   path = f"./{TEST_CACHE_FOLDER_NAME}/{testName}"
+   os.makedirs(path,exist_ok=True)
+   return path
+
+def DiffDir(testName):
+   path = f"./{DIFF_CACHE_FOLDER_NAME}/{testName}"
    os.makedirs(path,exist_ok=True)
    return path
 
 def LastGoodDir():
-   return "./testCacheGood"
+   return f"./{TEST_CACHE_GOOD_FOLDER_NAME}"
 
 def LastGoodTempDir(testName):
    path = f"{LastGoodDir()}/{testName}"
@@ -486,9 +505,10 @@ def CheckTestPassed(testOutput):
 
 def SaveOutput(testName,fileName,output):
    testTempDir = TempDir(testName)
-   with outputMutex:
-      with open(testTempDir + f"/{fileName}.txt","w") as file:
-         file.write(output)
+   if(saveEnabled): 
+      with outputMutex:
+         with open(testTempDir + f"/{fileName}.txt","w") as file:
+            file.write(output)
 
 def PerformTest(test,testTrueName,makefileArg,stage):
    # This function was previously taking the output from the makefile and checking the files using the hasher.
@@ -539,13 +559,28 @@ def PerformTest(test,testTrueName,makefileArg,stage):
 
    print(f"Error, PerformTest called with: {stage}. Fix this")
 
-MAX_NAME_LENGTH = -1
-def PrintResult(result):
-   def GeneratePad(word,amount,padding = '.'):
-      return padding * (amount - len(word))
+def GeneratePad(word,amount,padding = '.'):
+   return padding * (amount - len(word))
 
+MAX_NAME_LENGTH = -1
+def PrintTestResult(testName,color,condition,partialVal = None,cached = None,comments = None):
+   global MAX_NAME_LENGTH
    firstColumnSize = MAX_NAME_LENGTH
 
+   firstPad = ' ' + GeneratePad(testName,firstColumnSize - 1)
+   secondPad = ' '
+   #print(f"{testName}{firstPad}{secondPad}{color}{condition}{COLOR_BASE}{partialVal}{cached}{comments}")
+
+   finalStr = f"{testName}{firstPad}{secondPad}{color}{condition}{COLOR_BASE}"
+   if(partialVal):
+      finalStr = finalStr + partialVal
+   if(cached):
+      finalStr = finalStr + cached
+   if(comments):
+      finalStr = finalStr + comments
+   print(finalStr)
+
+def PrintResult(result):
    test = result.test
    subTest = result.subTest
    name = GetTestTrueName(test,subTest)
@@ -599,9 +634,7 @@ def PrintResult(result):
    else:
       print(f"Stage not handled: {stage},{finalStage}")
 
-   firstPad = ' ' + GeneratePad(testName,firstColumnSize - 1)
-   secondPad = ' '
-   print(f"{testName}{firstPad}{secondPad}{color}{condition}{COLOR_BASE}{partialVal}{cached}{comments}")
+   PrintTestResult(testName,color,condition,partialVal,cached,comments)
 
 def CppLocation(testName):
    return f"./software/src/Tests/{testName}.cpp"
@@ -706,7 +739,87 @@ def ThreadedPrintResult(result):
    with printMutex:
       PrintResult(result)
 
-# MARK
+def GetTestArgs(subTest,sameArgs,defaultArgs):
+   if(subTest.args):
+      args = sameArgs + ' ' + subTest.args
+   else:
+      args = sameArgs + ' ' + defaultArgs
+
+   return args
+
+@dataclass
+class DiffWork:
+   testAndSubTest : any
+   sameArgs : any
+   defaultArgs : any
+   single : any
+
+def ComputeDiffWork(work):
+   pass
+
+printTestResultMutex = Lock()
+def MutexPrintTestResult(name,color,msg):
+   with printTestResultMutex:
+      PrintTestResult(name,color,msg)
+
+def ComputeDiff(work):
+   testAndSubTest = work.testAndSubTest
+   sameArgs = work.sameArgs
+   defaultArgs = work.defaultArgs
+   single = work.single
+
+   test,subTest = testAndSubTest
+   args = GetTestArgs(subTest,sameArgs,defaultArgs)
+
+   name = GetTestTrueName(test,subTest)
+   finalStage = test.finalStage
+
+   if(subTest.tokens == 0):
+      MutexPrintTestResult(name,COLOR_BLUE,"NO_DATA")
+      return
+
+   testTempDir = DiffDir(name)
+
+   versatError,filepaths,versatData,output = RunVersat(test.name,testTempDir,args)
+
+   if(finalStage == Stage.SHOULD_FAIL):
+      # We do not compare should fail because we do not actually save what caused the difference in the first place
+      return
+
+   if(IsError(versatError)):
+      MutexPrintTestResult(name,COLOR_RED,"VERSAT_ERROR")
+      return
+
+   sourceLocation = CppLocation(test.name)
+   filepathsToHash = filepaths + [sourceLocation]
+   hashError,tokenAmount,hashVal = ComputeFilesTokenSizeAndHash(filepathsToHash)
+   if(IsError(hashError)):
+      MutexPrintTestResult(name,COLOR_RED,"HASH_ERROR")
+      return
+
+   #print(tokenAmount,subTest.tokens,hashVal,subTest.hashValz)
+   if(tokenAmount == subTest.tokens and hashVal == subTest.hashVal):
+      MutexPrintTestResult(name,COLOR_GREEN,"OK")
+      return
+   else:
+      MutexPrintTestResult(name,COLOR_YELLOW,"DIFF")
+
+   if(single):
+      for path in filepaths:
+         cachePath = path.replace(DIFF_CACHE_FOLDER_NAME,TEST_CACHE_FOLDER_NAME)
+
+         contentNow = None
+         contentGood = None
+         with open(path,"r") as f:
+            contentNow = f.readlines()
+         with open(cachePath,"r") as f:
+            contentGood = f.readlines()
+
+         res = context_diff(contentNow,contentGood,fromfile=cachePath,tofile=path)
+         with printTestResultMutex:
+            for x in res:
+               print(x)
+
 def DoWorkDirectly(work):
    test = work.test
    subTest = work.subTest
@@ -799,11 +912,10 @@ def RunTests2(testAndSubTestList,sameArgs,defaultArgs):
       test,subTest = testAndSubTest
       args = None
       makefileArgs = None
+      args = GetTestArgs(subTest,sameArgs,defaultArgs)
+
       if(subTest.args):
-         args = sameArgs + ' ' + subTest.args
          makefileArgs = ParseVersatArgsIntoMakefile(subTest.args)
-      else:
-         args = sameArgs + ' ' + defaultArgs
 
       work = ThreadWork(test,subTest,args,makefileArgs)
 
@@ -829,8 +941,6 @@ def RunTests2(testAndSubTestList,sameArgs,defaultArgs):
    return resultList
 
 if __name__ == "__main__":
-   signal.signal(signal.SIGINT, signal_handler)
-
    testInfoJson = None
    jsonTestInfoPath = "testInfo.json"
    jsonTestDataPath = "testData.json"
@@ -848,7 +958,7 @@ if __name__ == "__main__":
       sys.exit(0)
 
    parser = argparse.ArgumentParser(prog="Tester",description="Test Versat, using cache to prevent rerunning unnecessary tests")
-   allCommands = ["run","run-only","reset","enable","list"]
+   allCommands = ["run","run-only","diff","reset","enable","list"]
 
    parser.add_argument("command",choices=allCommands)
    parser.add_argument("testFilter",nargs='*')
@@ -942,7 +1052,25 @@ if __name__ == "__main__":
             subTest.stage = None
             subTest.accelData = None
 
+   elif(command == "diff"):
+      signal.signal(signal.SIGINT, signal_handler_terminate_immediatly)
+
+      saveEnabled = False
+      single = (len(testAndSubTestList) == 1)
+      allWork = [DiffWork(test,testInfo.sameArgs,testInfo.defaultArgs,single) for test in testAndSubTestList]
+
+      with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+         executor.map(ComputeDiff, allWork)
+
+      sys.exit(0)
+
    elif(command == "run" or command == "run-only" or command == "disable-failed"):
+      if(command == "run" or command == "run-only"):
+         signal.signal(signal.SIGINT, signal_handler)
+
+      if(command == "run-only"):
+         saveEnabled = False
+
       resultList : list[ThreadWork] = RunTests2(testAndSubTestList,testInfo.sameArgs,testInfo.defaultArgs)
 
       ReprintButOrganized(resultList)
@@ -984,6 +1112,7 @@ if __name__ == "__main__":
 
          testData[trueName] = asDict
 
-   with open(jsonTestDataPath,"w") as file:
-      json.dump(testData,file,cls=MyJsonEncoder,indent=2)
+   if(saveEnabled):
+      with open(jsonTestDataPath,"w") as file:
+         json.dump(testData,file,cls=MyJsonEncoder,indent=2)
    sys.exit(0)

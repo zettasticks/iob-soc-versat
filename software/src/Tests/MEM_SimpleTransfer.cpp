@@ -3,8 +3,10 @@
 void SingleTest(Arena* arena){
   int numberItems = 4;
 
-  VLinear_Mem_Output_0(&accelConfig->start,numberItems);
-  VLinear_Mem_Input_0(&accelConfig->end,numberItems);
+  //VLinear_Mem_Output_0(&accelConfig->start,numberItems);
+  //VLinear_Mem_Input_0(&accelConfig->end,numberItems);
+
+  MEM_SimpleTransfer_Simple(numberItems);
 
   for(int i = 0; i < numberItems; i++){
     VersatUnitWrite(TOP_start_addr,i,i + 1);

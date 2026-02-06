@@ -69,7 +69,7 @@ endif
 
 TEST_FOLDER := $(abspath $(TEST_FOLDER_TEMP))
 
-VERSAT_ARGUMENTS:=$(CUR_DIR)/$(VERSAT_SPEC) $(EXTRA_VERSAT_ARGS) -s -b$(AXI_DATA_W) -d -t $(TEST)
+VERSAT_ARGUMENTS:=$(CUR_DIR)/$(VERSAT_SPEC) $(EXTRA_VERSAT_ARGS) -b$(AXI_DATA_W) -d -t $(TEST)
 VERSAT_ARGUMENTS+=-I $(CUR_DIR)/submodules/VERSAT/hardware/src -O $(TEST_FOLDER)/software
 VERSAT_ARGUMENTS+=-o $(TEST_FOLDER)/hardware/src -g $(CUR_DIR)/../debug -u $(CUR_DIR)/hardware/src/units
 
@@ -110,7 +110,7 @@ fast-compile-versat:
 fast-setup: fast-compile-versat
 	cp ./software/src/Tests/testbench.hpp $(TEST_FOLDER)/software/src/testbench.hpp
 	cp ./software/src/Tests/$(TEST).cpp $(TEST_FOLDER)/software/src/test.cpp
-	./submodules/VERSAT/versat ./versatSpec.txt -s -b32 -d -t $(TEST) -o $(TEST_FOLDER)/hardware/src -O $(TEST_FOLDER)/software -g ../debug -u ./hardware/src/units 
+	./submodules/VERSAT/versat ./versatSpec.txt -b32 -d -t $(TEST) -o $(TEST_FOLDER)/hardware/src -O $(TEST_FOLDER)/software -g ../debug -u ./hardware/src/units 
 
 fast-pc-emul: fast-setup
 	make -C $(TEST_FOLDER) pc-emul-run

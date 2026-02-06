@@ -111,27 +111,26 @@ void InitVersatSHA(){
       return;
    }
 
-   VLinear_VRead(&accelConfig->MemRead,nullptr,16);
-   //ConfigureSimpleVRead(&((EXAMPLE_SHAConfig*) accelConfig)->MemRead,16,nullptr);
+   EXAMPLE_SHA_Simple(nullptr,16);
 
-   ACCEL_Constants_mem_iterA = 1;
-   ACCEL_Constants_mem_incrA = 1;
-   ACCEL_Constants_mem_perA = 16;
-   ACCEL_Constants_mem_dutyA = 16;
-   ACCEL_Constants_mem_startA = 0;
-   ACCEL_Constants_mem_shiftA = 0;
+   ACCEL_Constants_m_iterA = 1;
+   ACCEL_Constants_m_incrA = 1;
+   ACCEL_Constants_m_perA = 16;
+   ACCEL_Constants_m_dutyA = 16;
+   ACCEL_Constants_m_startA = 0;
+   ACCEL_Constants_m_shiftA = 0;
 
    for(int ii = 0; ii < 16; ii++){
-      VersatUnitWrite(TOP_cMem0_mem_addr,ii,kConstants[0][ii]);
+      VersatUnitWrite(TOP_cMem0_m_addr,ii,kConstants[0][ii]);
    }
    for(int ii = 0; ii < 16; ii++){
-      VersatUnitWrite(TOP_cMem1_mem_addr,ii,kConstants[1][ii]);
+      VersatUnitWrite(TOP_cMem1_m_addr,ii,kConstants[1][ii]);
    }
    for(int ii = 0; ii < 16; ii++){
-      VersatUnitWrite(TOP_cMem2_mem_addr,ii,kConstants[2][ii]);
+      VersatUnitWrite(TOP_cMem2_m_addr,ii,kConstants[2][ii]);
    }
    for(int ii = 0; ii < 16; ii++){
-      VersatUnitWrite(TOP_cMem3_mem_addr,ii,kConstants[3][ii]);
+      VersatUnitWrite(TOP_cMem3_m_addr,ii,kConstants[3][ii]);
    }
 
    accelConfig->Swap.enabled = 1;

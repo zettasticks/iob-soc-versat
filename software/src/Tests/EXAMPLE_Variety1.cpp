@@ -1,23 +1,14 @@
 #include "testbench.hpp"
 
-void ConfigureVariety1(volatile EXAMPLE_Variety1Config* config,int* memory){
-   VLinear_VRead(&config->read,memory,1);
-
-   VLinear_Mem_Output_0(&config->mem,1);
-   VersatUnitWrite(TOP_simple_mem_addr,0,2);
-
-   config->constant.constant = 1;
-}
-
 void SingleTest(Arena* arena){
    int memory = 3;
 
-   accelConfig->input_0.constant = 5;
-   accelConfig->input_1.constant = 4;
+   EXAMPLE_Variety1_Simple(&memory,1,1,5,4);
 
-   ConfigureVariety1(&accelConfig->simple,&memory);
+   VersatUnitWrite(TOP_m_addr,0,2);
 
    RunAccelerator(2);
 
-   Assert_Eq(accelState->output_0.currentValue,15);
+   EXAMPLE_Variety1_Result_Struct res = EXAMPLE_Variety1_Result();
+   Assert_Eq(res.res,15);
 }

@@ -579,8 +579,8 @@ extern "C" int RunTest(int versatBase){
 #endif
 
   Arena* arena = &arenaInst;
-  expectedArena = SubArena(arena,Kilobyte(16));
-  gotArena      = SubArena(arena,Kilobyte(16));
+  expectedArena = SubArena(arena,Kilobyte(128));
+  gotArena      = SubArena(arena,Kilobyte(128));
 
   SingleTest(arena);
   printf("Test fully ran\n");
