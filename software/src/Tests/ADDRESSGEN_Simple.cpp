@@ -15,8 +15,8 @@ void SingleTest(Arena* arena){
       ResetAccelerator();
       ClearBuffer(buffer,MAX_SIZE);
 
-      VLinear_Generator(&accelConfig->gen,size);
-      VLinear_VWrite(&accelConfig->output,buffer,size);
+      ADDRESSGEN_Simple_Gen(size);
+      ADDRESSGEN_Simple_Write(buffer,size);
 
       RunAccelerator(3);
       ClearCache(buffer);
@@ -33,8 +33,8 @@ void SingleTest(Arena* arena){
       ResetAccelerator();
       ClearBuffer(buffer,MAX_SIZE);
 
-      VLinear_Generator(&accelConfig->gen,size);
-      VLinear_VWrite(&accelConfig->output,buffer,size);
+      ADDRESSGEN_Simple_Gen(size);
+      ADDRESSGEN_Simple_Write(buffer,size);
 
       RunAccelerator(3);
       ClearCache(buffer);
@@ -50,8 +50,8 @@ void SingleTest(Arena* arena){
       ResetAccelerator();
       ClearBuffer(buffer,MAX_SIZE);
 
-      VLinear_Generator(&accelConfig->gen,size);
-      VLinear_VWrite(&accelConfig->output,buffer,size);
+      ADDRESSGEN_Simple_Gen(size);
+      ADDRESSGEN_Simple_Write(buffer,size);
 
       RunAccelerator(3);
       ClearCache(buffer);
@@ -66,8 +66,8 @@ void SingleTest(Arena* arena){
       ResetAccelerator();
       ClearBuffer(buffer,MAX_SIZE);
 
-      VDouble_Generator(&accelConfig->gen,size,size,size);
-      VLinear_VWrite(&accelConfig->output,buffer,size * size);
+      ADDRESSGEN_Simple_Gen2(size,size,size);
+      ADDRESSGEN_Simple_Write(buffer,size * size);
 
       RunAccelerator(3);
       ClearCache(buffer);
@@ -86,8 +86,8 @@ void SingleTest(Arena* arena){
       ResetAccelerator();
       ClearBuffer(buffer,MAX_SIZE);
 
-      VDouble_Generator(&accelConfig->gen,size,size,size);
-      VLinear_VWrite(&accelConfig->output,buffer,size * size);
+      ADDRESSGEN_Simple_Gen2(size,size,size);
+      ADDRESSGEN_Simple_Write(buffer,size * size);
 
       RunAccelerator(3);
       ClearCache(buffer);
@@ -103,8 +103,8 @@ void SingleTest(Arena* arena){
       ResetAccelerator();
       ClearBuffer(buffer,MAX_SIZE);
 
-      VDouble_Generator(&accelConfig->gen,size,size,size);
-      VLinear_VWrite(&accelConfig->output,buffer,size * size);
+      ADDRESSGEN_Simple_Gen2(size,size,size);
+      ADDRESSGEN_Simple_Write(buffer,size * size);
 
       RunAccelerator(3);
       ClearCache(buffer);
@@ -113,16 +113,14 @@ void SingleTest(Arena* arena){
       Assert_Eq(buffer,expected,MAX_SIZE,"Double-Linear Size = 1");
    }
 
-   // MARK
-
    if(tests & (1 << 6)){
       int size = 2;
 
       ResetAccelerator();
       ClearBuffer(buffer,MAX_SIZE);
 
-      VLinear_Generator(&accelConfig->gen,size * size);
-      VDouble_VWrite(&accelConfig->output,buffer,size,size,size);
+      ADDRESSGEN_Simple_Gen(size * size);
+      ADDRESSGEN_Simple_Write2(buffer,size,size,size);
 
       RunAccelerator(3);
       ClearCache(buffer);
@@ -141,8 +139,8 @@ void SingleTest(Arena* arena){
       ResetAccelerator();
       ClearBuffer(buffer,MAX_SIZE);
 
-      VLinear_Generator(&accelConfig->gen,size * size);
-      VDouble_VWrite(&accelConfig->output,buffer,size,size,size);
+      ADDRESSGEN_Simple_Gen(size * size);
+      ADDRESSGEN_Simple_Write2(buffer,size,size,size);
 
       RunAccelerator(3);
       ClearCache(buffer);
@@ -158,8 +156,8 @@ void SingleTest(Arena* arena){
       ResetAccelerator();
       ClearBuffer(buffer,MAX_SIZE);
 
-      VLinear_Generator(&accelConfig->gen,size * size);
-      VDouble_VWrite(&accelConfig->output,buffer,size,size,size);
+      ADDRESSGEN_Simple_Gen(size * size);
+      ADDRESSGEN_Simple_Write2(buffer,size,size,size);
 
       RunAccelerator(3);
       ClearCache(buffer);

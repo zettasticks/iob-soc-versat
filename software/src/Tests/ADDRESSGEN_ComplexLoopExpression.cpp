@@ -16,8 +16,8 @@ void SingleTest(Arena* arena){
       buffer[2]  = 30;
       buffer[3]  = 40;
 
-      VLinear_Mem_Input_0(&accelConfig->output,VALUES);
-      AddressGenComplexLoopExpression_VRead(&accelConfig->read,buffer,16,4);
+      ADDRESSGEN_ComplexLoopExpression_ComplexLoop(buffer,16,4);
+      ADDRESSGEN_ComplexLoopExpression_Mem(VALUES);
 
       ClearCache(buffer);
       RunAccelerator(3);

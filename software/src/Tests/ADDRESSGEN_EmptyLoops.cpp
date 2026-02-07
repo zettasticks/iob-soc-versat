@@ -17,8 +17,8 @@ void SingleTest(Arena* arena){
       buffer[5]  = 30;
       buffer[7]  = 40;
       
-      VLinear_Mem_Input_0(&accelConfig->output,VALUES);
-      AddressGenEmptyLoops_VRead(&accelConfig->read,buffer);
+      ADDRESSGEN_EmptyLoops_Mem(VALUES);
+      ADDRESSGEN_EmptyLoops_EmptyLoops(buffer);
 
       ClearCache(buffer);
       RunAccelerator(3);
@@ -41,8 +41,8 @@ void SingleTest(Arena* arena){
       buffer[5]  = 30;
       buffer[7]  = 40;
       
-      VLinear_Mem_Input_0(&accelConfig->output,VALUES);
-      AddressGenEmptyLoops2_VRead(&accelConfig->read,buffer);
+      ADDRESSGEN_EmptyLoops_Mem(VALUES);
+      ADDRESSGEN_EmptyLoops_EmptyLoops2(buffer);
 
       ClearCache(buffer);
       RunAccelerator(3);
@@ -65,8 +65,8 @@ void SingleTest(Arena* arena){
       buffer[5]  = 30;
       buffer[7]  = 40;
       
-      VLinear_Mem_Input_0(&accelConfig->output,VALUES);
-      AddressGenEmptyLoops3_VRead(&accelConfig->read,buffer);
+      ADDRESSGEN_EmptyLoops_Mem(VALUES);
+      ADDRESSGEN_EmptyLoops_EmptyLoops3(buffer);
 
       ClearCache(buffer);
       RunAccelerator(3);
@@ -89,8 +89,8 @@ void SingleTest(Arena* arena){
       buffer[2]  = 30;
       buffer[3]  = 40;
 
-      VLinear_Mem_Input_0(&accelConfig->output,VALUES_2);
-      AddressGenEmptyLoops4_VRead(&accelConfig->read,buffer);
+      ADDRESSGEN_EmptyLoops_Mem(VALUES_2);
+      ADDRESSGEN_EmptyLoops_EmptyLoops4(buffer);
 
       ClearCache(buffer);
       RunAccelerator(3);

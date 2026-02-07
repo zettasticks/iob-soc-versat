@@ -6,8 +6,10 @@
 void Test(int* buffer,int offset,int expected,const char* marker){
    ResetAccelerator();
 
-   VLinear_Mem_Input_0(&accelConfig->output,VALUES);
-   AddressGenConstant_VRead(&accelConfig->read,buffer,offset);
+   ADDRESSGEN_Constants_Constants(buffer,offset);
+   ADDRESSGEN_Constants_Mem(VALUES);
+   //VLinear_Mem_Input_0(&accelConfig->output,VALUES);
+   //AddressGenConstant_VRead(&accelConfig->read,buffer,offset);
 
    RunAccelerator(3);
    Assert_Eq(VersatUnitRead(TOP_output_addr,0),expected,marker);

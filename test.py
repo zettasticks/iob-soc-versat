@@ -619,9 +619,6 @@ def PrintResult(result):
       condition = failing + " " + stage.name + f"[{finalStage.name}]"
       partialVal = ""
       color = COLOR_RED
-   elif(result.error.error == ErrorType.TEST_FAILED):
-      color = COLOR_YELLOW
-      condition = partial
    elif(IsError(result.error)):
       color = COLOR_RED
       condition = f"{result.error.error.name}:{result.error.source.name}"

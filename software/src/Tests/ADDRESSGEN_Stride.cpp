@@ -11,14 +11,17 @@ void SingleTest(Arena* arena){
       
       forceSingleLoop = false;
       forceDoubleLoop = true;
-      TestAddressGen_Generator(&accelConfig->gen,2,2,2,2,2);
-      StridedLinear_Mem_Input_0(&accelConfig->mem,4,4);
+
+      ADDRESSGEN_Stride_Gen(2,2,2,2,2);
+      //TestAddressGen_Generator(&accelConfig->gen,2,2,2,2,2);
+      ADDRESSGEN_Stride_Mem(4,4);
+      //StridedLinear_Mem_Input_0(&accelConfig->mem,4,4);
 
       RunAccelerator(3);
 
       int results[4] = {};
       for(int i = 0; i < 4; i++){
-         results[i] = VersatUnitRead(TOP_mem_addr,i);
+         results[i] = VersatUnitRead(TOP_m_addr,i);
       }
 
       int expected[4] = {3,3,3,3};
@@ -30,14 +33,17 @@ void SingleTest(Arena* arena){
 
       forceSingleLoop = true;
       forceDoubleLoop = false;
-      TestAddressGen_Generator(&accelConfig->gen,2,2,2,2,2);
-      StridedLinear_Mem_Input_0(&accelConfig->mem,4,4);
+
+      ADDRESSGEN_Stride_Gen(2,2,2,2,2);
+      //TestAddressGen_Generator(&accelConfig->gen,2,2,2,2,2);
+      ADDRESSGEN_Stride_Mem(4,4);
+      //StridedLinear_Mem_Input_0(&accelConfig->mem,4,4);
 
       RunAccelerator(3);
 
       int results[4] = {};
       for(int i = 0; i < 4; i++){
-         results[i] = VersatUnitRead(TOP_mem_addr,i);
+         results[i] = VersatUnitRead(TOP_m_addr,i);
       }
 
       int expected[4] = {3,3,3,3};
@@ -52,8 +58,10 @@ void SingleTest(Arena* arena){
       forceSingleLoop = false;
       forceDoubleLoop = true;
 
-      TestAddressGen_Generator(&accelConfig->gen,2,2,2,2,2);
-      StridedLinear_VWrite(&accelConfig->write,buffer,4,4);
+      ADDRESSGEN_Stride_Gen(2,2,2,2,2);
+      //TestAddressGen_Generator(&accelConfig->gen,2,2,2,2,2);
+      ADDRESSGEN_Stride_StridedLinear(buffer,4,4);
+      //StridedLinear_VWrite(&accelConfig->write,buffer,4,4);
 
       RunAccelerator(3);
       ClearCache(buffer);
@@ -69,8 +77,10 @@ void SingleTest(Arena* arena){
       forceSingleLoop = true;
       forceDoubleLoop = false;
 
-      TestAddressGen_Generator(&accelConfig->gen,2,2,2,2,2);
-      StridedLinear_VWrite(&accelConfig->write,buffer,4,4);
+      ADDRESSGEN_Stride_Gen(2,2,2,2,2);
+      //TestAddressGen_Generator(&accelConfig->gen,2,2,2,2,2);
+      ADDRESSGEN_Stride_StridedLinear(buffer,4,4);
+      //StridedLinear_VWrite(&accelConfig->write,buffer,4,4);
 
       RunAccelerator(3);
       ClearCache(buffer);
@@ -89,8 +99,10 @@ void SingleTest(Arena* arena){
       forceSingleLoop = true;
       forceDoubleLoop = false;
 
-      TestAddressGen_Generator(&accelConfig->gen,2,2,2,2,2);
-      Strided2_VWrite(&accelConfig->write,buffer,2,2,4,4);
+      ADDRESSGEN_Stride_Gen(2,2,2,2,2);
+      //TestAddressGen_Generator(&accelConfig->gen,2,2,2,2,2);
+      ADDRESSGEN_Stride_Strided2(buffer,2,2,4,4);
+      //Strided2_VWrite(&accelConfig->write,buffer,2,2,4,4);
 
       RunAccelerator(3);
       ClearCache(buffer);
@@ -108,8 +120,10 @@ void SingleTest(Arena* arena){
       forceSingleLoop = false;
       forceDoubleLoop = true;
 
-      TestAddressGen_Generator(&accelConfig->gen,2,2,2,2,2);
-      Strided2_VWrite(&accelConfig->write,buffer,2,2,4,4);
+      ADDRESSGEN_Stride_Gen(2,2,2,2,2);
+      //TestAddressGen_Generator(&accelConfig->gen,2,2,2,2,2);
+      //Strided2_VWrite(&accelConfig->write,buffer,2,2,4,4);
+      ADDRESSGEN_Stride_Strided2(buffer,2,2,4,4);
 
       RunAccelerator(3);
       ClearCache(buffer);

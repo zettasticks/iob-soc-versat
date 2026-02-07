@@ -20,8 +20,8 @@ void SingleTest(Arena* arena){
       buffer[9]  = 70;
       buffer[11] = 80;
 
-      AddressGenAdvancedTest_VRead(&accelConfig->read,buffer,2,4,2,5);
-      VLinear_Mem_Input_0(&accelConfig->output,VALUES);
+      ADDRESSGEN_Advanced_Read(buffer,2,4,2,5);
+      ADDRESSGEN_Advanced_Mem(VALUES);
 
       ClearCache(buffer);
       RunAccelerator(3);
@@ -46,8 +46,8 @@ void SingleTest(Arena* arena){
       buffer[104] = 70;
       buffer[106] = 80;
 
-      AddressGenAdvancedTest_VRead(&accelConfig->read,buffer,2,4,2,100);
-      VLinear_Mem_Input_0(&accelConfig->output,VALUES);
+      ADDRESSGEN_Advanced_Read(buffer,2,4,2,100);
+      ADDRESSGEN_Advanced_Mem(VALUES);
 
       ClearCache(buffer);
       RunAccelerator(3);
@@ -72,8 +72,8 @@ void SingleTest(Arena* arena){
       buffer[12] = 70;
       buffer[17] = 80;
 
-      AddressGenAdvancedTest_VRead(&accelConfig->read,buffer,4,2,5,4);
-      VLinear_Mem_Input_0(&accelConfig->output,VALUES);
+      ADDRESSGEN_Advanced_Read(buffer,4,2,5,4);
+      ADDRESSGEN_Advanced_Mem(VALUES);
 
       ClearCache(buffer);
       RunAccelerator(3);
@@ -98,8 +98,8 @@ void SingleTest(Arena* arena){
       buffer[12] = 70;
       buffer[17] = 80;
 
-      AddressGenAdvancedTest_VRead(&accelConfig->read,buffer,2,4,5,2);
-      VLinear_Mem_Input_0(&accelConfig->output,VALUES);
+      ADDRESSGEN_Advanced_Read(buffer,2,4,5,2);
+      ADDRESSGEN_Advanced_Mem(VALUES);
 
       ClearCache(buffer);
       RunAccelerator(3);

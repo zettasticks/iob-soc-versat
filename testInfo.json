@@ -245,17 +245,6 @@
       ]
     },
     {
-      "name": "ADDRESSGEN_SimulateLoop",
-      "finalStage": "DISABLED",
-      "comment": "Need to find a way of checking if the simulation code is working properly",
-      "subTests": [
-        {},
-        {"args": "-b64"},
-        {"args": "-b128"},
-        {"args": "-b256"}
-      ]
-    },
-    {
       "name": "ADDRESSGEN_Advanced",
       "finalStage": "SIM_RUN",
       "subTests": [

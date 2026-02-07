@@ -29,9 +29,9 @@ void SingleTest(Arena* arena){
 
    int stride = kernelW * kernelH;
 
-   Conv2D_VRead(&accelConfig->features,features,kernelW,kernelH,3);
-   Weight2D_VRead(&accelConfig->weights,weights,kernelW,kernelH);
-   SimpleOut_VWrite(&accelConfig->output,buffer,1,stride);
+   EXAMPLE_Conv_Conv(features,kernelW,kernelH,3);
+   EXAMPLE_Conv_Weight(weights,kernelW,kernelH);
+   EXAMPLE_Conv_Out(buffer,1,stride);
 
    accelConfig->myAccum.strideMinusOne = stride - 1;
 

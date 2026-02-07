@@ -7,8 +7,12 @@ void SingleTest(Arena* arena){
 
    VersatMemoryCopy(TOP_start_addr,data,sizeof(int) * 4);
 
+   ADDRESSGEN_Mem_Simple(4);
+
+#if 0
    VLinear_Mem_Output_0(&accelConfig->start,4);
    VLinear_Mem_Input_0(&accelConfig->end,4);
+#endif
    
    RunAccelerator(3);
 

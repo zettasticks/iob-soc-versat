@@ -13,8 +13,12 @@ void SingleTest(Arena* arena){
 
    int expected[] = {0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3};
 
+   ADDRESSGEN_Moderate_Simple(xMax,yMax,zMax,wMax,aMax,total);
+
+#if 0
    TestAddressGen_Generator(&accelConfig->gen,xMax,yMax,zMax,wMax,aMax);
    VLinear_Mem_Input_0(&accelConfig->output,total);
+#endif
 
    RunAccelerator(3);
 
