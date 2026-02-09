@@ -83,7 +83,7 @@ module API_TransferSize(){
    config Simple2(addr: Address,addr2: Address,height: Fixed,width: Dyn){
       for y 0..height {
          for x 0..width {
-            v = addr[ y * width + x];
+            v = addr[y * width + x];
          }
          w = addr2[y * width];
       }
@@ -232,7 +232,6 @@ module EXAMPLE_Simple(){
   Const a;
   Const b;
   Reg result;
-
 #    
   addition = a + b;
 
@@ -2988,7 +2987,7 @@ module FullAES(){
       key[16];
    }
    share(config) Reg{
-      state[16];
+      stateReg[16];
    }
    share(config) Reg{
       lastResult[16];
@@ -3008,14 +3007,14 @@ module FullAES(){
 
    schedule:0..15 -> key[0..15];
 
-   state[0..15] -> round:0..15;
+   stateReg[0..15] -> round:0..15;
    key[0..15]   -> round:16..31;
    lastResult[0..15] -> round:32..47;
 
    round:0..15 -> lastAdd:0..15;
    lastValToAdd[0..15] -> lastAdd:16..31;
 
-   lastAdd:0..15 -> state[0..15];
+   lastAdd:0..15 -> stateReg[0..15];
    lastAdd:0..15 -> lastResult[0..15];
 }
 
