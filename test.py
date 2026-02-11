@@ -249,12 +249,12 @@ def ParseJson(jsonInfo,jsonData):
 
       if(subTests == None):
          trueName = name
-         testData = jsonData[trueName] if jsonData and trueName in jsonData else None
-         if(testData):
-            tokens = int(testData['tokens']) if 'tokens' in testData else None
-            hashVal = int(testData['hashVal']) if 'hashVal' in testData else None
-            stage = Stage[testData['stage']] if 'stage' in testData else Stage.NOT_WORKING
-            accelData = ParseAccelData(testData['accelData']) if 'accelData' in testData else None
+         data = jsonData[trueName] if jsonData and trueName in jsonData else None
+         if(data):
+            tokens = int(data['tokens']) if 'tokens' in data else None
+            hashVal = int(data['hashVal']) if 'hashVal' in data else None
+            stage = Stage[data['stage']] if 'stage' in data else Stage.NOT_WORKING
+            accelData = ParseAccelData(data['accelData']) if 'accelData' in data else None
          else:
             tokens = 0
             hashVal = 0
@@ -270,12 +270,12 @@ def ParseJson(jsonInfo,jsonData):
                else:
                   trueName = name
 
-               testData = jsonData[trueName] if jsonData and trueName in jsonData else None
-               if(testData):
-                  tokens = int(testData['tokens']) if 'tokens' in testData else None
-                  hashVal = int(testData['hashVal']) if 'hashVal' in testData else None
-                  stage = Stage[testData['stage']] if 'stage' in testData else Stage.NOT_WORKING
-                  accelData = ParseAccelData(testData['accelData']) if 'accelData' in testData else None
+               data = jsonData[trueName] if jsonData and trueName in jsonData else None
+               if(data):
+                  tokens = int(data['tokens']) if 'tokens' in data else None
+                  hashVal = int(data['hashVal']) if 'hashVal' in data else None
+                  stage = Stage[data['stage']] if 'stage' in data else Stage.NOT_WORKING
+                  accelData = ParseAccelData(data['accelData']) if 'accelData' in data else None
                else:
                   tokens = 0
                   hashVal = 0
@@ -292,8 +292,9 @@ def ParseJson(jsonInfo,jsonData):
 printMutex = Lock()
 testMutex = Lock()
 outputMutex = Lock()
-testData = {}
-def SaveTest(test,subTest):
+testData = None
+
+def AddTestToTestData(test,subTest):
    trueName = GetTestTrueName(test,subTest)
 
    asDict = {}
@@ -311,22 +312,27 @@ def SaveTest(test,subTest):
    with testMutex:
       testData[trueName] = asDict
 
-      if(saveEnabled):
+def SaveTest(test,subTest):
+   AddTestToTestData(test,subTest)
+
+   if(saveEnabled):
+      with outputMutex:
          with open(jsonTestDataPath,"w") as file:
             json.dump(testData,file,cls=MyJsonEncoder,indent=2)
 
 def signal_handler(sig, frame):
-   print("Inside signal handler")
+   print("Forced termination\n")
 
-   # Do not want to terminate if we are in the middle of writing to a file, otherwise corrupted data
-   # TODO: Need to check if we are inside the 'run' command instead of the 'diff' command.
-
+   # Do not want to terminate if we are in the middle of doing any form of IO
+   printMutex.acquire()
    testMutex.acquire()
    outputMutex.acquire()
-   sys.exit(0)
+   os._exit(0)
 
 def signal_handler_terminate_immediatly(sig,frame):
-   sys.exit(0)
+   print("Forced termination\n")
+
+   os._exit(0)
 
 # Used to find values in the form "NAME:VAL"
 def FindAndParseValue(content,valueToFind):
@@ -506,9 +512,8 @@ def CheckTestPassed(testOutput):
 def SaveOutput(testName,fileName,output):
    testTempDir = TempDir(testName)
    if(saveEnabled): 
-      with outputMutex:
-         with open(testTempDir + f"/{fileName}.txt","w") as file:
-            file.write(output)
+      with open(testTempDir + f"/{fileName}.txt","w") as file:
+         file.write(output)
 
 def PerformTest(test,testTrueName,makefileArg,stage):
    # This function was previously taking the output from the makefile and checking the files using the hasher.
@@ -751,9 +756,6 @@ class DiffWork:
    defaultArgs : any
    single : any
 
-def ComputeDiffWork(work):
-   pass
-
 printTestResultMutex = Lock()
 def MutexPrintTestResult(name,color,msg):
    with printTestResultMutex:
@@ -768,6 +770,9 @@ def ComputeDiff(work):
    test,subTest = testAndSubTest
    args = GetTestArgs(subTest,sameArgs,defaultArgs)
 
+   if(subTest.stage in [Stage.DISABLED,Stage.DISABLED_FAILING,Stage.NOT_WORKING,Stage.SHOULD_FAIL]):
+      return 
+
    name = GetTestTrueName(test,subTest)
    finalStage = test.finalStage
 
@@ -778,10 +783,6 @@ def ComputeDiff(work):
    testTempDir = DiffDir(name)
 
    versatError,filepaths,versatData,output = RunVersat(test.name,testTempDir,args)
-
-   if(finalStage == Stage.SHOULD_FAIL):
-      # We do not compare should fail because we do not actually save what caused the difference in the first place
-      return
 
    if(IsError(versatError)):
       MutexPrintTestResult(name,COLOR_RED,"VERSAT_ERROR")
@@ -983,6 +984,13 @@ if __name__ == "__main__":
 
    testInfo = ParseJson(testInfoJson,testDataJson)
 
+   # Initialize test data.
+   # This ensures us that we never lose previous data.
+   testData = {}
+   for test in testInfo.tests:
+      for subTest in test.subTests:
+         AddTestToTestData(test,subTest)
+
    def Filter(name,filters):
       for fil in filters:
          if(fil in name):
@@ -1090,24 +1098,9 @@ if __name__ == "__main__":
 
    print("\n\n\n") # A few new lines to make easier to see results
 
-   testData = {}
    for test in testInfo.tests:
       for subTest in test.subTests:
-         trueName = GetTestTrueName(test,subTest)
-
-         asDict = {}
-         if(subTest.args):
-            asDict["args"] = subTest.args
-         if(subTest.tokens):
-            asDict["tokens"] = subTest.tokens
-         if(subTest.hashVal):
-            asDict["hashVal"] = subTest.hashVal
-         if(subTest.stage):
-            asDict["stage"] = subTest.stage
-         if(subTest.accelData):
-            asDict["accelData"] = subTest.accelData
-
-         testData[trueName] = asDict
+         SaveTest(test,subTest)
 
    if(saveEnabled):
       with open(jsonTestDataPath,"w") as file:
