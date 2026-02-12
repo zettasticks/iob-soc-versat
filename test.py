@@ -441,7 +441,7 @@ def PairTestsAndSubtests(testList):
          yield (test,subTest)
 
 def ComputeFilesTokenSizeAndHash(files):
-   args = ["./submodules/VERSAT/build/calculateHash"] + files
+   args = ["./submodules/VERSAT/tool_build/calculateHash"] + files
 
    result = None
    try:
