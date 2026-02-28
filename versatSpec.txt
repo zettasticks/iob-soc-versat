@@ -183,6 +183,34 @@ module PARAM_Simple(){
    }
 }
 
+module PARAM_Temp2 #(X = 5,Y = 10) (){
+   Mem #(.ADDR_W(X)) m;
+#
+##
+}
+
+module PARAM_MemMapped(){
+   PARAM_Temp2 #(.X(7)) t;
+   Mem #(.ADDR_W(15)) m;
+   Reg r;
+#
+   m -> r;
+##
+   config Simple(index){
+      m.out0 = index;
+   }
+
+   mem Load(addr: Address,width){
+      for x 0..width {
+         m = addr[x];
+      }
+   }
+
+   state Result{
+      res = r.currentValue;
+   }
+}
+
 module PARAM_Temp1(){
    ParamConst #(.VALUE(321)) c;
    Reg r;
@@ -3367,3 +3395,48 @@ merge MERGE_CONFIG_ADDRESSGEN_MaxComplexity = CONFIG_ADDRESSGEN_PartialSharing |
 //merge GoodCryptoAlgos = SHA | McEliece | FullAES;
 
 //merge CryptoAlgos = SHA | AES256 | McEliece;
+
+/*
+iterative ITERATIVE_Cordic(a){
+   Reg regX;
+   Reg regY;
+   Reg regZ;
+
+   Fix_AddOrSub add[3];
+   Fix_Div2 div[2];
+   Fix_Sign extractSign;
+#
+   state0 {
+      regX -> div[0];
+      regY -> div[1];
+
+      {regX,div[1]} -> add[0]:0..1;
+      {div[0],regY} -> add[1]:0..1;
+
+      {regZ,a}      -> add[2]:0..1;
+
+      regZ -> extractSign;
+
+      negExtractSign = ~extractSign;
+
+      negExtractSign -> add[0]:2;
+      extractSign    -> add[1]:2;
+      negExtractSign -> add[2]:2;
+   };
+
+   state1 {
+      add[0..2] -> {regX,regY,regZ};
+   };
+##
+
+   mem Init(x,y,z){
+      regX[0] = x;
+      regY[0] = y;
+      regZ[0] = z;
+   }
+}
+*/
+
+module ITERATIVE_Cordic(){
+#
+}

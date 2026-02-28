@@ -3,5 +3,6 @@ TAGS
 compile_commands.json
 testCache
 testCacheGood
+diffCache
 testData.json
 debug

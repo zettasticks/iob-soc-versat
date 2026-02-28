@@ -11,6 +11,10 @@
       "finalStage": "SIM_RUN"
     },
     {
+      "name": "PARAM_MemMapped",
+      "finalStage": "SIM_RUN"
+    },
+    {
       "name": "PARAM_MERGE_NoMergeBecauseParam",
       "finalStage": "SIM_RUN"
     },
