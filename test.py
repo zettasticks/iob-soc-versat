@@ -32,10 +32,15 @@
 #    - Only simple locking mechanisms are used to make sure that we write test data as soon as possible (so user can abort at any time) while preventing conflicts
 #
 
-##############
-# TODO: Add a brief description here of what we are doing
-# Bunch of stuff that was supposed to be on Json, but since it does not support comments, put it here.
-# Basically, just a big warning for future maintainers to not touch certain parts of the test stage unless they know what they are doing
+#### TODO ####
+# The diff part is really brittle.
+# First, since the pc-emul.txt and sim-run.txt files are only generated when running Versat
+#   we run into the problem that the cached stuff messes with the file comparison
+#   since the files do not exist.
+# Second, the test software file is not copied into the test caches meaning that it is not part 
+#   of the comparison. If the change is inside the the software test part then it is
+#   not reflected on the diff.
+# Overall need more usage to get a feeling for things to implement/change.
 ##############
 
 #LEFT HERE
@@ -76,6 +81,7 @@ import os
 import random
 import signal
 import concurrent.futures
+import io
 from dataclasses import dataclass
 from enum import Enum,auto
 from pprint import pprint
@@ -105,8 +111,8 @@ COLOR_MAGENTA= '\33[35m'
 COLOR_CYAN   = '\33[36m'
 COLOR_WHITE  = '\33[37m'
 
-TEST_CACHE_FOLDER_NAME = "testCache"
-TEST_CACHE_GOOD_FOLDER_NAME = "testCacheGood"
+TEST_CACHE_FOLDER_NAME = "../AAA_testCache"
+TEST_CACHE_GOOD_FOLDER_NAME = "../AAA_testCacheGood"
 
 def DeleteTestDir(testName):
    path = f"./{TEST_CACHE_FOLDER_NAME}/{testName}"
@@ -213,11 +219,13 @@ class TestInfo:
       if(name == "finalStage"):
          return self.parent.finalStage
       elif(name == "name"):
-         return self.TrueName()
+         return self.NameWithArgsEmbedded()
+      elif(name == "expectedError"):
+         return self.parent.expectedError
       else:
          self.__getattribute__(name)
 
-   def TrueName(self):
+   def NameWithArgsEmbedded(self):
       name = self.parent.name
       args = self.args
 
@@ -311,7 +319,7 @@ def ParseJson(jsonInfo,jsonData):
 
       if(subTests == None):
          test = TestInfo(info)
-         trueName = test.TrueName()
+         trueName = test.NameWithArgsEmbedded()
 
          data = jsonData[trueName] if jsonData and trueName in jsonData else None
          if(data):
@@ -326,7 +334,7 @@ def ParseJson(jsonInfo,jsonData):
             for subTest in subTests:
                args = subTest['args'] if "args" in subTest else None
                test = TestInfo(info,args)
-               trueName = test.TrueName()
+               trueName = test.NameWithArgsEmbedded()
 
                data = jsonData[trueName] if jsonData and trueName in jsonData else None
 
@@ -355,7 +363,7 @@ outputMutex = Lock()
 testData = None
 
 def AddTestToTestData(test):
-   trueName = test.TrueName()
+   trueName = test.NameWithArgsEmbedded()
 
    asDict = {}
    if(test.args):
@@ -378,8 +386,8 @@ def SaveTest(test):
    AddTestToTestData(test)
 
    with outputMutex:
-      if(test.Passed()):
-         trueName = test.TrueName()
+      if(test.Passed() and SAVE_ENABLED):
+         trueName = test.NameWithArgsEmbedded()
          lastGoodLoc = LastGoodTestDir(trueName)
          pathLoc = TestDir(trueName)
 
@@ -460,6 +468,7 @@ def RunVersat(testName,testFolder,versatExtra):
    result = None
    try:
       #print(args)
+      #print(*args)
       result = sp.run(args,capture_output=True,timeout=10) # Maybe a bit low for merge based tests, eventually add timeout 'option' to the test itself
    except sp.TimeoutExpired as t:
       return Error(ErrorType.TIMEOUT,ErrorSource.VERSAT),[],None,GenerateProgramOutput(" ".join(args),t)
@@ -469,12 +478,14 @@ def RunVersat(testName,testFolder,versatExtra):
 
    returnCode = result.returncode
 
-   if(returnCode != 0):
-      return Error(ErrorType.PROGRAM_ERROR,ErrorSource.VERSAT),[],None,GenerateProgramOutput(" ".join(args),result)
-
    decoder = codecs.getdecoder("utf-8")
    output = decoder(result.stdout)[0]
    error = decoder(result.stderr)[0]
+
+   #print(returnCode,output,error)
+
+   if(returnCode != 0):
+      return Error(ErrorType.PROGRAM_ERROR,ErrorSource.VERSAT),[],None,GenerateProgramOutput(" ".join(args),result)
 
    filePathList = FindAndParseFilepathList(output)
 
@@ -577,11 +588,11 @@ def PerformTest(test):
    if SIM:
       return test
 
-   trueName = test.TrueName()
+   testName = test.parent.name
+   trueName = test.NameWithArgsEmbedded()
 
    args = None
    makefileArg = None
-   args = GetTestArgs(test)
 
    if(test.args):
       makefileArg = ParseVersatArgsIntoMakefile(test.args)
@@ -593,10 +604,10 @@ def PerformTest(test):
       # TODO: The fast rules appear to not work correctly. 
       #       Would like to have this working but already spent too much time on this
       if(False and os.path.isdir(testFolderName)):
-         error,output = RunMakefile("fast-pc-emul",trueName,makefileArg)
+         error,output = RunMakefile("fast-pc-emul",testName,makefileArg)
          SaveOutput(trueName,"fast-pc-emul",output)
       else:
-         error,output = RunMakefile("clean pc-emul-run",trueName,makefileArg)
+         error,output = RunMakefile("clean pc-emul-run",testName,makefileArg)
          SaveOutput(trueName,"pc-emul",output)
 
       if(IsError(error)):
@@ -612,7 +623,7 @@ def PerformTest(test):
    if stage == Stage.SIM_RUN: 
       # TODO: fast-sim-run appears to be causing problems, but I kinda would like to make this work.
       #       It might be a problem in the makefiles.
-      error,output = RunMakefile("sim-run",trueName,makefileArg,120)
+      error,output = RunMakefile("sim-run",testName,makefileArg,120)
       SaveOutput(trueName,"sim-run",output)
 
       if(IsError(error)):
@@ -654,7 +665,7 @@ def PrintTestResult(testName,color,condition,partialVal = None,cached = None,com
    print(finalStr)
 
 def PrintResult(test):
-   name = test.TrueName()
+   name = test.NameWithArgsEmbedded()
 
    finalStage = test.parent.finalStage
    stage = test.stage
@@ -712,7 +723,7 @@ def ThreadMain(workQueue,resultQueue,id):
       test = workQueue.get()
       
       try:
-         test = DoWorkDirectly(test)
+         test = GetCurrentTestState(test)
       except Exception as e:
          print(f"Exception reached ThreadMain:")
          traceback.print_exception(e)
@@ -725,7 +736,7 @@ def ThreadMain(workQueue,resultQueue,id):
 def CalculateMaxLengthOfTestNames(testList):
    maxNameLength = 0
    for test in testList:
-      trueName = test.TrueName()
+      trueName = test.NameWithArgsEmbedded()
       maxNameLength = max(maxNameLength,len(trueName))
    return (maxNameLength + 2) # +2 to have some space between name and result
 
@@ -772,7 +783,7 @@ def ReprintButOrganized(testList):
 
    testGroups = {}
    for test in testList:
-      name = test.TrueName()
+      name = test.NameWithArgsEmbedded()
 
       groups = TestGroups(name)
 
@@ -784,7 +795,7 @@ def ReprintButOrganized(testList):
    for group in testGroups.keys():
       print(f"{COLOR_CYAN}{group}{COLOR_BASE}:")
       for test in testList:
-         name = test.TrueName()
+         name = test.NameWithArgsEmbedded()
 
          groups = TestGroups(name)
 
@@ -811,56 +822,75 @@ def MutexPrintTestResult(name,color,msg):
       PrintTestResult(name,color,msg)
 
 def ComputeDiff(test):
-   test = GetCurrentTestState(test)
+   try:
+      test = GetCurrentTestState(test)
+      name = test.NameWithArgsEmbedded()
 
-   name = test.TrueName()
-   finalStage = test.finalStage
+      if not os.path.exists(TEST_CACHE_GOOD_FOLDER_NAME):
+         MutexPrintTestResult(name,COLOR_BLUE,"NO_DATA")
+         return
 
-   if(test.tokens == 0):
-      MutexPrintTestResult(name,COLOR_BLUE,"NO_DATA")
-      return
+      fileMatch = []
+      for root, subdirs, files in os.walk(TEST_CACHE_GOOD_FOLDER_NAME):
+         if(not "hardware" in root and not "software" in root):
+            continue
 
-   testTestDir = DiffDir(name)
+         for file in files:
+            testCacheGood = os.path.join(root,file)
 
-   versatError,filepaths,versatData,output = RunVersat(test.name,testTestDir,args)
+            fullPath = testCacheGood.replace(TEST_CACHE_GOOD_FOLDER_NAME,TEST_CACHE_FOLDER_NAME)
 
-   if(IsError(versatError)):
-      MutexPrintTestResult(name,COLOR_RED,"VERSAT_ERROR")
-      return
+            fileMatch.append((fullPath,testCacheGood))
 
-   sourceLocation = CppLocation(test.name)
-   filepathsToHash = filepaths + [sourceLocation]
-   hashError,tokenAmount,hashVal = ComputeFilesTokenSizeAndHash(filepathsToHash)
-   if(IsError(hashError)):
-      MutexPrintTestResult(name,COLOR_RED,"HASH_ERROR")
-      return
-
-   if(tokenAmount == test.tokens and hashVal == test.hashVal):
-      MutexPrintTestResult(name,COLOR_GREEN,"OK")
-      return
-   else:
-      MutexPrintTestResult(name,COLOR_YELLOW,"DIFF")
-
-   if(DIFF_SINGLE):
-      for path in filepaths:
-         cachePath = path.replace(TEST_CACHE_FOLDER_NAME,TEST_CACHE_GOOD_FOLDER_NAME)
-
+      results = []
+      differenceAmount = 0
+      for now,good in fileMatch:
          contentNow = None
          contentGood = None
-         with open(path,"r") as f:
-            contentNow = f.readlines()
-         with open(cachePath,"r") as f:
-            contentGood = f.readlines()
+         error = False
+         try:
+            with open(now,"r") as f:
+               contentNow = f.readlines()
+         except:
+            results.append((now,good,[f"File {now} does not exist"]))   
+            differenceAmount += 1
+            error = True
 
-         res = context_diff(contentNow,contentGood,fromfile=path,tofile=cachePath)
+         try:
+           with open(good,"r") as f:
+               contentGood = f.readlines()
+         except:
+            results.append((now,good,[f"File {good} does not exist"]))   
+            differenceAmount += 1
+            error = True
 
-         with printTestResultMutex:
-            for x in res:
-               print(x)
+         if not error:
+            res = context_diff(contentNow,contentGood,fromfile=now,tofile=good)
+
+            allDifferences = [x for x in res]
+            results.append((now,good,allDifferences))
+            differenceAmount += len(allDifferences)
+
+      if(differenceAmount != 0):
+         MutexPrintTestResult(name,COLOR_YELLOW,"DIFF")
+
+         if(DIFF_SINGLE):
+            with printTestResultMutex:
+               for test,good,differences in results:
+                  for x in differences:
+                     print(x)
+      else:
+         if(test.AnyErrors()):
+            MutexPrintTestResult(name,COLOR_YELLOW,"EQUAL[WITH_ERRORS]")
+         else:
+            MutexPrintTestResult(name,COLOR_GREEN,"EQUAL")
+
+   except Exception as e:
+      traceback.print_exception(e)
 
 def GetCurrentTestState(test):
-   name = test.TrueName()
-   args = test.args
+   name = test.NameWithArgsEmbedded()
+   args = GetTestArgs(test)
 
    finalStage = test.finalStage
 
@@ -868,9 +898,7 @@ def GetCurrentTestState(test):
    DeleteTestDir(name)
    dirPath = TestDir(name)
 
-   versatError,filepaths,versatData,output = RunVersat(test.name,dirPath,args)
-
-   #print(versatError,filepaths,versatData,output)
+   versatError,filepaths,versatData,output = RunVersat(test.parent.name,dirPath,args)
 
    if(finalStage == Stage.SHOULD_FAIL):
       errorsMatch = True
@@ -890,7 +918,7 @@ def GetCurrentTestState(test):
       test.error = versatError
       return test
 
-   sourceLocation = CppLocation(test.name)
+   sourceLocation = CppLocation(test.parent.name)
    filepathsToHash = filepaths + [sourceLocation]
    hashError,tokenAmount,hashVal = ComputeFilesTokenSizeAndHash(filepathsToHash)
    if(IsError(hashError)):
@@ -904,18 +932,14 @@ def GetCurrentTestState(test):
       test.cached = True
       return test
 
+   test.tokens = tokenAmount
+   test.hashVal = hashVal
    test.accelData = versatData
    test.stage = Stage.VERSAT
 
-   return test
-
-def DoWorkDirectly(test):
-   test = GetCurrentTestState(test)
-
    stageToProcess = Stage(test.stage.value + 1)
    finalStage = test.finalStage
-   while True:
-      print(f"Gonna process: {stageToProcess}")
+   while stageToProcess.value < finalStage.value + 1:
       test.stage = stageToProcess
       test = PerformTest(test)
 
@@ -925,14 +949,11 @@ def DoWorkDirectly(test):
       if(test.AnyErrors()):
          break
 
-      if(stageToProcess.value >= finalStage.value):
-         break
-
       stageToProcess = Stage(stageToProcess.value + 1)
 
    return test
 
-def RunTests2(testList):
+def RunTests(testList):
    global amountOfThreads
    amountOfTests = len(testList)
 
@@ -1027,11 +1048,11 @@ if __name__ == "__main__":
             return True
       return False
 
-   allTests = [test for test in testInfo.tests if Filter(test.TrueName(),testFilter)]
+   allTests = [test for test in testInfo.tests if Filter(test.NameWithArgsEmbedded(),testFilter)]
 
    testCount = {}
    for test in testInfo.tests:
-      testCount[test.TrueName()] = testCount.get(test.TrueName(),0) + 1
+      testCount[test.NameWithArgsEmbedded()] = testCount.get(test.NameWithArgsEmbedded(),0) + 1
 
    for name,count in testCount.items():
       if count > 1:
@@ -1047,7 +1068,7 @@ if __name__ == "__main__":
    print(f"\n\nFound and processing {len(allTests)} test(s)\n")
    print("\n\n")
 
-   allTestNames = [x.TrueName() for x in allTests]
+   allTestNames = [x.NameWithArgsEmbedded() for x in allTests]
 
    nameCount : dict[str,int] = {}
    for name in allTestNames:
@@ -1070,10 +1091,9 @@ if __name__ == "__main__":
       signal.signal(signal.SIGINT, signal_handler_terminate_immediatly)
 
       DIFF_SINGLE = (len(allTests) == 1)
-      allWork = [DiffWork(test,single) for test in allTests]
 
       with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-         executor.map(ComputeDiff, allWork)
+         executor.map(ComputeDiff, allTests)
 
       sys.exit(0)
 
@@ -1084,7 +1104,7 @@ if __name__ == "__main__":
       if(command == "run"):
          SAVE_ENABLED = True
 
-      resultList : list[TestInfo] = RunTests2(allTests)
+      resultList : list[TestInfo] = RunTests(allTests)
 
       ReprintButOrganized(resultList)
 
