@@ -73,7 +73,7 @@ run: test.log
 	@-test "$$(cat test.log)" = "Test passed!" || echo "$(DIR): Failed"  1>&2
 	@-test "$$(cat test.log)" = "Test passed!" && echo "$(DIR): Success" 1>&2
 
-test.log: remote_build_dir test.hex
+test.log: remote_build_dir test.hex build
 ifeq ($(SIM_SERVER),)
 ifneq ($(CONSOLE_CMD),)
 	$(BOARD_GRAB_CMD) -s 'make exec' -c '$(CONSOLE_CMD)' && echo "Checking test log..." && sleep 2

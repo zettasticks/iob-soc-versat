@@ -120,11 +120,19 @@ def DeleteTestDir(testName):
 
 def TestDir(testName):
    path = f"./{TEST_CACHE_FOLDER_NAME}/{testName}"
+   return path
+
+def MakeTestDir(testName):
+   path = TestDir(testName)
    os.makedirs(path,exist_ok=True)
    return path
 
 def LastGoodTestDir(testName):
    path = f"./{TEST_CACHE_GOOD_FOLDER_NAME}/{testName}"
+   return path   
+
+def MakeLastGoodTestDir(testName):
+   path = LastGoodTestDir(testName)
    os.makedirs(path,exist_ok=True)
    return path
 
@@ -388,8 +396,8 @@ def SaveTest(test):
    with outputMutex:
       if(test.Passed() and SAVE_ENABLED):
          trueName = test.NameWithArgsEmbedded()
-         lastGoodLoc = LastGoodTestDir(trueName)
-         pathLoc = TestDir(trueName)
+         lastGoodLoc = MakeLastGoodTestDir(trueName)
+         pathLoc = MakeTestDir(trueName)
 
          print(f"Saving {pathLoc} to {lastGoodLoc}")
 
@@ -575,7 +583,7 @@ def CheckTestPassed(testOutput):
       return False
 
 def SaveOutput(testName,fileName,output):
-   testTestDir = TestDir(testName)
+   testTestDir = MakeTestDir(testName)
    with open(testTestDir + f"/{fileName}.txt","w") as file:
       file.write(output)
 
@@ -826,19 +834,25 @@ def ComputeDiff(test):
       test = GetCurrentTestState(test)
       name = test.NameWithArgsEmbedded()
 
-      if not os.path.exists(TEST_CACHE_GOOD_FOLDER_NAME):
+      testCacheDir = TestDir(name)
+      testGoodDir = LastGoodTestDir(name)
+
+      if not os.path.exists(testCacheDir):
          MutexPrintTestResult(name,COLOR_BLUE,"NO_DATA")
          return
 
       fileMatch = []
-      for root, subdirs, files in os.walk(TEST_CACHE_GOOD_FOLDER_NAME):
+      for root, subdirs, files in os.walk(testCacheDir):
+         # Currently ignoring the .txt files since they are not created when the test is cached
+         # which causes the diff to trigger everytime. We are also missing the test .cpp file meaning 
+         # that any change on that can cause a false positive.
          if(not "hardware" in root and not "software" in root):
             continue
 
          for file in files:
             testCacheGood = os.path.join(root,file)
 
-            fullPath = testCacheGood.replace(TEST_CACHE_GOOD_FOLDER_NAME,TEST_CACHE_FOLDER_NAME)
+            fullPath = testCacheGood.replace(testCacheDir,testGoodDir)
 
             fileMatch.append((fullPath,testCacheGood))
 
@@ -896,7 +910,7 @@ def GetCurrentTestState(test):
 
    # NOTE: We always delete the testCache just to prevent old files from stickying around.
    DeleteTestDir(name)
-   dirPath = TestDir(name)
+   dirPath = MakeTestDir(name)
 
    versatError,filepaths,versatData,output = RunVersat(test.parent.name,dirPath,args)
 
@@ -930,6 +944,7 @@ def GetCurrentTestState(test):
 
    if(tokenAmount == testTokens and hashVal == testHashVal):
       test.cached = True
+      ThreadedPrintResult(test)
       return test
 
    test.tokens = tokenAmount
