@@ -248,6 +248,10 @@ class TestInfo:
       res = (self.parent.finalStage in [Stage.DISABLED,Stage.DISABLED_FAILING])
       return res
 
+   def ShouldFail(self):
+      res = (self.parent.finalStage == Stage.SHOULD_FAIL)
+      return res
+
    def Finished(self):
       ranEverything = self.stage == self.parent.finalStage
 
@@ -830,6 +834,9 @@ def MutexPrintTestResult(name,color,msg):
       PrintTestResult(name,color,msg)
 
 def ComputeDiff(test):
+   if(test.IsDisabled() or test.ShouldFail()):
+      return
+
    try:
       test = GetCurrentTestState(test)
       name = test.NameWithArgsEmbedded()
@@ -1135,7 +1142,7 @@ if __name__ == "__main__":
             print(f"Test {test.name} was not temp disabled, so cannot enable again")
 
    elif(command == "list"):
-      testList = list(sorted(testList,key=lambda x : x.name))
+      testList = list(sorted(allTests,key=lambda x : x.name))
       for test in testList:
          print(test.name)
 

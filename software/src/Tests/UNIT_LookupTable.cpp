@@ -5,7 +5,7 @@ void SingleTest(Arena* arena){
    iptr addrB = 1;
 
    iptr indexA = 0;
-   iptr indexB = 4;
+   iptr indexB = 1;
 
    VersatUnitWrite(TOP_table_addr,addrA,0xf0);
    VersatUnitWrite(TOP_table_addr,addrB,0xf4);

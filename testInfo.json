@@ -31,6 +31,10 @@
       "finalStage": "PC_EMUL"
     },
     {
+      "name": "API_Mem",
+      "finalStage": "PC_EMUL"
+    },
+    {
       "name": "API_TransferSize",
       "finalStage": "DISABLED_FAILING"
     },

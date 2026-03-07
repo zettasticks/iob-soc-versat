@@ -1,34 +1,25 @@
-// TODO: Finish API_Mem
 module API_Mem(){
    Mem output;
-   VRead v;
-
    Mem input;
-   VWrite w;
 #
-   v -> output:0;
-   input -> w;
+   input -> output:0;
 ##
-   config MemLinear(width: Fixed){
+   config Linear(width: Fixed){
       for x 0..width {
          output.in0 = x;
-         output.in1 = x;
          input.out0 = x;
-         input.out1 = x;
       }
    }
    
-   mem MemLoad(addr: Address,width: Fixed){
+   mem Load(addr: Address,width: Fixed){
       for x 0..width {
-         output[x] = addr[x];
          input[x] = addr[x];
       }
    }
 
-   mem MemDump(addr: Address,addr2: Address,width: Fixed){
+   mem Dump(addr: Address,width: Fixed){
       for x 0..width {
          addr[x] = output[x];
-         addr2[x] = input[x];
       }
    }
 }
@@ -51,11 +42,21 @@ module API_Simple(){
 module API_Composite(){
    API_Simple a;
    API_Simple b;
+   API_Mem m;
 #
 ##
-   config Simple(x,y){
-      a = API_Simple_Init(x);
-      b = API_Simple_Init(y);
+   config Simple(x,y,width2){
+      a.Init(x);
+      b.Init(y);
+      m.Linear(width2);
+   }
+
+   mem Load(addr: Address,width: Fixed){
+      m.Load(addr,width);
+   }
+
+   mem Dump(addr: Address,width: Fixed){
+      m.Dump(addr,width);
    }
 
    state Result{
@@ -70,17 +71,7 @@ module API_TransferSize(){
 #
    v -> w;
 ##
-
-/*
-   config Simple(addr: Address,addr2: Address,width){
-      for x 0..width {
-         v = addr[x];
-         w = addr2[x];
-      }
-   }
-*/
-
-   config Simple2(addr: Address,addr2: Address,height: Fixed,width: Dyn){
+   config Simple(addr: Address,addr2: Address,height: Fixed,width: Dyn){
       for y 0..height {
          for x 0..width {
             v = addr[y * width + x];

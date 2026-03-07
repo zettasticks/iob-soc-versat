@@ -8,20 +8,12 @@ void SingleTest(Arena* arena){
       loadBuffer[i] = i + 1;
    }
 
-   API_Composite_Simple(1,2,4);
-   API_Composite_Load(loadBuffer,4);
+   API_Mem_Linear(4);
+   API_Mem_Load(loadBuffer,4);
 
    RunAccelerator(3);
 
-   API_Composite_Result_Struct res = API_Composite_Result();
-
-   printf("%d\n",res.resA);
-   printf("%d\n",res.resB);
-
-   Assert_Eq(res.resA,1);
-   Assert_Eq(res.resB,2);
-
-   API_Composite_Dump(dumpBuffer,4);
+   API_Mem_Dump(dumpBuffer,4);
 
    ClearCache(arena->mem);
 
