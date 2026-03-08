@@ -838,7 +838,6 @@ def ComputeDiff(test):
       return
 
    try:
-      test = GetCurrentTestState(test)
       name = test.NameWithArgsEmbedded()
 
       testCacheDir = TestDir(name)
@@ -975,6 +974,27 @@ def GetCurrentTestState(test):
 
    return test
 
+def UpdateTest(test):
+   if(test.IsDisabled() or test.ShouldFail()):
+      return;
+
+   name = test.NameWithArgsEmbedded()
+   args = GetTestArgs(test)
+
+   finalStage = test.finalStage
+
+   # NOTE: We always delete the testCache just to prevent old files from stickying around.
+   DeleteTestDir(name)
+   dirPath = MakeTestDir(name)
+
+   versatError,filepaths,versatData,output = RunVersat(test.parent.name,dirPath,args)
+
+   if(IsError(versatError)):
+      MutexPrintTestResult(name,COLOR_RED,"VERSAT_FAIL")
+   else:
+      MutexPrintTestResult(name,COLOR_GREEN,"VERSAT_OK")
+
+
 def RunTests(testList):
    global amountOfThreads
    amountOfTests = len(testList)
@@ -1027,7 +1047,7 @@ if __name__ == "__main__":
       sys.exit(0)
 
    parser = argparse.ArgumentParser(prog="Tester",description="Test Versat, using cache to prevent rerunning unnecessary tests")
-   allCommands = ["run","run-only","diff","reset","enable","list"]
+   allCommands = ["run","run-only","diff","reset","enable","update","list"]
 
    parser.add_argument("command",choices=allCommands)
    parser.add_argument("testFilter",nargs='*')
@@ -1109,6 +1129,11 @@ if __name__ == "__main__":
          test.stage = None
          test.accelData = None
 
+   elif(command == "update"):
+      with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+         executor.map(UpdateTest, allTests)
+
+      sys.exit(0)
    elif(command == "diff"):
       signal.signal(signal.SIGINT, signal_handler_terminate_immediatly)
 
