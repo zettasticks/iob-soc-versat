@@ -43,8 +43,6 @@
 # Overall need more usage to get a feeling for things to implement/change.
 ##############
 
-#LEFT HERE
-
 # TODO:
 # Test code is kinda of a mess after addition of subtests. 
 # Also need lock the fact that makefile and this test need to agree on names for things. It might be helpful to put everything that depends on this kinda of stuff in functions that make it easy to change if needed, especially as we add more parameters
@@ -733,7 +731,7 @@ def CppLocation(testName):
 def ThreadMain(workQueue,resultQueue,id):
    while(True):
       test = workQueue.get()
-      
+
       try:
          test = GetCurrentTestState(test)
       except Exception as e:

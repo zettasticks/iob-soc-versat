@@ -1,3 +1,96 @@
+/*
+module PARAM_Inst #(X = 10) (){
+   Const constants[X];
+   Reg regs[X];
+#
+}
+*/
+
+/*
+The problem:
+
+We basically have 3 flavours of expressions.
+Spec expressions which are the ones used in connecting ports.
+Math expressions that are used to define variable arrays,ranges, and address gen expressions.
+
+And a config identifier which is the lhs of a user config statement.
+
+Because a user config statement might not have a rhs, (think function call and whatnot), the config identifier 
+is preparated to represent this.
+
+The config identifier is also prepared to represent a normal identifier with array support and wire access.
+This is also something that we need to be able to represent on the rhs.
+
+Do we want to augment the math expression to also be able to represent oop style function calls?
+
+Overall the idea is to fix the 2 flows inside Env, but what if we can convert a math expression into a config identifier expression?.
+
+If a config identifier expression is just a subset of a subset of a math expression 
+
+Types of statements:
+
+We probably do not want to allow function calls on the rhs of expressions
+
+Config:
+
+   output.in0 = x; # Virtual wire
+   output[0].in0 = x; # Virtual wire
+   c.constant = x; # Config loading
+   c[0].constant = x; # Config loading
+   v = addr[y * width + x]; # Address gen
+   v[0] = addr[y * width + x]; # Address gen
+
+   a.Init(x); # Config function call
+   a[0].Init(x); # Config function call
+
+State:
+
+   resA = a.Result; # State reading
+   resA[0] = a[0].Result; # State reading
+   res = r.currentValue; # State reading
+   res[0] = r[0].currentValue; # State reading
+
+Mem:
+
+   input[x] = addr[x]; # Mem loading
+   input[0][x] = addr[x]; # Mem loading
+   m.Load(addr,width);
+   m[0].Load(addr,width);
+
+For ConfigIdentifier, do we allow something like:
+
+   a[0].b[1] ?
+
+   Or do we only allow a[0].b and no more array like?
+
+   For now lets not allow hierarchical access.
+   We can only do a[...].c and nothing more.
+*/
+
+module API_Test(){
+   Mem A[2][2];
+   Const B[3];
+   Reg C[11];
+#
+   {A[0..1][0..1]:0..1,B[0..2]} -> C[0..10];
+##
+   mem Test(addr: Address){
+      for x 0..2{
+         A[0][0][x] = addr[x];
+      }
+   }
+}
+
+/*
+module API_MultiArray(){
+   Const consts[2][2];
+   Reg regs[2][2][2];
+#
+   consts[0][0] -> regs[0];
+##
+}
+*/
+
 module API_Mem(){
    Mem output;
    Mem input;
@@ -161,7 +254,7 @@ module API_Config2(){
    }
 }
 
-merge MERGE_API_Config = API_Config | API_Config2;
+merge API_MERGE_Config = API_Config | API_Config2;
 
 module PARAM_Simple(){
    ParamConst #(.VALUE(123)) c;
@@ -213,7 +306,37 @@ module PARAM_Temp1(){
    }
 }
 
-merge PARAM_MERGE_NoMergeBecauseParam = PARAM_Simple | PARAM_Temp1;
+merge MERGE_PARAM_NoMergeBecauseParam = PARAM_Simple | PARAM_Temp1;
+
+module MERGE_PARAM_Temp1(){
+   VRead #(.ADDR_W(4)) v;
+   VWrite w;
+#
+   v -> w;
+##
+   config Simple(inAddr: Address,outAddr: Address,width){
+      for x 0..width {
+         v = inAddr[x];
+         w = outAddr[x];
+      }
+   }
+}
+
+module MERGE_PARAM_Temp2(){
+   VRead #(.ADDR_W(12)) v;
+   VWrite w;
+#
+   v -> w;
+##
+   config Simple(inAddr: Address,outAddr: Address,width){
+      for x 0..width {
+         v = inAddr[x];
+         w = outAddr[x];
+      }
+   }
+}
+
+merge MERGE_PARAM_PreserveHighParam = MERGE_PARAM_Temp1 | MERGE_PARAM_Temp2;
 
 module PARAM_VUnits(){
    VRead #(.ADDR_W(6)) v;
@@ -257,7 +380,7 @@ module EXAMPLE_Simple(){
   addition -> result;
 }
 
-module EXAMPLE_DEBUG(){
+module DEBUG_EXAMPLE(){
   Const a;
   Const b;
   Reg result;
@@ -3213,17 +3336,17 @@ module ADDRESSGEN_Constants(){
 #
    read -> output;
 ##
-   config Constants(addr: Address,var1){
-      for x 0..5 {
-         read = addr[x + var1 + 5];
-      }
-   }
-
    config Mem(width){
       for x 0..width {
          output.in0 = x;
       }
    }   
+
+   config Constants(addr: Address,var1){
+      for x 0..5 {
+         read = addr[x + var1 + 5];
+      }
+   }
 }
 
 module ADDRESSGEN_EmptyLoops(){
@@ -3358,7 +3481,7 @@ module NoShare(){
 
 merge ADDRESSGEN_MERGE_MergeWithAddress = ADDRESSGEN_Advanced | ADDRESSGEN_ComplexLoopExpression;
 
-merge MERGE_CONFIG_Share = FullShare | SomeShare | NoShare;
+merge CONFIG_MERGE_Share = FullShare | SomeShare | NoShare;
 
 module CONFIG_ADDRESSGEN_PartialSharing(){
    share(config) VRead(ext_addr){

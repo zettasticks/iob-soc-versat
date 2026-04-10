@@ -15,7 +15,11 @@
       "finalStage": "SIM_RUN"
     },
     {
-      "name": "PARAM_MERGE_NoMergeBecauseParam",
+      "name": "MERGE_PARAM_NoMergeBecauseParam",
+      "finalStage": "SIM_RUN"
+    },
+    {
+      "name": "MERGE_PARAM_PreserveHighParam",
       "finalStage": "SIM_RUN"
     },
     {
@@ -39,7 +43,7 @@
       "finalStage": "DISABLED_FAILING"
     },
     {
-      "name": "MERGE_API_Config",
+      "name": "API_MERGE_Config",
       "finalStage": "PC_EMUL"
     },
     {
@@ -74,7 +78,7 @@
       "finalStage": "SIM_RUN"
     },
     {
-      "name": "EXAMPLE_DEBUG",
+      "name": "DEBUG_EXAMPLE",
       "finalStage": "SIM_RUN"
     },
     {
@@ -217,11 +221,11 @@
       "comment": "Nothing in software. See if Versat produces valid Verilog. Eventually make proper test"
     },
     {
-      "name": "MERGE_CONFIG_Share",
+      "name": "CONFIG_MERGE_Share",
       "finalStage": "SIM_RUN"
     },
     {
-      "name": "MERGE_CONFIG_ADDRESSGEN_MaxComplexity",
+      "name": "ADDRESSGEN_CONFIG_MERGE_MaxComplexity",
       "finalStage": "DISABLED_FAILING",
       "comment": "[NO SOFT TEST] Test not finished. Need to put something here that exercises the merged accelerator"
     },
