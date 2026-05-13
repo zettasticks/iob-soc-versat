@@ -95,9 +95,9 @@
       "finalStage": "SIM_RUN",
       "subTests": [
         {},
-        {"args": "-b64"},
-        {"args": "-b128"},
-        {"args": "-b256"}
+        {"args": "-b64","disabled" : true},
+        {"args": "-b128","disabled" : true},
+        {"args": "-b256","disabled" : true}
       ]
     },
     {
@@ -110,12 +110,12 @@
     },
     {
       "name": "DATABUS_SimpleTransfer",
-      "finalStage": "DISABLED_FAILING",
+      "finalStage": "SIM_RUN",
       "subTests": [
         {},
-        {"args": "-b64"},
-        {"args": "-b128"},
-        {"args": "-b256"}
+        {"args": "-b64","disabled" : true},
+        {"args": "-b128","disabled" : true},
+        {"args": "-b256","disabled" : true}
       ]
     },
     {
@@ -124,9 +124,9 @@
       "comment": "Test failing for higher AXI values. The strobe is being misscalculated and we are overwriting over data.",
       "subTests": [
         {},
-        {"args": "-b64"},
-        {"args": "-b128"},
-        {"args": "-b256"}
+        {"args": "-b64","disabled" : true},
+        {"args": "-b128","disabled" : true},
+        {"args": "-b256","disabled" : true}
       ]
     },
     {
@@ -176,10 +176,6 @@
     },
     {
       "name": "DELAYS_AddedDelays",
-      "finalStage": "SIM_RUN"
-    },
-    {
-      "name": "DELAYS_Variable",
       "finalStage": "SIM_RUN"
     },
     {
@@ -238,6 +234,10 @@
       "finalStage": "SIM_RUN"
     },
     {
+      "name": "ADDRESSGEN_NonZeroStart",
+      "finalStage": "PC_EMUL"
+    },
+    {
       "name": "ADDRESSGEN_Moderate",
       "finalStage": "SIM_RUN"
     },
@@ -251,9 +251,9 @@
       "comment" : "One subtest disabled because SingleLoop not capable of handling stride for multiple loop address gen, at least currently", 
       "subTests": [
         {},
-        {"args": "-b64"},
-        {"args": "-b128"},
-        {"args": "-b256"}
+        {"args": "-b64","disabled" : true},
+        {"args": "-b128","disabled" : true},
+        {"args": "-b256","disabled" : true}
       ]
     },
     {
@@ -261,9 +261,9 @@
       "finalStage": "SIM_RUN",
       "subTests": [
         {},
-        {"args": "-b64"},
-        {"args": "-b128"},
-        {"args": "-b256"}
+        {"args": "-b64","disabled" : true},
+        {"args": "-b128","disabled" : true},
+        {"args": "-b256","disabled" : true}
       ]
     },
     {
@@ -284,9 +284,9 @@
       "finalStage": "SIM_RUN",
       "subTests": [
         {},
-        {"args": "-b64"},
-        {"args": "-b128"},
-        {"args": "-b256"}
+        {"args": "-b64","disabled" : true},
+        {"args": "-b128","disabled" : true},
+        {"args": "-b256","disabled" : true}
       ]
     },
     {

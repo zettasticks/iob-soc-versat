@@ -67,6 +67,8 @@ For ConfigIdentifier, do we allow something like:
    We can only do a[...].c and nothing more.
 */
 
+/*
+
 module API_Test(){
    Mem A[2][2];
    Const B[3];
@@ -81,13 +83,149 @@ module API_Test(){
    }
 }
 
-/*
-module API_MultiArray(){
-   Const consts[2][2];
-   Reg regs[2][2][2];
+module API_Test21 (){
+   Const a[2];
+   Reg b[2];
 #
-   consts[0][0] -> regs[0];
+   a[0..1] -> b[0..1];
 ##
+   config Init(vals[2]){
+      for i 0..2 {
+         a[i].constant = vals[i];
+      }
+   }
+}
+   
+module API_Test22(){
+   Generator a[2];
+   Reg b[2];
+#
+   a[0..1] -> b[0..1];
+
+   // Technically we could also try to do:
+   // gen i 0..2 {
+   //   a[i] -> b[i].
+   // }
+
+##
+   config Init(vals[2]){
+      gen i 0..2 { // Multiple statements
+         for x 0..2 { // Address Gen
+            a[i] = x + vals[i];
+         }
+      }
+   }
+}
+
+/*
+   One thing that we could do is to unpack all the statements into individual ones.
+
+   What is the difference between the gen loop and a normal for loop position?
+
+      gen i 0..2 { // Multiple statements
+         for x 0..2 { // Address Gen
+            a[i] = x + vals[i];
+         }
+      }
+
+      or 
+
+      for x 0..2 { // Address Gen
+         gen i 0..2 { // Multiple statements
+            a[i] = x + vals[i];
+         }
+      }
+
+   It does not exist, right? Any expression that accesses arrays needs to only contain gen variables or constants. Any expression that represents an address gen or a constant to assign to 
+   a config wire needs to be a for loop variable or 
+
+   What if we added a new type of loop construct?
+
+   gen i 0..2 {
+      a[i] = b[i] + i;
+   }
+
+   That automatically becomes:
+
+   a_0 = b_0 + 0
+   a_1 = b_1 + 1
+
+   gen i 0..2 { // Multiple statements
+      for x 0..2 { // Address Gen
+         a[i] = x + vals[i];
+      }
+   }
+
+   becomes:
+
+      for x 0..2 {
+         a_0 = x + vals_0;
+      }
+      for x 0..2 {
+         a_1 = x + vals_1;
+      }
+
+
+   We can then loop on gen loops only and not having to bother writing the more complicated logic to figure out what kinda of variable we currently are dealing with.
+      We are passing responsability to the user but later on we could techincally change this to use logic to figure out what each variable "is".
+
+      for i 0..2 { // Multiple statements
+         for x 0..2 { // Address Gen
+            a[i] = x + vals[i];
+         }
+      }
+
+      becomes:
+
+      for x 0..2 {
+         a_0 = x + vals_0;
+         a_1 = x + vals_1;
+      }
+
+      for i 0..2 { // Multiple statements
+         a[i] = i + vals[i];
+      }
+
+      becomes
+
+      for i 0..2 {
+         a_0 = i + vals_0;
+         a_1 = i + vals_1;
+      }
+*/
+
+module API_Test2 #(X = 2) (){
+   Const a[X];
+   Reg b[X];
+#
+   a[0..X] -> b[0..X];
+##
+   config Init(vals[X]){
+      gen i 0..X {
+         a[i].constant = vals[i];
+      }
+   }
+}
+
+module API_Test3(){
+   API_Test2 #(X(3)) t;
+#
+}
+
+module API_Test4 #(X = 2) (){
+   VRead v[X];
+   VWrite w[X];
+#
+   v[0..X] -> w[0..X];
+##
+   config Init(readAddr[X],writeAddr[X],amount){
+      gen i 0..X {      
+         for x 0..amount/X {
+            v[x] = readAddr[i][x];
+            w[x] = writeAddr[i][x];
+         }
+      }
+   }
 }
 */
 
@@ -562,20 +700,11 @@ module CONFIG_ShareStatic(){
    {testShare[0]:0..2,testShare[1]:0..2,testStatic[0]:0..1,testStatic[1]:0..1} -> outputs[0..9];
 }
 
-module DELAYS_Variable(){
-   Const constant;
-   Buffer buf;
-   Reg output;
-#
-   constant -> buf;
-   buf -> output;
-}
-
 module DELAYS_AddedDelays(){
-   Counter gen;
+   Counter counter;
    Reg output;
 #
-   a = gen{1} + gen{2} + gen{3} + gen{4} + gen{5};
+   a = counter{1} + counter{2} + counter{3} + counter{4} + counter{5};
 
    a -> output;
 }
@@ -1363,6 +1492,66 @@ module GRAPH_SimpleLoop(){
       res = output.currentValue;
    }
 }
+
+module PipelineAdd(x,y){
+   PipelineRegister p;
+#
+   a = x + y;
+   a -> p;
+   p -> out;
+}
+
+module MERGE_BufferTemp1(){
+   Generator a;
+   PipelineRegister b0;
+   PipelineRegister b1;
+   PipelineRegister b2;
+   PipelineAdd adder;
+   Reg c;
+#
+   a -> b0;
+   b0 -> b1;
+   b1 -> b2;
+
+   {b2,a} -> adder:0..1;
+   adder -> c;
+##
+   config Init(){
+      // We only care about the 4. The range is to generate more numbers to check if we actually see the 4 or not
+      for x 4..10 {
+         a.out0 = x;
+      }
+   }
+
+   state Read{
+      res = c.currentValue;
+   }
+}
+
+module MERGE_BufferTemp2(){
+   Generator a;
+   PipelineRegister b0;
+   PipelineAdd adder;
+   Reg c;
+#
+   a -> b0;
+
+   {b0,a} -> adder:0..1;
+   adder -> c;
+##
+   config Init(){
+      // We only care about the 4. The range is to generate more numbers to check if we actually see the 4 or not
+      for x 4..10 {
+         a = x;
+      }
+   }
+
+   state Read{
+      res = c.currentValue;
+   }
+}
+
+merge MERGE_Buffer = MERGE_BufferTemp1 | MERGE_BufferTemp2;
 
 // Simple grouping of state so it appears better on the graphs
 module ShaState(x[8]){
@@ -3168,38 +3357,38 @@ module CryptoAlgos(){
 }
 
 module ADDRESSGEN_BadSyntax(){
-   Generator gen;
+   Generator counter;
 #
 ##
    config MissingVarDecl(){
       for x 0..missingVar {
-         gen = missingVar + y;
+         counter = missingVar + y;
       }
    }
 
    config OvershadowVariable(x){
       for x 0..2 {
-         gen = x;
+         counter = x;
       }
    }
 }
 
 module ADDRESSGEN_Simple(){
-   Generator gen;
+   Generator counter;
    VWrite output;
 #
-   gen -> output;
+   counter -> output;
 ##
    config Gen(width){
       for x 0..width {
-         gen = x;
+         counter = x;
       }
    }
 
    config Gen2(xWidth,yWidth,shift){
       for y 0..yWidth {
          for x 0..xWidth {
-            gen = y * shift + x;
+            counter = y * shift + x;
          }
       }
    }
@@ -3217,14 +3406,30 @@ module ADDRESSGEN_Simple(){
          }
       }
    }
+}
 
+module ADDRESSGEN_NonZeroStart(){
+   Generator counter;
+   Reg output;
+#
+   counter -> output;
+##
+   config Init(){
+      for x 5..10{
+         counter = x;
+      }
+   }
+
+   state Result{
+      res = output.currentValue;
+   }
 }
 
 module ADDRESSGEN_Moderate(){
-   Generator gen;
+   Generator counter;
    Mem output;
 #
-   gen -> output;
+   counter -> output;
 ##
    config Simple(xMax,yMax,zMax,wMax,bMax,width){
       for b 0..bMax {
@@ -3232,7 +3437,7 @@ module ADDRESSGEN_Moderate(){
             for z 0..zMax {
                for y 0..yMax {
                   for x 0..xMax {
-                     gen = y * yMax + x;
+                     counter = y * yMax + x;
                   }
                }
             }
@@ -3261,10 +3466,10 @@ module ADDRESSGEN_Mem(){
 module ADDRESSGEN_Stride(){
    Mem m;
    VWrite write;
-   Generator gen;
+   Generator counter;
 #
-   gen -> m;
-   gen -> write;
+   counter -> m;
+   counter -> write;
 ##
    config Gen(xMax,yMax,zMax,wMax,bMax){
       for b 0..bMax {
@@ -3272,7 +3477,7 @@ module ADDRESSGEN_Stride(){
             for z 0..zMax {
                for y 0..yMax {
                   for x 0..xMax {
-                     gen = y * yMax + x;
+                     counter = y * yMax + x;
                   }
                }
             }

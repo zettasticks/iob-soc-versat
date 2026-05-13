@@ -201,6 +201,7 @@ def ParseAccelData(jsonInfo):
 @dataclass
 class TestInfo:
    parent: 'ParentTestInfo'
+   finalStage: Stage = Stage.NOT_WORKING
    args: str = ""
    tokens: int = 0
    hashVal: int = 0
@@ -223,7 +224,7 @@ class TestInfo:
    # HACKY but works for now
    def __getattr__(self,name):
       if(name == "finalStage"):
-         return self.parent.finalStage
+         return self.finalStage
       elif(name == "name"):
          return self.NameWithArgsEmbedded()
       elif(name == "expectedError"):
@@ -243,15 +244,15 @@ class TestInfo:
       return name
 
    def IsDisabled(self):
-      res = (self.parent.finalStage in [Stage.DISABLED,Stage.DISABLED_FAILING])
+      res = (self.finalStage in [Stage.DISABLED,Stage.DISABLED_FAILING])
       return res
 
    def ShouldFail(self):
-      res = (self.parent.finalStage == Stage.SHOULD_FAIL)
+      res = (self.finalStage == Stage.SHOULD_FAIL)
       return res
 
    def Finished(self):
-      ranEverything = self.stage == self.parent.finalStage
+      ranEverything = self.stage == self.finalStage
 
       return ranEverything
 
@@ -271,7 +272,6 @@ class TestInfo:
 @dataclass
 class ParentTestInfo:
    name: str
-   finalStage: Stage
    tempDisabledStage: Stage
    comment: str
    subTests: list[TestInfo]
@@ -324,11 +324,11 @@ def ParseJson(jsonInfo,jsonData):
       expectedError = test['expectedError'] if "expectedError" in test else None
 
       testList = []
-      info = ParentTestInfo(name,finalStage,tempDisabledStage,comment,testList,expectedError)
+      info = ParentTestInfo(name,tempDisabledStage,comment,testList,expectedError)
       parentTestList.append(info)
 
       if(subTests == None):
-         test = TestInfo(info)
+         test = TestInfo(info,finalStage)
          trueName = test.NameWithArgsEmbedded()
 
          data = jsonData[trueName] if jsonData and trueName in jsonData else None
@@ -343,7 +343,9 @@ def ParseJson(jsonInfo,jsonData):
       else :
             for subTest in subTests:
                args = subTest['args'] if "args" in subTest else None
-               test = TestInfo(info,args)
+               test = TestInfo(info,finalStage,args)
+               disabled = subTest['disabled'] if "disabled" in subTest else False
+
                trueName = test.NameWithArgsEmbedded()
 
                data = jsonData[trueName] if jsonData and trueName in jsonData else None
@@ -354,6 +356,10 @@ def ParseJson(jsonInfo,jsonData):
                   test.stage = Stage[data['stage']] if 'stage' in data else Stage.NOT_WORKING
                   test.error = Error(ErrorType[data['error']['error']],ErrorSource[data['error']['source']]) if "error" in data else Error()
                   test.accelData = ParseAccelData(data['accelData']) if 'accelData' in data else None
+
+                  if(disabled):
+                     test.stage = Stage.DISABLED_FAILING
+                     test.finalStage = Stage.DISABLED_FAILING
 
                testList.append(test)
 
@@ -677,7 +683,7 @@ def PrintTestResult(testName,color,condition,partialVal = None,cached = None,com
 def PrintResult(test):
    name = test.NameWithArgsEmbedded()
 
-   finalStage = test.parent.finalStage
+   finalStage = test.finalStage
    stage = test.stage
 
    testName = name
@@ -948,13 +954,20 @@ def GetCurrentTestState(test):
 
    if(tokenAmount == testTokens and hashVal == testHashVal):
       test.cached = True
-      ThreadedPrintResult(test)
-      return test
+
+      if(test.stage.value >= finalStage.value):
+         ThreadedPrintResult(test)
+         return test
 
    test.tokens = tokenAmount
    test.hashVal = hashVal
    test.accelData = versatData
-   test.stage = Stage.VERSAT
+
+   if(not test.cached):
+      test.stage = Stage.VERSAT
+   # If we are not cached and the last test reached a final stage then we need to repeat the test from scratch
+   elif(test.stage.value < Stage.VERSAT.value or test.stage == finalStage):
+      test.stage = Stage.VERSAT
 
    stageToProcess = Stage(test.stage.value + 1)
    finalStage = test.finalStage
