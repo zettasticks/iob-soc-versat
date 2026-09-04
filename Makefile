@@ -40,6 +40,8 @@ VERSAT_CALL := gdb -ex run --args ./versat
 endif
 
 AXI_DATA_W?=32
+#VERSAT_PARAMS:=
+SETUP_ARGS+=$(VERSAT_PARAMS)
 SETUP_ARGS+=AXI_DATA_W=$(AXI_DATA_W)
 
 #
@@ -60,6 +62,13 @@ ifeq ($(AXI_DATA_W),256)
 TEST_FOLDER_TEMP := $(TEST_FOLDER_TEMP)_b256
 endif
 
+ifneq ($(CUSTOM_FOLDER_NAME),)
+TEST_FOLDER_TEMP := $(CUSTOM_FOLDER_NAME)	
+endif
+
+TEST_FOLDER := $(abspath $(TEST_FOLDER_TEMP))
+
+
 EXTRA_VERSAT_ARGS:=--debug
 
 ifneq ($(DO_PROFILE),)
@@ -67,11 +76,10 @@ EXTRA_VERSAT_ARGS+=--profile
 SETUP_ARGS+=PROFILE
 endif
 
-TEST_FOLDER := $(abspath $(TEST_FOLDER_TEMP))
-
 VERSAT_ARGUMENTS:=$(CUR_DIR)/$(VERSAT_SPEC) $(EXTRA_VERSAT_ARGS) -b$(AXI_DATA_W) -d -t $(TEST)
 VERSAT_ARGUMENTS+=-I $(CUR_DIR)/submodules/VERSAT/hardware/src -O $(TEST_FOLDER)/software
 VERSAT_ARGUMENTS+=-o $(TEST_FOLDER)/hardware/src -g $(CUR_DIR)/../debug -u $(CUR_DIR)/hardware/src/units
+VERSAT_ARGUMENTS+=$(VERSAT_PARAMS)
 
 get-versat-arguments:
 	@echo $(VERSAT_ARGUMENTS)
@@ -79,17 +87,17 @@ get-versat-arguments:
 
 # Single test rules
 setup:
-	+nix-shell --run 'make build-setup SETUP_ARGS="$(SETUP_ARGS) TEST=$(TEST)"'
+	+nix-shell --run 'make build-setup SETUP_ARGS="$(SETUP_ARGS)"'
 
 setup_pc:
-	+nix-shell --run 'make build-setup SETUP_ARGS="$(SETUP_ARGS) TEST=$(TEST)"'
+	+nix-shell --run 'make build-setup SETUP_ARGS="$(SETUP_ARGS)"'
 
 pc-emul-run:
 	+nix-shell --run 'make setup_pc && make -C $(TEST_FOLDER)/ pc-emul-run'
 
 fpga-run:
 	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM) && make -C $(TEST_FOLDER)/ fpga-fw-build BOARD=$(BOARD)'
-	make -C $(TEST_FOLDER)/ fpga-run BOARD=$(BOARD)
+	$(MAKE) -C $(TEST_FOLDER)/ fpga-run BOARD=$(BOARD)
 
 sim-build:
 	+nix-shell --run 'make setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM) TEST=$(TEST) && make -C $(TEST_FOLDER)/ sim-build SIMULATOR=$(SIMULATOR) VCD=$(VCD)'
@@ -100,7 +108,6 @@ sim-run:
 fpga-run-only:
 	cp ./software/src/Tests/$(TEST).cpp $(TEST_FOLDER)/software/src/test.cpp
 	cp ./software/src/Tests/testbench.hpp $(TEST_FOLDER)/software/src/
-	cp ./software/src/Tests/unitConfiguration.hpp $(TEST_FOLDER)/software/src/
 	+nix-shell --run "make -C $(TEST_FOLDER)/ fpga-fw-build fpga-run BOARD=$(BOARD)"
 
 # Fast rules need to run inside nix-shell otherwise we have linker problems from different compiler versions
@@ -113,10 +120,13 @@ fast-setup: fast-compile-versat
 	./submodules/VERSAT/versat ./versatSpec.txt -b32 -d -t $(TEST) -o $(TEST_FOLDER)/hardware/src -O $(TEST_FOLDER)/software -g ../debug -u ./hardware/src/units 
 
 fast-pc-emul: fast-setup
-	make -C $(TEST_FOLDER) pc-emul-run
+	$(MAKE) -C $(TEST_FOLDER) pc-emul-run
+
+fast-pc-emul-no-copy:
+	$(MAKE) -C $(TEST_FOLDER) pc-emul-run
 
 fast-sim-run: fast-setup
-	make -C $(TEST_FOLDER) sim-run SIMULATOR=$(SIMULATOR) VCD=$(VCD)
+	$(MAKE) -C $(TEST_FOLDER) sim-run SIMULATOR=$(SIMULATOR) VCD=$(VCD)
 
 test-folder:
 	@echo $(TEST_FOLDER)

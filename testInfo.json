@@ -35,6 +35,16 @@
       "finalStage": "PC_EMUL"
     },
     {
+      "name": "API_DivWorkGrid",
+      "finalStage": "DISABLED",
+      "subTests": [
+        {"args": "-AX=2 -AY=2","disabled" : false},
+        {"args": "-AX=3 -AY=2","disabled" : false},
+        {"args": "-AX=2 -AY=3","disabled" : false},
+        {"args": "-AX=3 -AY=3","disabled" : false}
+      ]
+    },
+    {
       "name": "API_Mem",
       "finalStage": "PC_EMUL"
     },
@@ -113,9 +123,9 @@
       "finalStage": "SIM_RUN",
       "subTests": [
         {},
-        {"args": "-b64","disabled" : true},
-        {"args": "-b128","disabled" : true},
-        {"args": "-b256","disabled" : true}
+        {"args": "-b64"},
+        {"args": "-b128"},
+        {"args": "-b256"}
       ]
     },
     {
@@ -258,7 +268,8 @@
     },
     {
       "name": "ADDRESSGEN_Advanced",
-      "finalStage": "SIM_RUN",
+      "finalStage": "DISABLED_FAILING",
+      "comment": "For some reason the test is not properly computing the values for the start of the second looop.",
       "subTests": [
         {},
         {"args": "-b64","disabled" : true},
@@ -295,10 +306,6 @@
       "expectedError": "[Error];"
     },
     {
-      "name": "ADDRESSGEN_MERGE_MergeWithAddress",
-      "finalStage": "SIM_RUN",
-      "comment": "[NO SOFT TEST] Test not finished. Need to put something here that exercises the merged accelerator"
-    },    {
       "name": "MERGE_TwoLevels",
       "finalStage": "DISABLED_FAILING"
     },

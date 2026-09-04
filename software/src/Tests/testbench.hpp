@@ -14,7 +14,6 @@ extern "C" {
 };
 
 #include "versat_accel.h"
-#include "unitConfiguration.hpp"
 
 #define TEST_PASSED 0
 #define TEST_FAILED 1
@@ -429,9 +428,12 @@ static void PrintArraySizedToMatch(TestValueArray* toPrint,TestValueArray* toCom
 static void PrintTestValue(TestValue* toPrint,TestValue* toCompare){
   TestValueSimples* val = (TestValueSimples*) toPrint;
 
+#if 0
   if(val->marker){
     printf("%s\n",val->marker);
   }
+#endif
+  
   switch(toPrint->type){
   case TestValueType_INTEGER:{
     printf("%d ",val->i);

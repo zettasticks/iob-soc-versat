@@ -1,44 +1,82 @@
 #include "testbench.hpp"
 
-#include "unitConfiguration.hpp"
-
 #define MAX_SIZE 5000
 #define SIZE 1
+
+// Because pico cannot handle unaligned reads and writes
+int Read4Bytes(void* offset){
+  char* asChar = (char*) offset;
+
+  union {
+    char asC[4];
+    int val;
+  } packed;
+
+  packed.asC[0] = asChar[0];
+  packed.asC[1] = asChar[1];
+  packed.asC[2] = asChar[2];
+  packed.asC[3] = asChar[3];
+
+  return packed.val;
+}
+
+void Write4Bytes(void* writeOffset,int data){
+  char* dataC = (char*) &data;
+  char* outC = (char*) writeOffset;
+
+  outC[0] = dataC[0];
+  outC[1] = dataC[1];
+  outC[2] = dataC[2];
+  outC[3] = dataC[3];
+}
 
 bool DoARun(int size,int offset,int* inputBuffer,int* outputBuffer,Arena* arena){
   int* input = &inputBuffer[offset];
   int* output = &outputBuffer[offset];
 
+  printf("A\n");
+
   for(int i = 0; i < size; i++){
-    input[i] = i + 1;
+    Write4Bytes(&input[i],i + 1);
+    Write4Bytes(&output[i],-1); // Clear output otherwise last tests values can conflict
   }
+
+  printf("B\n");
 
   DATABUS_SimpleTransfer_Simple(input,output,size);
 
-#if 0
-  VLinear_VRead(&accelConfig->read,input,size);
-  VLinear_VWrite(&accelConfig->write,output,size);
-#endif
+  printf("C\n");
   
   RunAccelerator(1);
+
+  printf("D\n");
 
   accelConfig->read.enabled = 0;
   accelConfig->write.enabled = 0;
 
   RunAccelerator(2);
 
+  printf("E\n");
+
   ClearCache(arena->mem);
+
+  printf("F\n");
 
   bool failed = false;     
   for(int i = 0; i < size; i++){
-    if(input[i] != output[i]){
+    int inputVal = Read4Bytes(&input[i]);
+    int outputVal = Read4Bytes(&output[i]);
+
+    if(inputVal != outputVal){
       failed = true;
-      printf("[%d:%d]Different at %d: %d %d\n",offset,size,i,input[i],output[i]);
+      printf("[%d:%d]Different at %d: %d %d\n",size,offset,i,inputVal,outputVal);
     }
   }
 
+  printf("G\n");
+
   if(!failed){
-    printf("[%d:%d] OK\n",offset,size);
+    printf("[%d:%d] OK\n",size,offset);
   }
 
   return failed;
@@ -59,6 +97,8 @@ int allSizes[] = {1,2,3,255,256,257,1023,1024,1025};
 void SingleTest(Arena* arena){
   int* inputBuffer = (int*) PushBytes(arena,sizeof(int) * MAX_SIZE * 2);
   int* outputBuffer = (int*) PushBytes(arena,sizeof(int) * MAX_SIZE * 2);
+
+  printf("Input: %p | Output: %p\n",inputBuffer,outputBuffer);
 
   bool failed = false;
 
@@ -94,7 +134,7 @@ void SingleTest(Arena* arena){
 
 #if 0 // Enable to run individual test
   printf("Gonna do a single run, wait a few seconds before terminating sim\n");
-  failed |= DoARun(1025,0,inputBuffer,outputBuffer,arena);
+  failed |= DoARun(1,0,inputBuffer,outputBuffer,arena);
 #else
   for(int offset = 0; offset < 4; offset++){
     for(int sizeIndex = 0; sizeIndex < ARRAY_SIZE(allSizes); sizeIndex += 1){

@@ -91,7 +91,7 @@ debug:
 #########################################
 
 test.o: src/test.cpp 
-	g++ -c -o $@ $< -O2 -march=native $(EMUL_INCLUDES)
+	g++ -g -c -o $@ $< -O2 -march=native $(EMUL_INCLUDES)
 
 fw_emul: $(EMUL_HDR) $(EMUL_SRC) test.o libaccel.a
 	gcc -o $@ -O2 $(EMUL_CFLAGS) $(EMUL_INCLUDES) $(abspath $(EMUL_SRC)) test.o libaccel.a -lm -lstdc++ #-lgcc -lc -lm -ldl 

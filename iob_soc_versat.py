@@ -28,12 +28,16 @@ def GetTestParameter():
     # Check for test type
     axiDataW = 32
     testName = "M_Stage"  # Default test
+    paramVals = []
     for arg in sys.argv[1:]:
         if arg[:5] == "TEST=":
             testName = arg[5:]
         if arg[:11] == "AXI_DATA_W=":
             axiDataW = int(arg[11:])
-    return testName,axiDataW
+        if arg[:2] == '-A':
+            paramVals.append(arg)
+
+    return testName,axiDataW,paramVals
 
 def Profile():
     for arg in sys.argv[1:]:
@@ -42,9 +46,18 @@ def Profile():
     return False
 
 def GetBuildDir(name):
-    testName,axiDataW = GetTestParameter()
+    testName,axiDataW,paramVals = GetTestParameter()
 
     sanitized = f"b{axiDataW}"
+
+    if(paramVals):
+        for param in paramVals:
+            sanitized += param
+
+        sanitized = sanitized.replace("--","_")
+        sanitized = sanitized.replace("-","_")
+        sanitized = sanitized.replace(" ","_")
+        sanitized = sanitized.replace("=","_")
 
     # TODO: Remove default test and use the version string if not running a test
     return os.path.realpath(f"../{name}_V0.70_{testName}_{sanitized}")
@@ -69,7 +82,11 @@ class iob_soc_versat(iob_soc):
     @classmethod
     def _create_submodules_list(cls, extra_submodules=[]):
         """Create submodules list with dependencies of this module"""
-        testName,axiDataW = GetTestParameter()
+        testName,axiDataW,paramVals = GetTestParameter()
+
+        extra = None
+        if(paramVals):
+            extra = paramVals
 
         cls.versat_type = CreateVersatClass(
             VERSAT_SPEC,
@@ -78,7 +95,8 @@ class iob_soc_versat(iob_soc):
             GetBuildDir("iob_soc_versat"),
             axiDataW,
             os.path.realpath(os.path.join(cls.setup_dir,"../debug/")),
-            Profile()
+            Profile(),
+            extra
         )
 
         super()._create_submodules_list(
@@ -113,7 +131,7 @@ class iob_soc_versat(iob_soc):
     def _post_setup(cls):
         super()._post_setup()
         
-        testName,axiDataW = GetTestParameter()
+        testName,axiDataW,paramVals = GetTestParameter()
 
         shutil.copy(
             f"{cls.build_dir}/software/src/Tests/{testName}.cpp",
@@ -122,11 +140,6 @@ class iob_soc_versat(iob_soc):
 
         shutil.copy(
             f"{cls.build_dir}/software/src/Tests/testbench.hpp",
-            f"{cls.build_dir}/software/src/",
-        )
-
-        shutil.copy(
-            f"{cls.build_dir}/software/src/Tests/unitConfiguration.hpp",
             f"{cls.build_dir}/software/src/",
         )
 
@@ -161,7 +174,7 @@ test.hex: iob_soc_versat_firmware.bin
     def _setup_confs(cls, extra_confs=[]):
         # Append confs or override them if they exist
 
-        testName,axiDataW = GetTestParameter()
+        testName,axiDataW,paramVals = GetTestParameter()
 
         confs = [
             {

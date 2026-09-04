@@ -27,6 +27,7 @@ void SingleTest(Arena* arena){
 
    int output = 123;
 
+   API_Config_InitMem();
    API_Config_Simple(1);
    API_Config_VRead(&buffer,1);
    API_Config_VWrite(&output,1);

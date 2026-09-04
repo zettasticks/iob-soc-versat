@@ -80,7 +80,7 @@ int main(int argc,char* argv[]){
    printf_init(&uart_putc);
 
    uart_puts("\n\n\nGonna run test\n\n\n");
-   
+
    int result = RunTest(VERSAT0_BASE);
 
    if(result){

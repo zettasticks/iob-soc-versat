@@ -1,7 +1,5 @@
 #include "testbench.hpp"
 
-#include "unitConfiguration.hpp"
-
 #define SIZE 1234
 
 void SingleTest(Arena* arena){

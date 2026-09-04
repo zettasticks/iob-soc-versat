@@ -38,7 +38,7 @@
 #   we run into the problem that the cached stuff messes with the file comparison
 #   since the files do not exist.
 # Second, the test software file is not copied into the test caches meaning that it is not part 
-#   of the comparison. If the change is inside the the software test part then it is
+#   of the comparison. If the change is inside the software test part then it is
 #   not reflected on the diff.
 # Overall need more usage to get a feeling for things to implement/change.
 ##############
@@ -239,6 +239,8 @@ class TestInfo:
       if(args and len(args) > 0):
          sanitizedArgs = args.replace("--","_")
          sanitizedArgs = sanitizedArgs.replace("-","_")
+         sanitizedArgs = sanitizedArgs.replace(" ","_")
+         sanitizedArgs = sanitizedArgs.replace("=","_")
          name = name + sanitizedArgs
 
       return name
@@ -669,7 +671,6 @@ def PrintTestResult(testName,color,condition,partialVal = None,cached = None,com
 
    firstPad = ' ' + GeneratePad(testName,firstColumnSize - 1)
    secondPad = ' '
-   #print(f"{testName}{firstPad}{secondPad}{color}{condition}{COLOR_BASE}{partialVal}{cached}{comments}")
 
    finalStr = f"{testName}{firstPad}{secondPad}{color}{condition}{COLOR_BASE}"
    if(partialVal):
@@ -740,6 +741,7 @@ def ThreadMain(workQueue,resultQueue,id):
 
       try:
          test = GetCurrentTestState(test)
+         ThreadedPrintResult(test)
       except Exception as e:
          print(f"Exception reached ThreadMain:")
          traceback.print_exception(e)
@@ -761,6 +763,10 @@ def ParseVersatArgsIntoMakefile(versatArgs):
    versatArgs = versatArgs.strip()
    if(versatArgs == None or versatArgs == ''):
       return ""
+
+   # MARK
+   if("-A" in versatArgs):
+      return "" # Not makefile related, can ignore.
 
    if(versatArgs == '--profile'):
       return "DO_PROFILE=T"
@@ -791,8 +797,10 @@ def ReprintButOrganized(testList):
       group = []
       splitted = testName.split("_")
 
+      allowedTestGroups = ["API"]
+
       for split in splitted:
-         if(AllCaps(split) and len(split) > 3): # LEN > 3 is mainly because of SHA and F stage and the likes.
+         if(AllCaps(split) and (len(split) > 3 or split in allowedTestGroups)): # LEN > 3 is mainly because of SHA and F stage and the likes.
             group.append(split)
 
       return group
@@ -934,6 +942,8 @@ def GetCurrentTestState(test):
 
       if(errorsMatch):
          test.stage = Stage.SHOULD_FAIL
+      else:
+         test.stage = Stage.NOT_WORKING
       return test
 
    SaveOutput(name,"versat",output)
@@ -956,7 +966,6 @@ def GetCurrentTestState(test):
       test.cached = True
 
       if(test.stage.value >= finalStage.value):
-         ThreadedPrintResult(test)
          return test
 
    test.tokens = tokenAmount
@@ -976,6 +985,8 @@ def GetCurrentTestState(test):
       test = PerformTest(test)
 
       SaveTest(test)
+
+      # We print any change sooner so that we can check test state faster
       ThreadedPrintResult(test)
 
       if(test.AnyErrors()):
@@ -1119,6 +1130,7 @@ if __name__ == "__main__":
    MAX_NAME_LENGTH = CalculateMaxLengthOfTestNames(allTests)
 
    print(f"\n\nFound and processing {len(allTests)} test(s)\n")
+   print(allTests)
    print("\n\n")
 
    allTestNames = [x.NameWithArgsEmbedded() for x in allTests]

@@ -1,82 +1,229 @@
-/*
-module PARAM_Inst #(X = 10) (){
-   Const constants[X];
-   Reg regs[X];
-#
+
+module API_DivWorkGrid #(X = 2,Y = 3) (){
+   VRead features[Y][X];
+   VRead weights[Y][X];
+   F_Mul muller[Y][X];
+   MyFloatAccum myAccum;
+   VWrite output;
+#   
+   for y 0..Y {
+      for x 0..X {
+         {features[y][x],weights[y][x]} -> muller[y][x]:0..1;
+      }
+   }
+
+   join = Reduce(muller[0..Y][0..X],F_Add);
+   join -> myAccum;
+
+   myAccum -> output;
+##
+   config Conv(addr: Buffer,kernelW,kernelH,inputImageW,xSize){
+      myAccum.strideMinusOne = (RangeSize(0,kernelH,Y,0) * RangeSize(0,kernelW,X,0)) - 1;
+
+      gen y 0..Y {
+         gen x 0..X {
+            for xPos 0..xSize {
+               for ky RangeLow(0,kernelH,Y,y)..RangeHigh(0,kernelH,Y,y) {
+                  for kx RangeLow(0,kernelW,X,x)..RangeHigh(0,kernelW,X,x) {
+                     features[y][x] = addr[Duty((ky * inputImageW + (kx + xPos)),(RangeSize(0,kernelH,Y,0) * RangeSize(0,kernelW,X,0)) / (RangeSize(0,kernelH,Y,y) * RangeSize(0,kernelW,X,x)))];
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   config Weight(addr: Buffer,kernelW,kernelH,xSize){
+      gen y 0..Y{
+         gen x 0..X{
+            for xPos 0..xSize {
+               for ky RangeLow(0,kernelH,Y,y)..RangeHigh(0,kernelH,Y,y) {
+                  for kx RangeLow(0,kernelW,X,x)..RangeHigh(0,kernelW,X,x) {
+                     weights[y][x] = addr[Duty(ky * kernelW + kx,(RangeSize(0,kernelH,Y,0) * RangeSize(0,kernelW,X,0)) / (RangeSize(0,kernelH,Y,y) * RangeSize(0,kernelW,X,x)))];
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   config Out(addr: Buffer,size,kernelW,kernelH){
+      for x 0..size {
+         output = addr[Duty(x,RangeSize(0,kernelH,Y,0) * RangeSize(0,kernelW,X,0))];
+      }
+   }
 }
-*/
 
-/*
-The problem:
+module API_DivWorkTest #(X = 2) (){
+   Generator input[X];
+   VWrite output[X];
+#   
+   input[0..X] -> output[0..X];
+##
+   config Init(size){
+      gen i 0..X{
+         for ky RangeLow(0,size,X,i)..RangeHigh(0,size,X,i){
+            for kx RangeLow(0,size,X,i)..RangeHigh(0,size,X,i){
+               input[i] = ky * 100 + kx;
+            }
+         }
+      }
+   }
 
-We basically have 3 flavours of expressions.
-Spec expressions which are the ones used in connecting ports.
-Math expressions that are used to define variable arrays,ranges, and address gen expressions.
+   config Out(addr: Buffer,addr2: Buffer,size){
+      for x 0..size {
+         output[0] = addr[x];
+         output[1] = addr2[x];
+      }
+   }
 
-And a config identifier which is the lhs of a user config statement.
+   state XVal{
+      divVal = X;
+   }
+}
 
-Because a user config statement might not have a rhs, (think function call and whatnot), the config identifier 
-is preparated to represent this.
+// The objective is to simulate a 3x3 convolution like operation over an image.
+// To make this actually useful we need to be able to process any image size.
+module API_DivWork2D #(X = 2) (){
+   VRead features[X];
+   VRead weights[X];
+   F_Mul muller[X];
+   MyFloatAccum myAccum;
+   VWrite output;
+#   
+   for x 0..X {
+      {features[x],weights[x]} -> muller[x]:0..1;
+   }
 
-The config identifier is also prepared to represent a normal identifier with array support and wire access.
-This is also something that we need to be able to represent on the rhs.
+   join = Reduce(muller[0..X],F_Add);
+   join -> myAccum;
+   
+   myAccum -> output;
+##
+   config Conv(addr: Buffer,kernelW,kernelH,inputImageW){
+      gen i 0..X{
+         for ky RangeLow(0,kernelH,X,i)..RangeHigh(0,kernelH,X,i) {
+            for kx 0..kernelW {
+               features[i] = addr[ky * inputImageW + kx];
+            }
+         }
+      }
+   }
 
-Do we want to augment the math expression to also be able to represent oop style function calls?
+   config Weight(addr: Buffer,kernelW,kernelH){
+      gen i 0..X{
+         for y RangeLow(0,kernelH,X,i)..RangeHigh(0,kernelH,X,i) {
+            for x 0..kernelW {
+               weights[i] = addr[y * kernelW + x];
+            }
+         }
+      }
+   }
 
-Overall the idea is to fix the 2 flows inside Env, but what if we can convert a math expression into a config identifier expression?.
+   config Out(addr: Buffer,size,stride){
+      for x 0..size {
+         output = addr[Duty(x,stride)];
+      }
+   }
+}
 
-If a config identifier expression is just a subset of a subset of a math expression 
+module API_Simulate(){
+   VRead v;
+   VWrite w;
+#
+   v -> w;
+##
+   // TODO: Instead of "config sim" it should be "config(sim)". That way we can stack modifiers and not have to parse them as keywords.
+   config sim Simple(inAddr : Buffer,outAddr : Buffer,width){
+      for x 0..width {
+         v = inAddr[x];
+         w = outAddr[x];
+      }
+   }
+}
 
-Types of statements:
-
-We probably do not want to allow function calls on the rhs of expressions
-
-Config:
-
-   output.in0 = x; # Virtual wire
-   output[0].in0 = x; # Virtual wire
-   c.constant = x; # Config loading
-   c[0].constant = x; # Config loading
-   v = addr[y * width + x]; # Address gen
-   v[0] = addr[y * width + x]; # Address gen
-
-   a.Init(x); # Config function call
-   a[0].Init(x); # Config function call
-
-State:
-
-   resA = a.Result; # State reading
-   resA[0] = a[0].Result; # State reading
-   res = r.currentValue; # State reading
-   res[0] = r[0].currentValue; # State reading
-
-Mem:
-
-   input[x] = addr[x]; # Mem loading
-   input[0][x] = addr[x]; # Mem loading
-   m.Load(addr,width);
-   m[0].Load(addr,width);
-
-For ConfigIdentifier, do we allow something like:
-
-   a[0].b[1] ?
-
-   Or do we only allow a[0].b and no more array like?
-
-   For now lets not allow hierarchical access.
-   We can only do a[...].c and nothing more.
-*/
-
-/*
 
 module API_Test(){
+   VRead g;
+   Mem m;
+#  
+   g -> m;
+##  
+   config InitMem(amount,unitCount,index){
+      for x 0..RangeSize(0,amount,unitCount) {
+         m.in0 = x;
+      }
+   }
+
+   config Init(addr: Buffer, amount,unitCount,index){
+      for x RangeLow(0,amount,unitCount,index)..RangeHigh(0,amount,unitCount,index){
+         g = addr[x];
+      }
+   }
+
+   config DisableMem(){
+      m.out0 = 0;
+   }
+
+   mem Read(addr: Buffer,amount){
+      for x 0..amount {
+         addr[x] = m[x];
+      }
+   }  
+   mem Clear(addr: Buffer,amount){
+      for x 0..amount {
+         m[x] = addr[x];
+      }
+   }  
+}
+
+module API_TestHier(){
+   API_Test t;
+#
+##
+   config Init(amount,unitCount,index){
+      t.Init(amount + 1,unitCount + 1,index + 1);
+   }
+}
+
+// Work is multiples of 2 values so we want odd number and prime numbers to push work division properly
+module API_DivWork #(X = 7) (){
+   VRead a[X];
+   BitMask masker[X];
+   VWrite b[X];
+#
+   a[0..X] -> masker[0..X];
+   masker[0..X] -> b[0..X];
+##
+
+   config InitMask(val){
+      gen i 0..X {
+         masker[i].mask = val;
+      }
+   }
+
+   config Divide(amount,addrIn : Buffer,addrOut : Buffer){
+      gen i 0..X {
+         for x RangeLow(0,amount,X,i)..RangeHigh(0,amount,X,i){
+            a[i] = addrIn[x];
+            b[i] = addrOut[x];
+         }
+      }
+   }
+
+   state XVal{
+      divVal = X;
+   }
+}
+
+module API_Test1(){
    Mem A[2][2];
    Const B[3];
    Reg C[11];
 #
    {A[0..1][0..1]:0..1,B[0..2]} -> C[0..10];
 ##
-   mem Test(addr: Address){
+   mem Test(addr: Buffer){
       for x 0..2{
          A[0][0][x] = addr[x];
       }
@@ -90,12 +237,12 @@ module API_Test21 (){
    a[0..1] -> b[0..1];
 ##
    config Init(vals[2]){
-      for i 0..2 {
+      gen i 0..2 {
          a[i].constant = vals[i];
       }
    }
 }
-   
+
 module API_Test22(){
    Generator a[2];
    Reg b[2];
@@ -110,89 +257,12 @@ module API_Test22(){
 ##
    config Init(vals[2]){
       gen i 0..2 { // Multiple statements
-         for x 0..2 { // Address Gen
+         for x 0..2 { // Buffer Gen
             a[i] = x + vals[i];
          }
       }
    }
 }
-
-/*
-   One thing that we could do is to unpack all the statements into individual ones.
-
-   What is the difference between the gen loop and a normal for loop position?
-
-      gen i 0..2 { // Multiple statements
-         for x 0..2 { // Address Gen
-            a[i] = x + vals[i];
-         }
-      }
-
-      or 
-
-      for x 0..2 { // Address Gen
-         gen i 0..2 { // Multiple statements
-            a[i] = x + vals[i];
-         }
-      }
-
-   It does not exist, right? Any expression that accesses arrays needs to only contain gen variables or constants. Any expression that represents an address gen or a constant to assign to 
-   a config wire needs to be a for loop variable or 
-
-   What if we added a new type of loop construct?
-
-   gen i 0..2 {
-      a[i] = b[i] + i;
-   }
-
-   That automatically becomes:
-
-   a_0 = b_0 + 0
-   a_1 = b_1 + 1
-
-   gen i 0..2 { // Multiple statements
-      for x 0..2 { // Address Gen
-         a[i] = x + vals[i];
-      }
-   }
-
-   becomes:
-
-      for x 0..2 {
-         a_0 = x + vals_0;
-      }
-      for x 0..2 {
-         a_1 = x + vals_1;
-      }
-
-
-   We can then loop on gen loops only and not having to bother writing the more complicated logic to figure out what kinda of variable we currently are dealing with.
-      We are passing responsability to the user but later on we could techincally change this to use logic to figure out what each variable "is".
-
-      for i 0..2 { // Multiple statements
-         for x 0..2 { // Address Gen
-            a[i] = x + vals[i];
-         }
-      }
-
-      becomes:
-
-      for x 0..2 {
-         a_0 = x + vals_0;
-         a_1 = x + vals_1;
-      }
-
-      for i 0..2 { // Multiple statements
-         a[i] = i + vals[i];
-      }
-
-      becomes
-
-      for i 0..2 {
-         a_0 = i + vals_0;
-         a_1 = i + vals_1;
-      }
-*/
 
 module API_Test2 #(X = 2) (){
    Const a[X];
@@ -207,9 +277,22 @@ module API_Test2 #(X = 2) (){
    }
 }
 
-module API_Test3(){
-   API_Test2 #(X(3)) t;
+module API_Test31 #(X=1) (){
+   API_Test2 #(.X(X)) t;
 #
+##
+   config Init(vals[X]){
+      t.Init(vals);
+   }
+}
+
+module API_Test3(){
+   API_Test2 #(.X(3)) t;
+#
+##
+   config Init(vals[3]){
+      t.Init(vals);
+   }
 }
 
 module API_Test4 #(X = 2) (){
@@ -227,7 +310,32 @@ module API_Test4 #(X = 2) (){
       }
    }
 }
+
+/*
+
+For X == 3, we should transform the expressions into:
+
+if amount is 4, then we need to partition with 2,1,1
+
+config Init(readAddr[X],writeAddr[X],amount){
+   for x 0..((amount/X) + (MOD(amount,X) == 1 ? 1 : 0)) {
+      v_0 = readAddr_0[x];
+      w_0 = writeAddr_0[x];
+   }
+   for x 0..((amount/X) + (MOD(amount,X) == 2 ? 1 : 0)) {
+      v_1 = readAddr_1[x];
+      w_1 = writeAddr_1[x];
+   }
+   for x 0..((amount/X) + (MOD(amount,X) == 0 ? 1 : 0)) {
+      v_2 = readAddr_2[x];
+      w_2 = writeAddr_2[x];
+   }
+}
+
+How do we detect this condition?
+
 */
+
 
 module API_Mem(){
    Mem output;
@@ -242,13 +350,13 @@ module API_Mem(){
       }
    }
    
-   mem Load(addr: Address,width: Fixed){
+   mem Load(addr: Buffer,width: Fixed){
       for x 0..width {
          input[x] = addr[x];
       }
    }
 
-   mem Dump(addr: Address,width: Fixed){
+   mem Dump(addr: Buffer,width: Fixed){
       for x 0..width {
          addr[x] = output[x];
       }
@@ -282,11 +390,11 @@ module API_Composite(){
       m.Linear(width2);
    }
 
-   mem Load(addr: Address,width: Fixed){
+   mem Load(addr: Buffer,width: Fixed){
       m.Load(addr,width);
    }
 
-   mem Dump(addr: Address,width: Fixed){
+   mem Dump(addr: Buffer,width: Fixed){
       m.Dump(addr,width);
    }
 
@@ -302,7 +410,7 @@ module API_TransferSize(){
 #
    v -> w;
 ##
-   config Simple(addr: Address,addr2: Address,height: Fixed,width: Dyn){
+   config Simple(addr: Buffer,addr2: Buffer,height: Fixed,width: Dyn){
       for y 0..height {
          for x 0..width {
             v = addr[y * width + x];
@@ -327,7 +435,7 @@ module API_Config(){
    m -> r2;
    v -> w;
 ##
-   config Test(addr: Address,width){
+   config Test(addr: Buffer,width){
       for y 0..width {
          for x 0..width {
             w = addr[x];
@@ -340,11 +448,15 @@ module API_Config(){
       c.constant = x;
    }
 
-   mem Mem(addr: Address){
+   config InitMem(){
+      m.out0 = 0;
+   }
+
+   mem Mem(addr: Buffer){
       m[0] = addr[0];
    }
 
-   config All(addr: Address,addr2: Address,y,width){
+   config All(addr: Buffer,addr2: Buffer,y,width){
       c.constant = y;
       for x 0..width {
          v = addr[x];
@@ -354,7 +466,7 @@ module API_Config(){
       }
    }
 
-   config VRead(addr: Address,width){
+   config VRead(addr: Buffer,width){
       for x 0..width {
          v = addr[x];
       }
@@ -363,7 +475,7 @@ module API_Config(){
       }
    }
 
-   config VWrite(addr: Address,width){
+   config VWrite(addr: Buffer,width){
       for x 0..width {
          w = addr[x];
       }
@@ -405,14 +517,7 @@ module PARAM_Simple(){
    }
 }
 
-module PARAM_Temp2 #(X = 5,Y = 10) (){
-   Mem #(.ADDR_W(X)) m;
-#
-##
-}
-
 module PARAM_MemMapped(){
-   PARAM_Temp2 #(.X(7)) t;
    Mem #(.ADDR_W(15)) m;
    Reg r;
 #
@@ -422,7 +527,7 @@ module PARAM_MemMapped(){
       m.out0 = index;
    }
 
-   mem Load(addr: Address,width){
+   mem Load(addr: Buffer,width){
       for x 0..width {
          m = addr[x];
       }
@@ -452,7 +557,7 @@ module MERGE_PARAM_Temp1(){
 #
    v -> w;
 ##
-   config Simple(inAddr: Address,outAddr: Address,width){
+   config Simple(inAddr: Buffer,outAddr: Buffer,width){
       for x 0..width {
          v = inAddr[x];
          w = outAddr[x];
@@ -466,7 +571,7 @@ module MERGE_PARAM_Temp2(){
 #
    v -> w;
 ##
-   config Simple(inAddr: Address,outAddr: Address,width){
+   config Simple(inAddr: Buffer,outAddr: Buffer,width){
       for x 0..width {
          v = inAddr[x];
          w = outAddr[x];
@@ -482,7 +587,7 @@ module PARAM_VUnits(){
 #
    v -> w;
 ## 
-   config Init(addr: Address,addr2: Address,width: Dyn){
+   config Init(addr: Buffer,addr2: Buffer,width: Dyn){
       for x 0..width {
          v = addr[x];
          w = addr2[x];
@@ -540,7 +645,7 @@ module EXAMPLE_Conv(){
    
    myAccum -> output;
 ##
-   config Conv(addr: Address,kernelW,kernelH,inputImageW){
+   config Conv(addr: Buffer,kernelW,kernelH,inputImageW){
       for ky 0..kernelH {
          for kx 0..kernelW {
             features = addr[ky * inputImageW + kx];
@@ -548,15 +653,15 @@ module EXAMPLE_Conv(){
       }
    }
 
-   config Weight(addr: Address,kernelW,kernelH){
+   config Weight(addr: Buffer,kernelW,kernelH){
       for x 0..(kernelH*kernelW){
          weights = addr[x];
       }
    }
 
-   config Out(addr: Address,size,stride){
+   config Out(addr: Buffer,size,stride){
       for x 0..size {
-         output = addr[x / stride];
+         output = addr[Duty(x,stride)];
       }
    }
 }
@@ -931,7 +1036,7 @@ module DATABUS_SimpleTransfer(){
 #
    read -> write;
 ##
-   config Simple(inAddr : Address,outAddr : Address,width){
+   config Simple(inAddr : Buffer,outAddr : Buffer,width){
       for x 0..width {
          read = inAddr[x];
          write = outAddr[x];
@@ -945,19 +1050,19 @@ module DATABUS_MultipleTransfers(){
 #
    read -> write;
 ##
-   config LinearRead(inAddr: Address,xWidth){
+   config LinearRead(inAddr: Buffer,xWidth){
       for x 0..xWidth {
          read = inAddr[x];
       }
    }
 
-   config LinearWrite(outAddr: Address,xWidth){
+   config LinearWrite(outAddr: Buffer,xWidth){
       for x 0..xWidth {
          write = outAddr[x];
       }
    }
 
-   config DoubleRead(inAddr: Address,xWidth,yWidth,shift){
+   config DoubleRead(inAddr: Buffer,xWidth,yWidth,shift){
       for y 0..yWidth {
          for x 0..xWidth {
             read = inAddr[y * shift + x];
@@ -965,7 +1070,7 @@ module DATABUS_MultipleTransfers(){
       }
    }
 
-  config DoubleWrite(outAddr: Address,xWidth,yWidth,shift){
+  config DoubleWrite(outAddr: Buffer,xWidth,yWidth,shift){
       for y 0..yWidth {
          for x 0..xWidth {
             write = outAddr[y * shift + x];
@@ -973,7 +1078,7 @@ module DATABUS_MultipleTransfers(){
       }
    }
 
-   config TripleRead(inAddr: Address,xWidth,yWidth,zWidth,shift,shift2){
+   config TripleRead(inAddr: Buffer,xWidth,yWidth,zWidth,shift,shift2){
       for z 0..zWidth {
          for y 0..yWidth {
             for x 0..xWidth {
@@ -983,7 +1088,7 @@ module DATABUS_MultipleTransfers(){
       }
    }
 
-   config TripleWrite(outAddr: Address,xWidth,yWidth,zWidth,shift,shift2){
+   config TripleWrite(outAddr: Buffer,xWidth,yWidth,zWidth,shift,shift2){
       for z 0..zWidth {
          for y 0..yWidth {
             for x 0..xWidth {
@@ -1001,7 +1106,7 @@ module EXAMPLE_PROFILE(){
 #
    read -> write;
 ##
-   config Simple(inAddr : Address,outAddr : Address,width){
+   config Simple(inAddr : Buffer,outAddr : Buffer,width){
       for x 0..width {
          read = inAddr[x];
          write = outAddr[x];
@@ -1596,7 +1701,7 @@ module EXAMPLE_SHA(){
    
    F3:0..7 -> State:0..7;
 ##
-   config Simple(addr: Address,width: Fixed){
+   config Simple(addr: Buffer,width: Fixed){
       for x 0..width {
          MemRead = addr[x];
       }
@@ -1928,19 +2033,19 @@ module UNIT_VRead(){
 #
    t -> m;
 ##
-   config Simple(addr : Address,width: Fixed){
+   config Simple(addr : Buffer,width: Fixed){
       for x 0..width {
          t = addr[x];
       }
    }
 
-   mem MemLoad(addr: Address,width: Fixed){
+   mem MemLoad(addr: Buffer,width: Fixed){
       for x 0..width {
          m[x] = addr[x];
       }
    }
 
-   mem MemDump(addr: Address,width: Fixed){
+   mem MemDump(addr: Buffer,width: Fixed){
       for x 0..width {
          addr[x] = m[x];
       }
@@ -3087,7 +3192,7 @@ module EXAMPLE_Variety1(){
 
    c -> reg;
 ##
-   config Simple(addr: Address,width: Fixed,val,xVal,yVal){
+   config Simple(addr: Buffer,width: Fixed,val,xVal,yVal){
       x.constant = xVal;
       y.constant = yVal;
       constant.constant = val;
@@ -3113,7 +3218,7 @@ module EXAMPLE_Variety2(){
    total = x + y + z + read + m;
    total -> write;
 ##
-   config Simple(inAddr: Address,outAddr: Address,width: Fixed,xVal,yVal,zVal){
+   config Simple(inAddr: Buffer,outAddr: Buffer,width: Fixed,xVal,yVal,zVal){
       x.constant = xVal;
       y.constant = yVal;
       z.constant = zVal;
@@ -3393,17 +3498,43 @@ module ADDRESSGEN_Simple(){
       }
    }
 
-   config Write(addr: Address,width){
+   config Write(addr: Buffer,width){
       for x 0..width {
          output = addr[x];
       }
    }
 
-   config Write2(addr: Address,xWidth,yWidth,shift){
+   config Write2(addr: Buffer,xWidth,yWidth,shift){
       for y 0..yWidth {
          for x 0..xWidth {
             output = addr[y * shift + x];
          }
+      }
+   }
+}
+
+module ADDRESSGEN_Boundary(){
+   Generator g;
+   Mem m;
+#
+   g -> m;
+##
+   config Init(amount){
+      for x 0..amount {
+         g = x;
+         m.in0 = x;
+      }
+   }
+
+   mem Write(addr: Buffer,amount){
+      for x 0..amount {
+         m[x] = addr[x];
+      }
+   }
+
+   mem Read(addr: Buffer,amount){
+      for x 0..amount {
+         addr[x] = m[x];
       }
    }
 }
@@ -3487,25 +3618,25 @@ module ADDRESSGEN_Stride(){
 
    config Mem(size,stride){
       for x 0..size {
-         m.in0 = x / stride;
+         m.in0 = Duty(x,stride);
       }
    }
 
-   config StridedLinear(addr: Address,size,stride){
+   config StridedLinear(addr: Buffer,size,stride){
       for x 0..size {
-         write = addr[x / stride];
+         write = addr[Duty(x,stride)];
       }
    }
 
-   config Strided2(addr: Address,sizeX,sizeY,width,stride){
+   config Strided2(addr: Buffer,sizeX,sizeY,width,stride){
       for y 0..sizeY {
          for x 0..sizeX {
-            write = addr[(y * width + x) / stride];
+            write = addr[Duty(y * width + x,stride)];
          }
       }
    }
 
-   config Compared(addr: Address,sizeX,sizeY,width){
+   config Compared(addr: Buffer,sizeX,sizeY,width){
       for y 0..sizeY {
          for x 0..sizeX {
             write = addr[y * width + x];
@@ -3520,7 +3651,7 @@ module ADDRESSGEN_Advanced(){
 #
    read -> output;
 ##
-   config Read(addr: Address,var1,var2,var3,var4){
+   config Read(addr: Buffer,var1,var2,var3,var4){
       for y 0..var1 {
          for x 0..var2 {
             read = addr[var3 * x + var4 * y];
@@ -3547,7 +3678,7 @@ module ADDRESSGEN_Constants(){
       }
    }   
 
-   config Constants(addr: Address,var1){
+   config Constants(addr: Buffer,var1){
       for x 0..5 {
          read = addr[x + var1 + 5];
       }
@@ -3560,7 +3691,7 @@ module ADDRESSGEN_EmptyLoops(){
 #
    read -> output;
 ##
-   config EmptyLoops(addr: Address){
+   config EmptyLoops(addr: Buffer){
       for y 0..2 {
          for x 0..2 {
             for empty 0..2 {
@@ -3569,7 +3700,7 @@ module ADDRESSGEN_EmptyLoops(){
          }
       }
    }
-   config EmptyLoops2(addr: Address){
+   config EmptyLoops2(addr: Buffer){
       for y 0..2 {
          for empty 0..2 {
             for x 0..2 {
@@ -3578,7 +3709,7 @@ module ADDRESSGEN_EmptyLoops(){
          }
       }
    }
-   config EmptyLoops3(addr: Address){
+   config EmptyLoops3(addr: Buffer){
       for empty 0..2 {
          for y 0..2 {
             for x 0..2 {
@@ -3587,7 +3718,7 @@ module ADDRESSGEN_EmptyLoops(){
          }
       }
    }
-   config EmptyLoops4(addr: Address){
+   config EmptyLoops4(addr: Buffer){
       for t 0..4 {
          for x 0..5 {
             read = addr[t];
@@ -3611,7 +3742,7 @@ module ADDRESSGEN_ComplexLoopExpression(){
    // TODO: More complex loops, including the start being different than zero and potentially starting on negative numbers.
    // TODO: Also, do we care about loops that go down? We probably should but have not found a usecase yet so hard to care too much about it.
 
-   config ComplexLoop(addr : Address,var1,var2){
+   config ComplexLoop(addr : Buffer,var1,var2){
       for x 0..(var1 / var2) {
          read = addr[x];
       }
@@ -3630,7 +3761,7 @@ module ADDRESSGEN_TooManyLoops(){
 #
    read -> output;
 ##
-   config TooManyLoops(){
+   config TooManyLoops(addr : Buffer){
       for h 0..2 {
          for g 0..2 {
             for f 0..2 {
@@ -3684,7 +3815,7 @@ module NoShare(){
    unitsZ[0..2] -> output[0..2];
 }
 
-merge ADDRESSGEN_MERGE_MergeWithAddress = ADDRESSGEN_Advanced | ADDRESSGEN_ComplexLoopExpression;
+merge ADDRESSGEN_MERGE_MergeWithBuffer = ADDRESSGEN_Advanced | ADDRESSGEN_ComplexLoopExpression;
 
 merge CONFIG_MERGE_Share = FullShare | SomeShare | NoShare;
 
@@ -3697,12 +3828,12 @@ module CONFIG_ADDRESSGEN_PartialSharing(){
    read[0] -> output:0;
    read[1] -> output:1;
 ##
-   config Read0(addr: Address,width){
+   config Read0(addr: Buffer,width){
       for x 0..width {
          read[0] = addr[x];
       }
    }
-   config Read1(addr: Address,width){
+   config Read1(addr: Buffer,width){
       for x 0..width {
          read[0] = addr[x];
       }
@@ -3759,3 +3890,9 @@ iterative ITERATIVE_Cordic(a){
 module ITERATIVE_Cordic(){
 #
 }
+
+
+
+
+
+
